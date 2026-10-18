@@ -19,7 +19,7 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
     let files: FileStore
     /// File operations run here, off the main thread: reading a file in iCloud
     /// Drive may have to download it first. One queue keeps them in order.
-    let fileQueue = DispatchQueue(label: "eu.ronacher.Terrarium.files", qos: .userInitiated)
+    let fileQueue = DispatchQueue(label: "eu.ronacher.pyterrarium.files", qos: .userInitiated)
     private var roles: [ObjectIdentifier: Role] = [:]
     /// Ops the common bridge does not know: (op, value, sender) -> reply.
     var handler: (String, [String: Any], Role, @escaping Reply) -> Void = { _, _, _, reply in reply(nil, "no handler") }

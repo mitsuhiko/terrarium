@@ -28,7 +28,7 @@ final class DocsIndex: @unchecked Sendable {
 
     static let shared = DocsIndex()
 
-    let queue = DispatchQueue(label: "eu.ronacher.Terrarium.docs", qos: .userInitiated)
+    let queue = DispatchQueue(label: "eu.ronacher.pyterrarium.docs", qos: .userInitiated)
     private var connections: [String: OpaquePointer] = [:]
     private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 

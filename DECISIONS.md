@@ -1885,6 +1885,18 @@ fallback is "Terrarium – Python IDE".
 - Unchanged: the repository (`mitsuhiko/pyslopnista`, so the privacy and
   support URLs too) and the spikes.
 
+## D53: The bundle ID is `eu.ronacher.pyterrarium`, signed by the paid team
+
+2026-10-18 - Accepted
+
+The app was signed by the free Personal Team (`ZRL6J4P42H`), which cannot
+upload to App Store Connect, and automatic signing had registered
+`eu.ronacher.Terrarium` to that team. Store builds need the paid Apple
+Developer Program team, which may not be able to register an ID that the
+personal team holds. The bundle ID is now `eu.ronacher.pyterrarium`
+(supersedes D52's bundle ID); the Keychain services and queue labels
+follow it. Installs start fresh again; nothing is published yet.
+
 ## Proposed (not yet decided)
 
 (none)

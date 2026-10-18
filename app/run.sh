@@ -21,7 +21,7 @@ for arg in "$@"; do
   esac
 done
 
-BUNDLE_ID=eu.ronacher.Terrarium
+BUNDLE_ID=eu.ronacher.pyterrarium
 mkdir -p build
 ./scripts/fetch-pyodide.sh
 ./scripts/build-docs.py   # no-op when vendor/docs-* match the pinned archives
