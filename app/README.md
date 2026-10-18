@@ -370,9 +370,16 @@ The pages can be inspected with Safari's Web Inspector (Develop → Simulator):
 "Engine" and one "Editor" per pane.
 ```
 
-## Status (2026-10-17)
+## Status (2026-10-18)
 
-Since D31 the app is native SwiftUI. `./run.sh --selftest` passes all 79
+Since D31 the app is native SwiftUI. `./run.sh --selftest` passes all 86
+checks in the iPhone 18 Pro simulator (2026-10-18), including the
+examples: each new one is lint-clean in the editor (`Types.py` has its five
+mistakes), the games and apps open and react to taps (`examples_games`,
+`examples_apps`), the console ones print what they should (`Async.py`,
+`Debug Me.py`, `Clipboard Tools.py`, the adventure's walkthrough),
+`Earthquakes.ipynb` runs all its cells, and `Start Here.md`'s links all
+lead somewhere. Before that, it passed all 79
 checks in the iPhone 18 Pro simulator, including `crash_recovery` with a
 RecursionError traceback (D49), `memory_budget` and `engine_recovery`
 (D50, the last check: it ends the engine's process and finishes in the new

@@ -143,6 +143,22 @@ export async function selftest() {
   breakpoints.clearAll();
   await app.setSplit(false); // a split view restored from the last session
 
+  // What this WebKit gives the engine page: Python needs isolation and shared memory (D9).
+  await step("environment", async () => {
+    const ua = navigator.userAgent.match(/OS ([\d_]+)/)?.[1]?.replace(/_/g, ".");
+    let sabClone = "ok";
+    try {
+      structuredClone(new SharedArrayBuffer(4));
+    } catch (e) {
+      sabClone = String((e as Error).message ?? e);
+    }
+    return {
+      ios: ua, crossOriginIsolated: self.crossOriginIsolated, secure: self.isSecureContext,
+      sabClone,
+      jspi: typeof (WebAssembly as any).Suspending === "function",
+    };
+  });
+
   await step("examples_seeded", async () => {
     const names = (await fs.list("Examples")).map((e) => e.name);
     if (!names.includes("Hello.py")) throw new Error(`examples: ${names}`);
@@ -1291,6 +1307,228 @@ export async function selftest() {
     return opened;
   });
 
+  // -- the examples ---------------------------------------------------------------------
+
+  const NEW_EXAMPLES = [
+    "Async Data.py", "Async.py", "Bounce.py", "Brick Breaker.py", "Clipboard Tools.py", "Debug Me.py", "Draw a Digit.py",
+    "Drum Machine.py", "Game of Life.py", "Journal.py", "Mandelbrot.py", "Navigation.py", "Paint.py", "Piano.py",
+    "Pomodoro.py", "Settings.py", "Tabs.py", "Turtle Fractals.py", "Voice Memos.py", "Weather.py",
+    "Adventure/world.py",
+  ];
+
+  /** Run an example app and wait for it to show; the text of its tree. */
+  async function openApp(name: string, timeout = 60000) {
+    const { done } = await runFile(`Examples/${name}`);
+    await until(async () => (await nativeTree()).visible, timeout).catch(() => {
+      throw new Error(`${name} did not open: ${consoleText().slice(-500)}`);
+    });
+    return { done };
+  }
+  async function closeApp(name: string, done: Promise<unknown>) {
+    if (/Traceback|Error/.test(consoleText())) throw new Error(`${name}: ${consoleText().slice(-800)}`);
+    session.closeUI();
+    await until(async () => !(await nativeTree()).visible, 5000).catch(() => {
+      throw new Error(`${name} did not close`);
+    });
+    await done.catch(() => {});
+  }
+  const texts = async () => findNodes((await nativeTree()).tree, (n) => n.t === "Text" || n.t === "Label").map((n) => String(n.p.text ?? ""));
+  const untilText = (pred: (s: string) => boolean, timeout = 15000) =>
+    until(async () => (await texts()).find(pred), timeout).catch(async () => {
+      throw new Error(`no such text in ${JSON.stringify(await texts()).slice(0, 600)}; console: ${consoleText().slice(-400)}`);
+    });
+  const canvases = async () => findNodes((await nativeTree()).tree, (n) => n.t === "Canvas");
+  const pointer = (id: number, event: string, x: number, y: number, touch = 1) =>
+    nativeEvent(id, event, [{ x, y, id: touch, buttons: event === "pointer_up" ? 0 : 1 }]);
+
+  await step("examples_lint_clean", async () => {
+    // What the editor shows for each new example: nothing (Types.py on purpose has five).
+    const found: Record<string, string[]> = {};
+    for (const name of NEW_EXAMPLES) {
+      const path = `Examples/${name}`;
+      let problems;
+      try {
+        problems = await analysis.check(path, await fs.readText(path));
+      } catch (e) {
+        found[name] = [String(e)];
+        continue;
+      }
+      const real = problems.filter((p) => p.code !== "unresolved-import");
+      if (real.length) found[name] = real.map((p) => `${p.start.line}: ${p.source} ${p.code} ${p.message}`);
+    }
+    if (Object.keys(found).length) throw new Error(JSON.stringify(found));
+    const types = (await analysis.check("Examples/Types.py", await fs.readText("Examples/Types.py"))).map((p) => p.code).sort();
+    const want = ["B006", "F401", "invalid-argument-type", "invalid-argument-type", "invalid-return-type"];
+    if (JSON.stringify(types) !== JSON.stringify(want)) found["Types.py"] = types;
+    if (Object.keys(found).length) throw new Error(JSON.stringify(found));
+  });
+
+  await step("examples_games", async () => {
+    const result: Record<string, unknown> = {};
+    // Brick Breaker: a tap launches the ball, and the game loop runs.
+    let { done } = await openApp("Brick Breaker.py");
+    let [canvas] = await canvases();
+    await pointer(canvas.i, "pointer_down", 180, 500);
+    await pointer(canvas.i, "pointer_up", 180, 500);
+    await sleep(1500);
+    await closeApp("Brick Breaker", done);
+    // Game of Life: Play advances the generations.
+    ({ done } = await openApp("Game of Life.py"));
+    const play = await untilNode((n) => n.t === "Button" && n.p.label === "Play");
+    await nativeEvent(play.i, "click");
+    result.life = await untilText((s) => /^Generation ([3-9]|\d\d)/.test(s));
+    [canvas] = await canvases();
+    await pointer(canvas.i, "pointer_down", 5, 5);
+    await closeApp("Game of Life", done);
+    // Mandelbrot: a picture, a zoom, and the same on all cores.
+    ({ done } = await openApp("Mandelbrot.py"));
+    result.mandelbrot = await untilText((s) => s.includes("s on 1 process"), 60000);
+    [canvas] = await canvases();
+    await pointer(canvas.i, "pointer_down", 120, 180);
+    result.zoomed = await untilText((s) => s.startsWith("4x zoom"), 60000);
+    const cores = await untilNode((n) => n.t === "Toggle" && n.p.label === "Use all cores");
+    await nativeEvent(cores.i, "change", [true]);
+    result.parallel = await untilText((s) => s.startsWith("4x zoom") && s.includes("processes"), 90000);
+    await closeApp("Mandelbrot", done);
+    // Draw a Digit: a vertical stroke is a 1.
+    ({ done } = await openApp("Draw a Digit.py"));
+    await untilText((s) => s.startsWith("Ready."), 90000);
+    [canvas] = await canvases();
+    await pointer(canvas.i, "pointer_down", 140, 40);
+    for (let y = 60; y <= 240; y += 20) await pointer(canvas.i, "pointer_move", 140, y);
+    await pointer(canvas.i, "pointer_up", 140, 240);
+    await untilText((s) => s.endsWith("votes"), 15000);
+    const guess = (await texts()).find((s) => /^\d$/.test(s));
+    if (guess !== "1") throw new Error(`guessed ${guess}: ${JSON.stringify(await texts())}`);
+    result.digit = guess;
+    await closeApp("Draw a Digit", done);
+    // Piano: a key plays its note.
+    ({ done } = await openApp("Piano.py"));
+    [canvas] = await canvases();
+    await pointer(canvas.i, "pointer_down", 10, 200);
+    result.piano = await untilText((s) => s.startsWith("C4"));
+    await pointer(canvas.i, "pointer_up", 10, 200);
+    await closeApp("Piano", done);
+    // Drum Machine: it plays.
+    ({ done } = await openApp("Drum Machine.py"));
+    const drums = await untilNode((n) => n.t === "Button" && n.p.label === "Play");
+    await nativeEvent(drums.i, "click");
+    await untilNode((n) => n.t === "Button" && n.p.label === "Stop");
+    await sleep(1000);
+    await closeApp("Drum Machine", done);
+    // The canvas examples from uikit.
+    for (const name of ["Bounce.py", "Paint.py"]) {
+      ({ done } = await openApp(name));
+      [canvas] = await canvases();
+      await pointer(canvas.i, "pointer_down", 100, 100);
+      await pointer(canvas.i, "pointer_move", 150, 150);
+      await pointer(canvas.i, "pointer_up", 150, 150);
+      await sleep(500);
+      await closeApp(name, done);
+    }
+    return result;
+  });
+
+  await step("examples_apps", async () => {
+    const result: Record<string, unknown> = {};
+    // Weather: the simulator's location, then a search.
+    let { done } = await openApp("Weather.py");
+    result.weather = await untilText((s) => s.startsWith("Feels like"), 60000);
+    await closeApp("Weather", done);
+    // Journal: the first entry, a new one, the database file.
+    for (const f of ["journal.db", "journal.db-journal"]) if (await fs.exists(`Examples/${f}`)) await fs.remove(`Examples/${f}`);
+    ({ done } = await openApp("Journal.py"));
+    await untilNode((n) => n.t === "Row" && String(n.p.title).startsWith("Started a journal"));
+    result.journal = await untilText((s) => s.endsWith("day streak"));
+    await closeApp("Journal", done);
+    if (!(await fs.exists("Examples/journal.db"))) throw new Error("no journal.db");
+    await fs.remove("Examples/journal.db");
+    // Pomodoro: start and pause.
+    ({ done } = await openApp("Pomodoro.py"));
+    const start = await untilNode((n) => n.t === "Button" && n.p.label === "Start");
+    await nativeEvent(start.i, "click");
+    const pause = await untilNode((n) => n.t === "Button" && n.p.label === "Pause");
+    await sleep(1200);
+    await nativeEvent(pause.i, "click");
+    await untilNode((n) => n.t === "Button" && n.p.label === "Start");
+    await closeApp("Pomodoro", done);
+    if (await fs.exists("Examples/pomodoro.json")) await fs.remove("Examples/pomodoro.json");
+    // The rest open and close.
+    for (const name of ["Voice Memos.py", "Navigation.py", "Tabs.py", "Settings.py", "Async Data.py"]) {
+      ({ done } = await openApp(name));
+      await sleep(800);
+      await closeApp(name, done);
+    }
+    if (await fs.exists("Examples/Recordings")) await fs.remove("Examples/Recordings");
+    return result;
+  });
+
+  await step("examples_console", async () => {
+    const result: Record<string, unknown> = {};
+    // asyncio with httpx.
+    let { done } = await runFile("Examples/Async.py");
+    await done;
+    expectLines(consoleText(), ["One after another:", "All at once:", "As they arrive:", "within 10 ms"]);
+    result.async = consoleText().match(/All at once:.*/)?.[0];
+    // Debug Me: fails on its second check.
+    ({ done } = await runFile("Examples/Debug Me.py"));
+    await done;
+    expectLines(consoleText(), ["find(13) = 5 \u2713", "find(7) = -1 \u2717 (should be 3)", "AssertionError"]);
+    // Types: two of its mistakes bite.
+    ({ done } = await runFile("Examples/Types.py"));
+    await done;
+    expectLines(consoleText(), ["Average rating: 4.35", "['classic: Dune', 'cyberpunk: Neuromancer']", "TypeError"]);
+    // Clipboard Tools: sort the lines on the clipboard.
+    await fs.mkdir("Tests").catch(() => {});
+    await fs.mkdir("Tests/device").catch(() => {});
+    await runOutput("Tests/device/clip.py", "import clipboard\nclipboard.set('pear\\nApple\\nfig')\n");
+    ({ done } = await runFile("Examples/Clipboard Tools.py"));
+    if (!(await until(() => appCall<boolean>("deviceHasDialog"), 15000).then(() => appCall<boolean>("deviceAnswer", [4])))) throw new Error(`no dialog: ${consoleText()}`);
+    await until(idle, 30000);
+    expectLines(consoleText(), ["Sort lines:\nApple\nfig\npear"]);
+    // Adventure: imports a sibling module and reads JSON; the walkthrough wins.
+    ({ done } = await runFile("Examples/Adventure/Adventure.py"));
+    for (const command of ["e", "take can", "w", "s", "take net", "n", "w", "use net", "use can", "e", "n", "use can"]) {
+      await until(() => session.getSnapshot().awaitingInput, 15000).catch(() => {
+        throw new Error(`no prompt for ${command}: ${consoleText().slice(-500)}`);
+      });
+      session.submitInput(command);
+      await sleep(50);
+    }
+    await done;
+    expectLines(consoleText(), ["GLASSHOUSE", "You saved the moon orchid in 10 moves"]);
+    // Turtle Fractals: draws, and keeps running for taps until Stop.
+    const scenes = turtleScenes.size;
+    await runFile("Examples/Turtle Fractals.py");
+    await until(() => turtleScenes.size > scenes && (lastScene()?.items.size ?? 0) > 100, 60000);
+    await until(() => lastScene()?.listening.pointer, 60000); // waiting for taps
+    if (idle()) throw new Error(`ended: ${consoleText().slice(-400)}`);
+    session.stop();
+    await until(idle, 10000);
+    if (/Traceback/.test(consoleText())) throw new Error(consoleText().slice(-600));
+    result.fractal = lastScene()?.items.size;
+    return result;
+  });
+
+  await step("examples_start_here", async () => {
+    const path = "Examples/Start Here.md";
+    await app.openFile(path);
+    await until(async () => (await editorCall<any>("markdownInfo"))?.path === path, 10000);
+    await editorCall("previewFollow", "Brick%20Breaker.py");
+    await until(async () => (await app.currentFile()) === "Examples/Brick Breaker.py", 5000);
+    await app.openFile(path);
+    await until(async () => (await editorCall<any>("markdownInfo"))?.path === path, 10000);
+    await editorCall("previewFollow", "Adventure/README.md");
+    await until(async () => (await app.currentFile()) === "Examples/Adventure/README.md", 5000);
+    // Every link to a file points at an example that is there.
+    const text = await fs.readText(path);
+    const missing = [];
+    for (const [, target] of text.matchAll(/\]\(([^):]+)\)/g)) {
+      if (!(await fs.exists(`Examples/${decodeURIComponent(target)}`))) missing.push(target);
+    }
+    if (missing.length) throw new Error(`missing: ${missing}`);
+  });
+
   await step("editor_themes", async () => {
     await app.openFile("Examples/Hello.py");
     const themes = await editorCall<{ id: string }[]>("themes");
@@ -1721,6 +1959,23 @@ export async function selftest() {
     const created = await appCall<string>("newFromTemplate", "Tests/nb", "fresh", "notebook");
     const fresh = await openNotebook(created, 2);
     expect(created === "Tests/nb/fresh.ipynb" && fresh.cells[0].type === "markdown", "template", fresh);
+  });
+
+  await step("examples_notebook", async () => {
+    // Earthquakes: live data, pandas and plots; Run All without an error.
+    const path = "Examples/Earthquakes.ipynb";
+    const before = await fs.readText(path);
+    const info = await openNotebook(path, 11);
+    await editorCall("notebookCommand", "runAll");
+    const ran = await cellDone(9, 180000);
+    const code = ran.cells.filter((c: any) => c.type === "code");
+    const errors = code.flatMap((c: any) => c.outputs.filter((o: any) => o.type === "error"));
+    if (errors.length || code.some((c: any) => !c.outputs.length)) throw new Error(JSON.stringify(code.map((c: any) => c.outputs.map((o: any) => o.type))));
+    const b = ran.cells[9].outputs.find((o: any) => o.type === "stream")?.text;
+    // Leave the example as it was shipped (without outputs).
+    await appCall("closeTab", path).catch(() => {});
+    await fs.writeText(path, before);
+    return { cells: info.cells.length, b };
   });
 
   // -- Markdown files (D46) ------------------------------------------------------------
