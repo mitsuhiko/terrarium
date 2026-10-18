@@ -68,10 +68,9 @@ to do by hand in App Store Connect, and the open risks for review.
 4. Pricing and Availability: free; countries.
 5. App Privacy: privacy policy URL, then "Data Not Collected". This answers
    for the developer and the code in the app; the agent sends data only to
-   providers the user signs in to and allows. If Radius counts as the
-   developer's own service (Earendil), revisit this: then messages and
-   project files sent to it are "User Content: Other User Content", used for
-   App Functionality and not linked to identity unless Radius links them.
+   providers the user signs in to and allows. Radius is one of those
+   providers: a separate legal entity, not the developer's own service, so
+   it does not change this answer.
 6. Age rating questionnaire: answer for the app as it is.
    - Unrestricted web access: yes. Programs fetch any URL, and HTML outputs
      and links open web content.
@@ -94,21 +93,35 @@ to do by hand in App Store Connect, and the open risks for review.
 
 ## Open risks for review
 
-- **Private API in features (not only tests)**:
-  - `_setEnabled:forFeature:` / `_features` on WKPreferences: the 120 Hz
-    page rendering, `WebHost.renderAtDisplayRate`.
-  - A WKContentView subclass for the key bar, and `_updateTextInputTraits:`
-    for plain keyboard traits in code fields (`KeyboardAccessory`).
-  - `_elementDidFocus:userIsInteracting:…` for programmatic focus (as
-    Capacitor's keyboard plugin does).
-  These are in the binary. If review rejects them, the fallbacks are:
-  pages at 60 Hz; the key bar on the native fields only, or as a view above
-  the keyboard instead of its accessory; HTML attributes for traits; a tap
-  to focus `input()`.
+- **Private API in features (not only tests)**. WebKit has no public API
+  for any of these (checked in the iOS 27.1 SDK headers). What other apps
+  in the store do (their sources, 2026-10-18):
+  - `_elementDidFocus:userIsInteracting:…` for programmatic focus: the same
+    swizzle is in Capacitor's core (`WKWebView+Capacitor.swift`, so in every
+    Capacitor app), react-native-webview
+    (`keyboardDisplayRequiresUserAction`), Blink Shell, a-Shell and Code
+    App. Widely shipped; keep it.
+  - A WKContentView subclass that overrides `inputAccessoryView` (a public
+    UIResponder selector) for the key bar: react-native-webview
+    (`hideKeyboardAccessoryView`), Code App (Monaco's key bar), Ionic's
+    keyboard plugin (`HideFormAccessoryBar`). Keep it.
+  - `_updateTextInputTraits:` for plain traits in the editor: Blink's
+    `KBWebViewBase.m`, copied into a-Shell and Code App, replaces it outright
+    to turn off smart quotes, dashes and autocorrection. Keep it; CodeMirror's
+    `autocapitalize`/`autocorrect`/`spellcheck` attributes are the fallback
+    (smart quotes and dashes have no HTML attribute).
+  - `_features` / `_setEnabled:forFeature:` on WKPreferences (120 Hz page
+    rendering, `WebHost.renderAtDisplayRate`): none of those apps do this,
+    and it calls WKPreferencesPrivate methods directly, the kind of call
+    review's scan flags. Since D31 the shell is native: navigation and
+    animations are SwiftUI, and scrolling in the editor is UIKit's (async
+    scrolling in the UI process), at the display's rate either way. Only
+    what the page itself paints (typing, the caret, CodeMirror's updates while
+    scrolling) is held near 60 fps. The safest choice is to drop it.
 - **2.5.2 / 4.7 (Q9)**: packages download from PyPI and run in WebKit. The
   review notes explain this. Pythonista, Pyto, Carnets and a-Shell ship
   similar features.
-- **Subscription sign-ins (Q21)**: Claude Pro/Max, ChatGPT and Copilot
+- **Subscription sign-ins (Q21)**, accepted as a risk: Claude Pro/Max, ChatGPT and Copilot
   sign-ins from a third-party app may be against those providers' terms,
   and review may ask about them.
 - **Name** (D52): "Terrarium" is a common word; other apps and
@@ -116,5 +129,5 @@ to do by hand in App Store Connect, and the open risks for review.
   record. "Python" is only in the subtitle, which describes what the app
   is for, as the PSF's trademark policy allows.
 - **4.8 / 5.1.1(v)**: the app has no login of its own; provider sign-ins
-  are for using those services. If a Radius account can be created through
-  the app's sign-in, account deletion must be reachable from the app too.
+  are for using those services. Accounts, Radius's included, belong to the
+  providers (separate companies), which handle deleting them.
