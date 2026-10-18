@@ -42,4 +42,4 @@ line, until you tap Stop or it calls `turtle.bye()`, even without
 - Saving the canvas as PostScript (`getcanvas().postscript()`) isn't
   available.
 
-Examples: `Turtle.py` and `Catch the Turtle.py`.
+Examples: `Turtle.py`, `Turtle Fractals.py` and `Catch the Turtle.py`.

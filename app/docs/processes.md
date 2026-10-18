@@ -4,7 +4,7 @@ A program can start more Pythons: `multiprocessing` runs functions in other
 processes, and `subprocess` runs other Python programs. Every process is a
 Python interpreter of its own, so work spread over several processes runs
 on several CPU cores at the same time. The example `Processes.py` shows all
-three ways below.
+three ways below; `Mandelbrot.py` draws a picture with a `Pool`.
 
 ```python
 import multiprocessing as mp
