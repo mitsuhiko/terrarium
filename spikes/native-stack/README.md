@@ -21,7 +21,7 @@ What helps is warming up: JSC first runs wasm with its baseline compiler,
 whose native frames are much bigger than its optimizing compiler's. A fresh
 interpreter that ran the usual paths through C code a few hundred times
 (about 20 ms) recurses 1.5 to 6 times deeper before the crash. The app does
-that in every new worker (`_pyslop_warmup.py`, D49), and shows the crash
+that in every new worker (`_terrarium_warmup.py`, D49), and shows the crash
 that remains as a `RecursionError` traceback with the program's frames.
 
 ## What it is
@@ -50,7 +50,7 @@ STEPS="wasm=1" ./run.sh                                          # plain wasm fr
 
 **Deepest recursion before the crash** (async, as programs run). "Warmed
 up" is the generic warm-up (`GENERIC_WARMUP`, the same as the app's
-`_pyslop_warmup.py`); "the case itself" ran the case 200 times at depth 20
+`_terrarium_warmup.py`); "the case itself" ran the case 200 times at depth 20
 first.
 
 | case | cold | warmed up | the case itself |

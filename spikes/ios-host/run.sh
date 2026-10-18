@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 DEVICE="${1:-booted}"
-BUNDLE_ID=dev.pyslopnista.spike.host
+BUNDLE_ID=dev.terrarium.spike.host
 APP=build/Host.app
 
 rm -rf build

@@ -29,7 +29,7 @@ async function main() {
       moduleURL: base + "pyodide.mjs",
       indexURL: base,
       packageBaseUrl: new URL("pkgs/", location.href).href,
-      runtime: { "_pyslop_procs.py": await text("_pyslop_procs.py") },
+      runtime: { "_terrarium_procs.py": await text("_terrarium_procs.py") },
       preload: preload ? PRELOAD : [],
     },
     cpuCount: navigator.hardwareConcurrency || 1,

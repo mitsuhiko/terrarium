@@ -53,7 +53,7 @@ page (or Node main thread): Manager (web/procs-manager.js)
   ▼
 worker per process (web/worker.js): its own Pyodide
   _procs (web/procs-worker.js): pipes as fds, waits, semaphores, pids
-  _pyslop_procs.py: patches os, time, select, selectors, multiprocessing,
+  _terrarium_procs.py: patches os, time, select, selectors, multiprocessing,
                     subprocess, concurrent.futures
 ```
 

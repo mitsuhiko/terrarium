@@ -2,7 +2,7 @@
 // Node worker thread.
 //   boot:  load Pyodide (this is what the warm pool does ahead of time)
 //   start: become process `pid`: shared objects, files, packages, install
-//          _pyslop_procs, run the task, report the exit code
+//          _terrarium_procs, run the task, report the exit code
 import "./sab-polyfill.js";
 import { createProcs } from "./procs-worker.js";
 
@@ -43,8 +43,8 @@ async function onBoot(msg) {
     packageBaseUrl: msg.packageBaseUrl,
     env: { HOME: "/home/pyodide", PYTHONDONTWRITEBYTECODE: "1" },
   });
-  py.FS.mkdirTree("/lib/pyslop");
-  for (const [name, text] of Object.entries(msg.runtime)) py.FS.writeFile(`/lib/pyslop/${name}`, text);
+  py.FS.mkdirTree("/lib/terrarium");
+  for (const [name, text] of Object.entries(msg.runtime)) py.FS.writeFile(`/lib/terrarium/${name}`, text);
   // Like forkserver's preload: a warm worker imports what a spawned child
   // will need anyway (the patches are applied at start, D: lazy hooks).
   let preloadMs = 0;
@@ -76,10 +76,10 @@ async function onStart(msg) {
   if (msg.packages?.length) await py.loadPackage(msg.packages, { messageCallback: () => {} });
   if (task.kind === "main") await py.loadPackagesFromImports(py.FS.readFile(task.path, { encoding: "utf8" }), { messageCallback: () => {} });
   const t2 = performance.now();
-  py.runPython("import sys; sys.path.insert(0, '/lib/pyslop'); import _pyslop_procs; _pyslop_procs.install()");
+  py.runPython("import sys; sys.path.insert(0, '/lib/terrarium'); import _terrarium_procs; _terrarium_procs.install()");
   const t3 = performance.now();
   post({ type: "started", setupMs: round(t1 - t0 + (t3 - t2)), packagesMs: round(t2 - t1), installMs: round(t3 - t2) });
-  const runTask = py.pyimport("_pyslop_procs").run_task;
+  const runTask = py.pyimport("_terrarium_procs").run_task;
   let code;
   try {
     code = runTask(JSON.stringify(task), msg.payload ?? undefined);

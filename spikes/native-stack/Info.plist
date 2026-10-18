@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>NativeStackSpike</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.pyslopnista.spike.nativestack</string>
+	<string>dev.terrarium.spike.nativestack</string>
 	<key>CFBundleName</key>
 	<string>Native Stack Spike</string>
 	<key>CFBundleDisplayName</key>

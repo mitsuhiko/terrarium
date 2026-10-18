@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>XHRWaitSpike</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.pyslopnista.spike.xhrwait</string>
+	<string>dev.terrarium.spike.xhrwait</string>
 	<key>CFBundleName</key>
 	<string>XHR Wait Spike</string>
 	<key>CFBundleDisplayName</key>

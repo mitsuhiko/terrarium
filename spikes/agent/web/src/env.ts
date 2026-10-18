@@ -51,7 +51,7 @@ export function normalize(path: string): string | undefined {
 }
 
 export class ProjectEnv implements ExecutionEnv {
-  readonly id = "pyslopnista-project";
+  readonly id = "terrarium-project";
   cwd = "/";
 
   private async native<T>(op: string, path: string, args: Record<string, unknown> = {}): Promise<Result<T, FileError>> {

@@ -13,7 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 DEVICE="${SIM:-booted}"
-BUNDLE_ID=dev.pyslopnista.spike.xhrwait
+BUNDLE_ID=dev.terrarium.spike.xhrwait
 APP=build/XHRWaitSpike.app
 
 rm -rf "$APP"

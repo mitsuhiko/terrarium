@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>HostFSSpike</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.pyslopnista.spike.hostfs</string>
+	<string>dev.terrarium.spike.hostfs</string>
 	<key>CFBundleName</key>
 	<string>HostFS Spike</string>
 	<key>CFBundleDisplayName</key>

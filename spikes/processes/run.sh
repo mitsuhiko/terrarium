@@ -15,7 +15,7 @@ cd "$(dirname "$0")"
 TESTS="${1:-}"
 DEVICE="${SIM:-booted}"
 VERSION="${PYODIDE:-314.0.7}"
-BUNDLE_ID=dev.pyslopnista.spike.processes
+BUNDLE_ID=dev.terrarium.spike.processes
 APP=build/ProcessesSpike.app
 PYODIDE_DIR=../../app/vendor/pyodide-$VERSION
 [ -d "$PYODIDE_DIR" ] || { echo "missing $PYODIDE_DIR; run app/scripts/fetch-pyodide.sh" >&2; exit 1; }

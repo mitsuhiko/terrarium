@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>ProcessesSpike</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.pyslopnista.spike.processes</string>
+	<string>dev.terrarium.spike.processes</string>
 	<key>CFBundleName</key>
 	<string>Processes Spike</string>
 	<key>CFBundleDisplayName</key>

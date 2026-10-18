@@ -13,7 +13,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-BUNDLE_ID=eu.ronacher.PyslopnistaSpike
+BUNDLE_ID=eu.ronacher.TerrariumSpike
 APP=build/dd/Build/Products/Release-iphoneos/DevicePerf.app
 DEVICE="${DEVICE:-$(xcrun devicectl list devices 2>/dev/null | grep physical | grep -E 'available|connected' | grep -oE '[0-9A-F]{8}-[0-9A-F]{16}' | head -1)}"
 TIMEOUT="${TIMEOUT:-300}"

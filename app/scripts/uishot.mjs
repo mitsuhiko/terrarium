@@ -10,6 +10,7 @@
 // evaluation and the screenshot, so the overrides hold. Prints the PNG path.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 // cdp.js reads the port at import time, so set it before importing (never
 // touch the shared browser on 9222).
 process.env.BROWSER_DEBUG_PORT = "9333";
@@ -66,7 +67,7 @@ if (type !== null) {
 }
 await new Promise((r) => setTimeout(r, wait));
 const data = await cdp.screenshot(session);
-const dir = "/Users/mitsuhiko/Development/pyslopnista/app/build/ui";
+const dir = fileURLToPath(new URL("../build/ui", import.meta.url));
 mkdirSync(dir, { recursive: true });
 const out = join(dir, `${name}-${device}${dark ? "-dark" : ""}-${Date.now()}.png`);
 writeFileSync(out, data);

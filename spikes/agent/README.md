@@ -25,7 +25,7 @@ host provides:
 - `Sources/SchemeHandler.swift`: the `/__http` proxy (D25), but streaming,
   and it adds API keys:
   - Every chunk URLSession delivers goes to the page right away.
-  - A request carrying the launch token (`X-Pyslop-Token`) gets the API key
+  - A request carrying the launch token (`X-Terrarium-Token`) gets the API key
     header for its target host set natively. The page only holds a
     placeholder key.
 - `mock/server.py`: a scripted Anthropic Messages server on the Mac
@@ -55,7 +55,7 @@ SIM=<udid> ./run.sh         # a specific simulator
 | Streamed answer (about 10 s, partial commits every 100 ms) | The same time on memory and SQLite (9.9 vs 10.0 s); about 940 bridge calls |
 | Tools over the project env | `read`, `edit` and `write` (including a new subdirectory) change the native files. `../outside.txt` and a missing file come back to the model as error results. |
 | Streaming through the scheme handler | 10 server-sent events 200 ms apart arrive as 10 chunks, the first after 17-40 ms and the last after about 1.9 s. **`WKURLSchemeTask` streams to `fetch`**. |
-| Credentials | Through the patched `fetch` the host injects the key (200, `X-Pyslop-Credential: injected`). The same request without the token gets no key (401). |
+| Credentials | Through the patched `fetch` the host injects the key (200, `X-Terrarium-Credential: injected`). The same request without the token gets no key (401). |
 | Real client through the proxy | pi-ai's Anthropic SDK client streams a tool call from the mock, and the Harness runs `write` and sends the result back. The whole run takes 60-200 ms. |
 | Reload in the middle of a streamed answer | The SQLite transaction open at the reload is rolled back by the host. After the reload, `submit` with the same `requestId` finds the submission and `harness.resume()` retries the generation. The partial answer stays as an `aborted` entry, and the full answer follows (2 requests to the mock). |
 | Reload in the middle of a tool call | The call is not replay-safe, so the model gets "Tool sleep was interrupted and may have partially run" as an error result and answers. |

@@ -4,10 +4,10 @@
 <dict>
 	<!-- The simulator reads these from the binary (__TEXT,__entitlements, as Xcode does) for the Keychain. -->
 	<key>application-identifier</key>
-	<string>ZRL6J4P42H.dev.pyslopnista.spike.agent</string>
+	<string>ZRL6J4P42H.dev.terrarium.spike.agent</string>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>ZRL6J4P42H.dev.pyslopnista.spike.agent</string>
+		<string>ZRL6J4P42H.dev.terrarium.spike.agent</string>
 	</array>
 </dict>
 </plist>

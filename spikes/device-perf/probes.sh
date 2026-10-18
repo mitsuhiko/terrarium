@@ -4,7 +4,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 mkdir -p build/probes
-BUNDLE_ID=eu.ronacher.PyslopnistaSpike
+BUNDLE_ID=eu.ronacher.TerrariumSpike
 DEVICE="${DEVICE:-$(xcrun devicectl list devices 2>/dev/null | grep physical | grep -E 'available|connected' | grep -oE '[0-9A-F]{8}-[0-9A-F]{16}' | head -1)}"
 export DEVICE
 

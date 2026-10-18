@@ -214,7 +214,7 @@ typing works on the iPhone 14 Pro (2026-10-17).
 
 2026-10-13 - Superseded by D31 (was P3)
 
-Same stack as pi-mobile. The Python worker, `_pyslop.py` and `ui.py` are served
+Same stack as pi-mobile. The Python worker, `_terrarium.py` and `ui.py` are served
 as static files (`public/runtime/`), not bundled. `npm run dev` runs the app in
 a desktop browser with a localStorage mock of the host bridge.
 
@@ -270,7 +270,7 @@ same scripts run with `uv run` on a desktop. Resolution or locking with uv
 
 2026-10-13 - Accepted (was P1; `spikes/debugger/`)
 
-`_pyslop_debug.py` subclasses `bdb.Bdb(backend="monitoring")`, new in 3.14.
+`_terrarium_debug.py` subclasses `bdb.Bdb(backend="monitoring")`, new in 3.14.
 With breakpoints set but not hit, programs run as fast as without the
 debugger, while settrace and pdb are 6-12x slower. That is why every run is
 debuggable and there is no "Debug" mode. The other options considered were
@@ -366,8 +366,8 @@ therefore routes cross-origin `XMLHttpRequest` and `fetch` calls to
   longer apply (encoding, length) or would override our cross-origin isolation
   headers.
 - Headers that browsers don't let scripts set, like `User-Agent` and `Cookie`,
-  travel in `X-Pyslop-Headers`.
-- A network failure answers 502 with `X-Pyslop-Error`, which the shim turns
+  travel in `X-Terrarium-Headers`.
+- A network failure answers 502 with `X-Terrarium-Error`, which the shim turns
   back into a network error.
 
 On the Python side there is nothing app-specific:
@@ -498,7 +498,7 @@ Pyodide ships neither `tkinter` nor `turtle`. We ship CPython's own
 (speeds, undo, stamps, shapes, `setworldcoordinates`, `Vec2D`, ...). Only its
 Tkinter interface, which CPython keeps in one block (`TurtleScreenBase`,
 `ScrolledCanvas`, `_Root`) for exactly this kind of port, is replaced by
-`_pyslop_turtle.py`. `app/scripts/make-turtle.py` generates the app's
+`_terrarium_turtle.py`. `app/scripts/make-turtle.py` generates the app's
 `turtle.py` from the host's 3.14 standard library.
 
 - The backend keeps Tk's canvas model in Python (items with coordinates and
@@ -729,7 +729,7 @@ covers API keys and OAuth alike:
 - **The proxy drops WebKit's own User-Agent.** Anthropic's token endpoint
   answers a browser or curl User-Agent with a fake 429 rate limit; a CFNetwork
   or node one is accepted. A User-Agent the code sets (pi-ai's `claude-cli/…`)
-  travels in `X-Pyslop-Headers`, as Python's does (D25).
+  travels in `X-Terrarium-Headers`, as Python's does (D25).
 - **OpenAI Codex uses server-sent events** (`stream.transport: "sse"`): a
   browser WebSocket cannot carry auth headers.
 - **Simulator:** unsigned simulator builds need their entitlements embedded
@@ -981,7 +981,7 @@ sent only when it changed since the model last saw it:
 - **Mid-turn:** when the tabs or the active file change while the
   conversation on screen works. The host tells the engine; 400 ms later
   the engine reads the state again and compares.
-  - If it changed, a `pyslopnista.ide` entry is submitted as a write with
+  - If it changed, a `terrarium.ide` entry is submitted as a write with
     a model message. pi-durable places it at the next boundary, like a
     steer.
   - pi-ai has no system role mid-conversation, so the block goes in as a
@@ -1123,8 +1123,8 @@ We take the first, as Pythonista does. The app has:
   full screen). Its parameter is an entity for each `.py` file in
   Documents; files in linked folders can be picked by path but are not
   listed, since listing may download them. An App Shortcut ("Run <program>
-  in Pyslopnista") makes it show up in Shortcuts, Spotlight and Siri;
-- **`pyslopnista://run?path=<app path>`** (and `open?path=`) links, for an
+  in Terrarium") makes it show up in Shortcuts, Spotlight and Siri;
+- **`terrarium://run?path=<app path>`** (and `open?path=`) links, for an
   "Open URL" action or anywhere links open;
 - **"Add to Home Screen…"** for `.py` files (the editor's ⋯ menu and the
   file browser's context menu): a sheet with the steps in Shortcuts, a
@@ -1151,7 +1151,7 @@ The Shortcuts app's side was not driven by the test.
 
 The code editor has five themes (`app/web/src/editor/themes.ts`), each with
 a light and a dark palette:
-- **Pyslopnista** (the default), drawn from the app icon: on light, deep
+- **Terrarium** (the default), drawn from the app icon: on light, deep
   Python blue keywords, blue definitions and amber strings on near-white
   with a yellow-tinted current line; on dark, Python yellow keywords and
   caret, light blue definitions and orange strings on the icon's navy;
@@ -1273,7 +1273,7 @@ run (Run, input, Stop, packages, versions, HTTP, links, help, shortcuts),
 one page per module with an introduction, examples and every function,
 class, method and attribute.
 
-`scripts/build-docs.py` renders them into `pyslopnista/` inside each bundled
+`scripts/build-docs.py` renders them into `terrarium/` inside each bundled
 docs set, in the HTML Sphinx makes: sections with ids, API entries as
 `dl.py` with the full name as id (`ui.Button`, `sound.Player.play`),
 code highlighted with the archive's Pygments styles. So the viewer shows
@@ -1281,11 +1281,11 @@ them like the Python docs (dark mode, the stylesheet, the breadcrumbs), and
 the same index takes them in: chunks, symbols, full-text search. Nothing
 treats them differently:
 - the agent's `docs_search` and `docs_read` find and read them like the
-  standard library (`pyslopnista/photos.html#photos.pick_image`); their
+  standard library (`terrarium/photos.html#photos.pick_image`); their
   descriptions and the prompt say they are there;
 - `help(clipboard.get)` and Show Info open them;
 - the docs' start page links them first, and the viewer's book menu has
-  "Pyslopnista Modules".
+  "Terrarium Modules".
 
 Rendering from Markdown keeps the sources readable and diffable; writing
 them by hand (not from docstrings) gives room for introductions, examples
@@ -1403,7 +1403,7 @@ output, update, clear, done, kernel), batched per frame, which the host
 passes to every pane with the notebook. The console's `>>>` runs in the
 kernel while it lives.
 
-**Python** (`_pyslop_notebook.py`): `run_cell` runs a cell in `__main__`.
+**Python** (`_terrarium_notebook.py`): `run_cell` runs a cell in `__main__`.
 The last expression is shown unless it ends in `;`, top-level `await`
 works, figures are shown at the end, and errors (with KeyboardInterrupt
 and SystemExit) become error outputs with the cell's frames only, so the
@@ -1452,7 +1452,7 @@ A traceback was text: the worker posted the error message and
 `cleanTraceback` removed Pyodide's frames with a regex. In a phone's
 console, wrapped monospace text was hard to read. The exception still
 exists when the run fails, because Pyodide keeps it in `sys.last_exc`. So
-`_pyslop_traceback.py` describes it once, in Python, and the console and
+`_terrarium_traceback.py` describes it once, in Python, and the console and
 notebooks draw that description.
 
 **The data.** `describe(exc)` returns:
@@ -1469,7 +1469,7 @@ notebooks draw that description.
   library frames get only their own line.
 
 Python's rules decide which frames are whose. The runtime's own frames
-(Pyodide's, `/lib/pyslop`) are dropped, in the text too. Frames in the
+(Pyodide's, `/lib/terrarium`) are dropped, in the text too. Frames in the
 project, the console and cells are "app". The standard library and
 installed packages are "library", named by module path (`json/decoder.py`).
 Repeated frames (recursion) fold into one frame with a count. Very long
@@ -1578,7 +1578,7 @@ forms are dropped, along with scripts and handlers as everywhere.
   - `#anchor` scrolls to a heading (GitHub's anchors).
   - `docs:` opens the Python docs (D37), and so it does in notebook
     Markdown now too.
-  - Web, `mailto:` and `pyslopnista:` links leave the app.
+  - Web, `mailto:` and `terrarium:` links leave the app.
   - Relative paths resolve against the file's folder, and a leading `/`
     against the root of its location. A file opens in the editor, at
     `#L12` as a line or at `#heading` in another Markdown file. A folder
@@ -1652,7 +1652,7 @@ programs at once.
   an event that happened at the same time, so a parent stopped together
   with its children raises KeyboardInterrupt in `join()`, as on POSIX.
 
-**Python** (`_pyslop_procs.py`): the stdlib runs unchanged on a replaced OS
+**Python** (`_terrarium_procs.py`): the stdlib runs unchanged on a replaced OS
 layer.
 - **Replaced:** `os.getpid`/`getppid`/`pipe`/`waitpid`/`kill`/`cpu_count`,
   `select.poll`/`select.select`/`selectors.PollSelector`,
@@ -1751,7 +1751,7 @@ and still miss most crashes. In async runs it doesn't even apply: Pyodide
 gives each JSPI task its own thread state with the default limits.
 
 What the app does instead:
-- **Warm-up:** every new worker runs `_pyslop_warmup.py` (about 20 ms in
+- **Warm-up:** every new worker runs `_terrarium_warmup.py` (about 20 ms in
   the simulator) before it waits as a spare. It runs the usual paths
   through C code (`lru_cache`, `map()`, `__repr__`, `json`, `==`, `yield
   from`) a few hundred times, so JSC compiles them with its optimizing
@@ -1858,19 +1858,17 @@ are in its binary. Not yet uploaded or reviewed.
 
 2026-10-18 - Accepted
 
-"Pyslopnista" was too close to "Pythonista" for the store (guidelines 4.1
-and 5.2.1), and it puts "slop" in front of users. The app is now
-**Terrarium**: a home for a python, and a small enclosed world where
-programs grow. The store shows it as "Terrarium – Python IDE with a coding
+The name has to stay clear of "Pythonista" for the store (guidelines 4.1
+and 5.2.1). The app is **Terrarium**: a home for a python, and a small
+enclosed world where programs grow. The store shows it as "Terrarium – Python IDE with a coding
 agent" (name and subtitle). If the name is taken in the store, the
 fallback is "Terrarium – Python IDE".
 - Everything users see says Terrarium: the display name, the docs (the
   app's modules are under `terrarium/` in the docs tree), the editor theme,
   the agent's prompt, messages from Python, the privacy policy and the
   listing.
-- Identifiers changed too, since nothing is published yet:
-  - the bundle ID is `eu.ronacher.Terrarium`, so installs start fresh and
-    the old app stays installed next to it;
+- Identifiers follow the name:
+  - the bundle ID is `eu.ronacher.Terrarium`;
   - the link scheme is `terrarium://run?path=…` (D38);
   - the OAuth callback scheme is `terrarium-auth`;
   - the Keychain services, the theme id `terrarium` and the agent's entry
@@ -1878,12 +1876,9 @@ fallback is "Terrarium – Python IDE".
   - the Xcode project is `app/ios/Terrarium.xcodeproj` (target, scheme and
     product `Terrarium`).
 - Internal names follow: the runtime's Python modules are
-  `_terrarium*.py` in `/lib/terrarium` (was `_pyslop*`, `/lib/pyslop`), and
-  the host's headers are `X-Terrarium-*` (was `X-Pyslop-*`). The same goes
-  for `_terrariumhost`, `TerrariumShell` and the other `pyslop` prefixes.
-  Earlier decisions keep the old names.
-- Unchanged: the repository (`mitsuhiko/pyslopnista`, so the privacy and
-  support URLs too) and the spikes.
+  `_terrarium*.py` in `/lib/terrarium`, and the host's headers are
+  `X-Terrarium-*`. The same goes for `_terrariumhost`, `TerrariumShell` and
+  the other prefixes.
 
 ## D53: The bundle ID is `eu.ronacher.pyterrarium`, signed by the paid team
 
@@ -1897,10 +1892,9 @@ personal team holds. The bundle ID is now `eu.ronacher.pyterrarium`
 (supersedes D52's bundle ID); the Keychain services and queue labels
 follow it. Installs start fresh again; nothing is published yet.
 
-The repository moved to `mitsuhiko/terrarium` (supersedes D52's
-"unchanged" note), and so did the privacy policy and support URLs in
-Settings → About and in `app/appstore/metadata.md`. GitHub redirects the old
-name, but only until a repository with that name exists again.
+The repository is `mitsuhiko/terrarium`, and the privacy policy and
+support URLs in Settings → About and in `app/appstore/metadata.md` point
+there.
 
 ## Proposed (not yet decided)
 

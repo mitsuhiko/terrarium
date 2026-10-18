@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-BUNDLE_ID=dev.pyslopnista.spike.nativestack
+BUNDLE_ID=dev.terrarium.spike.nativestack
 APP=build/NativeStackSpike.app
 
 rm -rf "$APP"

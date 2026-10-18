@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>PyodideSpike</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.pyslopnista.spike.pyodide</string>
+	<string>dev.terrarium.spike.pyodide</string>
 	<key>CFBundleName</key>
 	<string>Pyodide Spike</string>
 	<key>CFBundleDisplayName</key>

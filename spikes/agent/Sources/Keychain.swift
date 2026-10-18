@@ -5,7 +5,7 @@ import Security
 /// pi-ai's credential JSON. This device only, readable after first unlock (so
 /// a refresh can happen while the phone is locked).
 enum Keychain {
-    static let service = "dev.pyslopnista.spike.credentials"
+    static let service = "dev.terrarium.spike.credentials"
 
     struct KeychainError: Error, CustomStringConvertible {
         let status: OSStatus

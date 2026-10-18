@@ -8,7 +8,7 @@ import WebKit
 /// - The response streams: every chunk URLSession delivers goes to the page
 ///   right away (`didReceive` more than once), which server-sent events need.
 /// - Credentials are added here. A request carrying the launch token
-///   (`X-Pyslop-Token`, which only the page's main thread knows) to a host we
+///   (`X-Terrarium-Token`, which only the page's main thread knows) to a host we
 ///   hold a credential for gets that header set natively. The key never
 ///   enters the web view.
 @MainActor
@@ -64,10 +64,10 @@ final class SchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate 
     /// Headers of our hop, not the caller's request. `user-agent` is WebKit's
     /// own: forwarding it makes servers treat us as a browser (Anthropic's
     /// token endpoint answers a browser or curl User-Agent with a fake 429).
-    /// A User-Agent the code set itself arrives in X-Pyslop-Headers.
+    /// A User-Agent the code set itself arrives in X-Terrarium-Headers.
     private static let hopHeaders: Set<String> = [
         "host", "origin", "referer", "connection", "content-length", "accept-encoding", "user-agent",
-        "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest", "x-pyslop-headers", "x-pyslop-token",
+        "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest", "x-terrarium-headers", "x-terrarium-token",
     ]
     private static let droppedResponseHeaders: Set<String> = [
         "content-encoding", "content-length", "transfer-encoding", "connection", "keep-alive",
@@ -86,13 +86,13 @@ final class SchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate 
             request.setValue(value, forHTTPHeaderField: name)
         }
         // Headers fetch may not set (User-Agent, …) travel as JSON, as in the app (D25).
-        if let hidden = incoming.value(forHTTPHeaderField: "X-Pyslop-Headers"),
+        if let hidden = incoming.value(forHTTPHeaderField: "X-Terrarium-Headers"),
            let extra = try? JSONSerialization.jsonObject(with: Data(hidden.utf8)) as? [String: String] {
             for (name, value) in extra { request.setValue(value, forHTTPHeaderField: name) }
         }
         var injected = false
         let key = target.port.map { "\(host):\($0)" } ?? host
-        if incoming.value(forHTTPHeaderField: "X-Pyslop-Token") == token, let credential = credentials[key] ?? credentials[host] {
+        if incoming.value(forHTTPHeaderField: "X-Terrarium-Token") == token, let credential = credentials[key] ?? credentials[host] {
             request.setValue(credential.value, forHTTPHeaderField: credential.header)
             injected = true
         }
@@ -117,7 +117,7 @@ final class SchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate 
             }
             headers.merge(Self.isolation) { _, new in new }
             headers["Cache-Control"] = "no-store"
-            if entry.injected { headers["X-Pyslop-Credential"] = "injected" }
+            if entry.injected { headers["X-Terrarium-Credential"] = "injected" }
             let reply = HTTPURLResponse(url: entry.task.request.url!, statusCode: http?.statusCode ?? 200,
                                         httpVersion: "HTTP/1.1", headerFields: headers)!
             entry.task.didReceive(reply)
@@ -144,7 +144,7 @@ final class SchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate 
                 } else {
                     active.insert(ObjectIdentifier(entry.task))
                     let message = error.localizedDescription.replacingOccurrences(of: "\n", with: " ")
-                    respond(entry.task, 502, Data(message.utf8), "text/plain", ["X-Pyslop-Error": message])
+                    respond(entry.task, 502, Data(message.utf8), "text/plain", ["X-Terrarium-Error": message])
                 }
             } else {
                 entry.task.didFinish()

@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Agent</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.pyslopnista.spike.agent</string>
+	<string>dev.terrarium.spike.agent</string>
 	<key>CFBundleName</key>
 	<string>Agent Spike</string>
 	<key>CFBundleDisplayName</key>

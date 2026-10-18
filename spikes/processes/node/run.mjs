@@ -22,7 +22,7 @@ const boot = {
   moduleURL: pathToFileURL(pyodideDir + "pyodide.mjs").href,
   indexURL: pyodideDir,
   packageBaseUrl: fs.existsSync(pkgs) ? pkgs : undefined,
-  runtime: { "_pyslop_procs.py": read(path.join(web, "_pyslop_procs.py")) },
+  runtime: { "_terrarium_procs.py": read(path.join(web, "_terrarium_procs.py")) },
   preload: process.env.PRELOAD === "0" ? [] : PRELOAD,
 };
 

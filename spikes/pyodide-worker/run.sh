@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 
 PYODIDE_VERSION=314.0.7
 DEVICE="${DEVICE:-booted}"
-BUNDLE_ID=dev.pyslopnista.spike.pyodide
+BUNDLE_ID=dev.terrarium.spike.pyodide
 APP=build/PyodideSpike.app
 VENDOR=vendor/pyodide-$PYODIDE_VERSION
 

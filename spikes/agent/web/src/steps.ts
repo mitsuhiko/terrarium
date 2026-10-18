@@ -216,7 +216,7 @@ const stream: Step = async (c) => {
     events,
     firstChunkMs: arrivals[0],
     lastChunkMs: arrivals.at(-1),
-    credential: { withToken: withToken.status, injectedHeader: withToken.headers.get("X-Pyslop-Credential"), withoutToken: withoutToken.status },
+    credential: { withToken: withToken.status, injectedHeader: withToken.headers.get("X-Terrarium-Credential"), withoutToken: withoutToken.status },
   };
 };
 

@@ -43,9 +43,9 @@ final class Host: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegat
     func makeWebView() -> WKWebView {
         // Stand-ins for the Keychain: the mock server's key, and a real key only
         // when run.sh passes one (--real).
-        if let mock = env["PYSLOP_MOCK_URL"].flatMap(URL.init(string:)), let host = mock.host {
+        if let mock = env["TERRARIUM_MOCK_URL"].flatMap(URL.init(string:)), let host = mock.host {
             let key = mock.port.map { "\(host):\($0)" } ?? host
-            scheme.credentials[key] = .init(header: "x-api-key", value: env["PYSLOP_MOCK_KEY"] ?? "mock-key")
+            scheme.credentials[key] = .init(header: "x-api-key", value: env["TERRARIUM_MOCK_KEY"] ?? "mock-key")
         }
         if let real = env["ANTHROPIC_API_KEY"], !real.isEmpty {
             scheme.credentials["api.anthropic.com"] = .init(header: "x-api-key", value: real)
@@ -65,7 +65,7 @@ final class Host: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegat
                 arguments: ["server": server, "connection": connection, "method": method, "target": target],
                 in: nil, in: .page, completionHandler: nil)
         }
-        let steps = env["PYSLOP_STEPS"] ?? "all"
+        let steps = env["TERRARIUM_STEPS"] ?? "all"
         webView.load(URLRequest(url: URL(string: "\(SchemeHandler.scheme)://app/index.html#\(steps)")!))
         return webView
     }
@@ -126,7 +126,7 @@ final class Host: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegat
         case "config":
             replyHandler([
                 "token": scheme.token,
-                "mockUrl": env["PYSLOP_MOCK_URL"] ?? "",
+                "mockUrl": env["TERRARIUM_MOCK_URL"] ?? "",
                 "realKey": !(env["ANTHROPIC_API_KEY"] ?? "").isEmpty,
                 "loads": loads,
                 "rolledBackOnNavigation": rolledBackOnNavigation,
@@ -176,7 +176,7 @@ final class Host: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegat
         closeAuthSession()
         authSerial += 1
         let serial = authSerial
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "pyslop-auth") { [weak self] _, error in
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "terrarium-auth") { [weak self] _, error in
             let reason = (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin ? "cancelled" : "\(error.map { "\($0)" } ?? "done")"
             DispatchQueue.main.async {
                 guard let self, self.authSerial == serial, self.authSession != nil else { return }

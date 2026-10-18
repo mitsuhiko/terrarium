@@ -25,7 +25,7 @@ for arg in "$@"; do
 done
 
 DEVICE="${SIM:-booted}"
-BUNDLE_ID=dev.pyslopnista.spike.agent
+BUNDLE_ID=dev.terrarium.spike.agent
 APP=build/Agent.app
 PORT=8765
 MOCK_KEY="mock-$RANDOM$RANDOM"
@@ -59,9 +59,9 @@ DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE_ID" data)
 RESULT="$DATA/Documents/agent-result.json"
 rm -rf "$RESULT" "$DATA/Documents/agent-log.txt" "$DATA/Documents/db" "$DATA/Documents/project"
 
-export SIMCTL_CHILD_PYSLOP_STEPS="$STEPS"
-export SIMCTL_CHILD_PYSLOP_MOCK_URL="http://127.0.0.1:$PORT"
-export SIMCTL_CHILD_PYSLOP_MOCK_KEY="$MOCK_KEY"
+export SIMCTL_CHILD_TERRARIUM_STEPS="$STEPS"
+export SIMCTL_CHILD_TERRARIUM_MOCK_URL="http://127.0.0.1:$PORT"
+export SIMCTL_CHILD_TERRARIUM_MOCK_KEY="$MOCK_KEY"
 if [ "$REAL" = 1 ]; then
   : "${ANTHROPIC_API_KEY:?--real needs ANTHROPIC_API_KEY}"
   export SIMCTL_CHILD_ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY"

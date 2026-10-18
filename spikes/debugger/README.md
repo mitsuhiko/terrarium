@@ -85,7 +85,7 @@ Chrome against the dev server):
 
 ## Implementation sketch (option 3)
 
-- **`_pyslop/debugger.py`.** Subclass `bdb.Bdb(backend="monitoring")` and set
+- **`_terrarium/debugger.py`.** Subclass `bdb.Bdb(backend="monitoring")` and set
   `sys.breakpointhook` to it, so `breakpoint()` opens the visual debugger.
   - It is armed only when the run has breakpoints or `breakpoint()` is called.
   - It only stops in project files ("just my code"). Step-in skips the
@@ -106,7 +106,7 @@ Chrome against the dev server):
 
 ## Outcome
 
-Option 3 was built into the app (D23, `app/web/public/runtime/python/_pyslop_debug.py`).
+Option 3 was built into the app (D23, `app/web/public/runtime/python/_terrarium_debug.py`).
 Two things the spike did not show:
 - CPython polls the interrupt buffer only periodically, and runs the handler at
   a later check. A sleep loop could therefore miss Pause and sleep on. The

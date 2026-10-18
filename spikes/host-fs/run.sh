@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 
 STEPS="${1:-all}"
 DEVICE="${SIM:-booted}"
-BUNDLE_ID=dev.pyslopnista.spike.hostfs
+BUNDLE_ID=dev.terrarium.spike.hostfs
 APP=build/HostFSSpike.app
 PYODIDE=../../app/vendor/pyodide-314.0.7
 [ -d "$PYODIDE" ] || { echo "missing $PYODIDE; run app/scripts/fetch-pyodide.sh" >&2; exit 1; }

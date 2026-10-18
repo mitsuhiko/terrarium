@@ -11,7 +11,7 @@ Q12 (is the wasm-GC trampoline safe on devices).
 - `DevicePerf.xcodeproj`: a hand-written minimal project (objectVersion 77,
   synchronized folder pointing at `../pyodide-worker/Sources`, generated
   Info.plist, automatic signing with team `ZRL6J4P42H`, bundle id
-  `eu.ronacher.PyslopnistaSpike`). The `copy-web.sh` build phase bundles the
+  `eu.ronacher.TerrariumSpike`). The `copy-web.sh` build phase bundles the
   pyodide-worker web runtime, `ui-toolkit/web` (as `ui/`), `jspi-repro/web` (as
   `jspi/`) and the Pyodide core.
 - `run.sh`: builds with `xcodebuild -allowProvisioningUpdates`, installs and

@@ -1,12 +1,12 @@
 // Provider HTTP goes through the host's /__http proxy (D25): no CORS, and
 // streaming. Headers fetch refuses to send (User-Agent, which pi-ai sets on
 // every request, e.g. `claude-cli/…` for Anthropic subscriptions) are read
-// from the call before WebKit sees them and travel in X-Pyslop-Headers.
+// from the call before WebKit sees them and travel in X-Terrarium-Headers.
 // Requests carry the launch token, for the spike's host-side key injection
 // (D32; the mock steps use it).
 const PROXY = new URL("/__http", location.href).href;
 
-/** Headers fetch may not set; the proxy sets them from X-Pyslop-Headers. */
+/** Headers fetch may not set; the proxy sets them from X-Terrarium-Headers. */
 const FORBIDDEN = new Set(["user-agent", "cookie", "referer", "origin"]);
 /** Headers that describe our hop, never forwarded. */
 const HOP = new Set(["host", "connection", "accept-encoding", "content-length"]);
@@ -34,8 +34,8 @@ export function installProxyFetch(token: string) {
     });
     const hidden: Record<string, string> = {};
     for (const [name, value] of raw) if (FORBIDDEN.has(name.toLowerCase())) hidden[name.toLowerCase()] = String(value);
-    if (Object.keys(hidden).length) headers.set("X-Pyslop-Headers", JSON.stringify(hidden));
-    headers.set("X-Pyslop-Token", token);
+    if (Object.keys(hidden).length) headers.set("X-Terrarium-Headers", JSON.stringify(hidden));
+    headers.set("X-Terrarium-Token", token);
     const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
     return original(`${PROXY}?url=${encodeURIComponent(url.href)}`, { method: request.method, headers, body, signal: request.signal });
   };
