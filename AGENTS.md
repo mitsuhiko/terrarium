@@ -1,6 +1,6 @@
 # AGENTS.md
 
-A Pythonista replacement for iOS: a native SwiftUI app, with Pyodide and
+Terrarium (formerly Pyslopnista, D52), a Pythonista replacement for iOS: a native SwiftUI app, with Pyodide and
 CodeMirror in web views (D31), native ui apps (D30) and a pi-durable coding
 agent. Early research phase.
 

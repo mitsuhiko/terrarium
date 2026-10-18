@@ -1,4 +1,4 @@
-"""Runtime support for Pyslopnista (installed into /lib/pyslop at boot).
+"""Runtime support for Terrarium (installed into /lib/pyslop at boot).
 
 - inline matplotlib: ``plt.show()`` sends PNGs to the console
 - ``repl(source)``: run console input in ``__main__`` with REPL semantics
@@ -145,8 +145,8 @@ def _install_webbrowser():
         def open(self, url, new=0, autoraise=True):
             return open_url(url, new, autoraise)
 
-    browser = AppBrowser("pyslopnista")
-    webbrowser.register("pyslopnista", None, browser, preferred=True)
+    browser = AppBrowser("terrarium")
+    webbrowser.register("terrarium", None, browser, preferred=True)
     webbrowser.register("default", None, browser)
     webbrowser.open = open_url
     webbrowser.open_new = lambda url: open_url(url, 1)

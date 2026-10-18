@@ -2,7 +2,7 @@
 
 Notifications that arrive later, at a time or a place, even when the program
 or the app isn't running. A notification can carry a link that opens when
-it is tapped: a `pyslopnista://run?path=…` link runs a program. The first use
+it is tapped: a `terrarium://run?path=…` link runs a program. The first use
 asks for permission.
 
 ```python

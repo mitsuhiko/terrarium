@@ -34,12 +34,12 @@ export interface Theme {
   dark: Palette;
 }
 
-export const DEFAULT_THEME = "pyslopnista";
+export const DEFAULT_THEME = "terrarium";
 
 export const THEMES: Theme[] = [
   {
-    id: "pyslopnista",
-    name: "Pyslopnista",
+    id: "terrarium",
+    name: "Terrarium",
     light: {
       bg: "#fbfcfe", fg: "#1b2433", gutter: "#a3adbf", gutterActive: "#3776ab", caret: "#3776ab",
       activeLine: "rgba(255, 212, 59, 0.14)", selection: "rgba(55, 118, 171, 0.22)", bracket: "rgba(255, 212, 59, 0.5)",

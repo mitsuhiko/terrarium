@@ -2,7 +2,7 @@
 
 The `ui` module builds apps that look and feel like iOS: screens with
 navigation bars, lists, buttons, text fields, tabs, sheets and a drawing
-canvas. Inside Pyslopnista they are real SwiftUI views; a program that calls
+canvas. Inside Terrarium they are real SwiftUI views; a program that calls
 `ui.run()` opens full screen, and the **×** button on its first screen ends
 it (touch and hold it to restart the program).
 

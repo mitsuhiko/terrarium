@@ -329,7 +329,7 @@ private struct EditorChrome: ViewModifier {
                 .tint(.primary)
                 .accessibilityLabel("\(tabLabel(file)): go to a symbol or line")
             } else {
-                Text("Pyslopnista").font(.headline)
+                Text("Terrarium").font(.headline)
             }
             subtitle(file).lineLimit(1)
         }

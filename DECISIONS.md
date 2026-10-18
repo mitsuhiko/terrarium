@@ -1854,6 +1854,33 @@ Evidence: a Release archive (2026-10-18) has the manifest,
 `licenses.json` and the encryption key. None of the self-test's selectors
 are in its binary. Not yet uploaded or reviewed.
 
+## D52: The app is called Terrarium
+
+2026-10-18 - Accepted
+
+"Pyslopnista" was too close to "Pythonista" for the store (guidelines 4.1
+and 5.2.1), and it puts "slop" in front of users. The app is now
+**Terrarium**: a home for a python, and a small enclosed world where
+programs grow. The store shows it as "Terrarium – Python IDE with a coding
+agent" (name and subtitle). If the name is taken in the store, the
+fallback is "Terrarium – Python IDE".
+- Everything users see says Terrarium: the display name, the docs (the
+  app's modules are under `terrarium/` in the docs tree), the editor theme,
+  the agent's prompt, messages from Python, the privacy policy and the
+  listing.
+- Identifiers changed too, since nothing is published yet:
+  - the bundle ID is `eu.ronacher.Terrarium`, so installs start fresh and
+    the old app stays installed next to it;
+  - the link scheme is `terrarium://run?path=…` (D38);
+  - the OAuth callback scheme is `terrarium-auth`;
+  - the Keychain services, the theme id `terrarium` and the agent's entry
+    types follow;
+  - the Xcode project is `app/ios/Terrarium.xcodeproj` (target, scheme and
+    product `Terrarium`).
+- Unchanged: the repository (`mitsuhiko/pyslopnista`, so the privacy and
+  support URLs too), the internal `_pyslop*` Python modules and `X-Pyslop`
+  headers, the spikes and earlier decisions.
+
 ## Proposed (not yet decided)
 
 (none)

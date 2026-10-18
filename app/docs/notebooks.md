@@ -5,7 +5,7 @@ and see each cell's output right below it: values, printed text, plots,
 tables. Everything a cell defines stays around for the cells after it,
 because they all run in one Python, the notebook's *kernel*.
 
-Pyslopnista opens Jupyter notebooks (`.ipynb` files, as Jupyter, JupyterLab,
+Terrarium opens Jupyter notebooks (`.ipynb` files, as Jupyter, JupyterLab,
 Google Colab and VS Code write them) and Python files with cells.
 
 ## Two kinds of notebooks

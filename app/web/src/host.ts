@@ -88,7 +88,7 @@ export function base64ToBytes(b64: string): Uint8Array {
 // -- browser mock ------------------------------------------------------------------
 
 type MockNode = { dir: true; mtime: number } | { dir: false; data: string; mtime: number };
-const MOCK_KEY = "pyslopnista.mockfs";
+const MOCK_KEY = "terrarium.mockfs";
 
 function loadMock(): Record<string, MockNode> {
   try {

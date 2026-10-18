@@ -246,6 +246,6 @@ const showDocsTool = defineTool({
 });
 
 export const IDETools = defineExtension({
-  name: "pyslopnista-ide",
+  name: "terrarium-ide",
   tools: [stateTool, openTool, closeTool, lintTool, formatTool, showDocsTool],
 });

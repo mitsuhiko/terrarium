@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build and run Pyslopnista.
+# Build and run Terrarium.
 #
 #   ./run.sh                     simulator (booted), interactive
 #   ./run.sh --selftest          simulator, run the end-to-end checks, print JSON
@@ -21,7 +21,7 @@ for arg in "$@"; do
   esac
 done
 
-BUNDLE_ID=eu.ronacher.Pyslopnista
+BUNDLE_ID=eu.ronacher.Terrarium
 mkdir -p build
 ./scripts/fetch-pyodide.sh
 ./scripts/build-docs.py   # no-op when vendor/docs-* match the pinned archives
@@ -36,10 +36,10 @@ ARGS=()
 [ -n "${FRAGMENT:-}" ] && ARGS+=(--fragment "$FRAGMENT")
 
 if [ "$TARGET" = simulator ]; then
-  xcodebuild -project ios/Pyslopnista.xcodeproj -scheme Pyslopnista -configuration Debug \
+  xcodebuild -project ios/Terrarium.xcodeproj -scheme Terrarium -configuration Debug \
     -destination "generic/platform=iOS Simulator" -derivedDataPath build/dd \
     CODE_SIGNING_ALLOWED=NO build > build/xcodebuild.log 2>&1 || { grep -E "error:" build/xcodebuild.log | head -20; tail -5 build/xcodebuild.log; exit 1; }
-  APP=build/dd/Build/Products/Debug-iphonesimulator/Pyslopnista.app
+  APP=build/dd/Build/Products/Debug-iphonesimulator/Terrarium.app
   xcrun simctl terminate "${SIM:-booted}" "$BUNDLE_ID" 2>/dev/null || true
   xcrun simctl install "${SIM:-booted}" "$APP"
   if [ "$SELFTEST" = 1 ]; then
@@ -66,11 +66,11 @@ fi
 DEVICE="${DEVICE:-$(xcrun devicectl list devices 2>/dev/null | grep -v simulated | grep -E 'available|connected' | grep -oE '[0-9A-F]{8}-[0-9A-F]{16}' | head -1 || true)}"
 [ -n "$DEVICE" ] || { echo "no paired device" >&2; exit 1; }
 # Release, but with the self-test's private-API hooks (SELFTEST_SPI, D51); scripts/archive.sh builds without them.
-xcodebuild -project ios/Pyslopnista.xcodeproj -scheme Pyslopnista -configuration Release \
+xcodebuild -project ios/Terrarium.xcodeproj -scheme Terrarium -configuration Release \
   -destination "id=$DEVICE" -derivedDataPath build/dd -allowProvisioningUpdates \
   SWIFT_ACTIVE_COMPILATION_CONDITIONS=SELFTEST_SPI build > build/xcodebuild.log 2>&1 \
   || { grep -E "error:" build/xcodebuild.log | head -20; exit 1; }
-xcrun devicectl device install app --device "$DEVICE" build/dd/Build/Products/Release-iphoneos/Pyslopnista.app > build/install.log 2>&1 \
+xcrun devicectl device install app --device "$DEVICE" build/dd/Build/Products/Release-iphoneos/Terrarium.app > build/install.log 2>&1 \
   || { cat build/install.log; exit 1; }
 xcrun devicectl device process launch --device "$DEVICE" --terminate-existing "$BUNDLE_ID" ${ARGS[@]+"${ARGS[@]}"} > build/launch.log 2>&1 \
   || { cat build/launch.log; exit 1; }

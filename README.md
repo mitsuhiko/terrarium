@@ -1,11 +1,14 @@
-# Pyslopnista
+# Terrarium
+
+**Terrarium – Python IDE with a coding agent.**
 
 A Pythonista-style Python IDE for iPhone and iPad: a native SwiftUI app that
 runs Python on the device ([Pyodide](https://pyodide.org/), CPython 3.14 in
 WebAssembly) and has a coding agent built in.
 
-> A demo and research project, written largely with coding agents (hence the
-> name). It is not on the App Store and not affiliated with Pythonista.
+> A demo and research project, written largely with coding agents (it was
+> called Pyslopnista until 2026-10-18). It is not on the App Store yet and
+> not affiliated with Pythonista.
 
 <p>
   <img src="docs/screenshots/iphone-agent.png" width="24%" alt="The coding agent wrote and ran a program">

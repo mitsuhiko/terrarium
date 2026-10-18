@@ -3,7 +3,7 @@ import Foundation
 
 // Running a program from outside the app (D38): the "Run Python Program"
 // action for the Shortcuts app (which is also how a program gets an icon on
-// the Home Screen) and pyslopnista://run?path=<path> links. Both end in
+// the Home Screen) and terrarium://run?path=<path> links. Both end in
 // `LaunchRouter`, which hands the request to the app once it is ready.
 
 /// What the app is asked to do from outside.
@@ -11,9 +11,9 @@ enum LaunchAction: Equatable, Sendable {
     case run(String) // app path, as the file browser has it ("Examples/Todo App.py")
     case open(String)
 
-    static let scheme = "pyslopnista"
+    static let scheme = "terrarium"
 
-    /// pyslopnista://run?path=Examples/Todo%20App.py (or open?path=…).
+    /// terrarium://run?path=Examples/Todo%20App.py (or open?path=…).
     init?(url: URL) {
         guard url.scheme == Self.scheme,
               let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "path" })?.value,
@@ -113,7 +113,7 @@ struct ProgramQuery: EntityStringQuery {
 struct RunProgramIntent: AppIntent {
     static let title: LocalizedStringResource = "Run Python Program"
     static let description = IntentDescription(
-        "Opens Pyslopnista and runs a program, like its Run button. A ui app opens full screen. Add this shortcut to the Home Screen to start the program with one tap."
+        "Opens Terrarium and runs a program, like its Run button. A ui app opens full screen. Add this shortcut to the Home Screen to start the program with one tap."
     )
     static let openAppWhenRun = true
 
@@ -137,7 +137,7 @@ struct RunProgramIntent: AppIntent {
     }
 }
 
-struct PyslopnistaShortcuts: AppShortcutsProvider {
+struct TerrariumShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: RunProgramIntent(),

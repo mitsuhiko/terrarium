@@ -10,10 +10,10 @@ OUT="$PWD/vendor/ty_wasm"
 CHECKOUT="$HOME/.cache/checkouts/github.com/astral-sh/ruff"
 [ -d "$CHECKOUT" ] || git clone --filter=blob:none https://github.com/astral-sh/ruff "$CHECKOUT"
 git -C "$CHECKOUT" cat-file -e "$RUFF_REV^{commit}" 2>/dev/null || git -C "$CHECKOUT" fetch origin
-WORK="$HOME/.cache/pyslopnista-ruff-$RUFF_REV"
+WORK="$HOME/.cache/terrarium-ruff-$RUFF_REV"
 [ -d "$WORK" ] || git -C "$CHECKOUT" worktree add --detach "$WORK" "$RUFF_REV"
 
 rustup target add wasm32-unknown-unknown >/dev/null
-CARGO_TARGET_DIR="$HOME/.cache/pyslopnista-cargo-target" \
+CARGO_TARGET_DIR="$HOME/.cache/terrarium-cargo-target" \
   wasm-pack build "$WORK/crates/ty_wasm" --target web --release --out-dir "$OUT"
 echo "$RUFF_REV" > "$OUT/.rev"

@@ -298,7 +298,7 @@ class Code(TextDisplayObject):
 
 class Javascript(TextDisplayObject):
     def __repr__(self):
-        return "<Javascript output: not shown in Pyslopnista>"
+        return "<Javascript output: not shown in Terrarium>"
 
 
 class JSON(DisplayObject):
@@ -451,7 +451,7 @@ class PyslopShell:
         return shell(cmd)
 
     def __repr__(self):
-        return "<pyslopnista notebook shell>"
+        return "<terrarium notebook shell>"
 
 
 _shell = PyslopShell()
@@ -719,7 +719,7 @@ def line_magic(name, args):
         return None
     if name == "pip":
         raise UsageError("%pip only works at the top level of a cell.")
-    raise UsageError(f"Line magic function `%{name}` not found (not available in Pyslopnista).")
+    raise UsageError(f"Line magic function `%{name}` not found (not available in Terrarium).")
 
 
 def shell(command):
@@ -788,9 +788,9 @@ def _cell_magic(name, args, body, ns):
     elif name in ("bash", "sh", "script", "system", "!"):
         raise UsageError("Shell commands are not available on iOS (there is no shell).")
     elif name in ("javascript", "js"):
-        raise UsageError("JavaScript cells are not supported in Pyslopnista.")
+        raise UsageError("JavaScript cells are not supported in Terrarium.")
     else:
-        raise UsageError(f"Cell magic `%%{name}` not found (not available in Pyslopnista).")
+        raise UsageError(f"Cell magic `%%{name}` not found (not available in Terrarium).")
     return None
 
 

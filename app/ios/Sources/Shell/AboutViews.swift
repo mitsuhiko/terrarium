@@ -57,7 +57,7 @@ struct AcknowledgementsView: View {
                 Section {
                     ForEach(list.builtIn) { row($0) }
                 } footer: {
-                    Text("Pyslopnista is built on these projects. Thank you to everyone who works on them.")
+                    Text("Terrarium is built on these projects. Thank you to everyone who works on them.")
                 }
                 Section("Packages") {
                     ForEach(list.packages) { row($0) }

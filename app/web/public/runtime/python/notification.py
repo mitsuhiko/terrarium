@@ -4,7 +4,7 @@
     notification.schedule("Tea is ready!", delay=180, sound_name="default")
 
 A notification can carry a URL that opens when it is tapped, e.g. a
-pyslopnista://run?path=… link to run a program. The first use asks for permission.
+terrarium://run?path=… link to run a program. The first use asks for permission.
 """
 
 from _device import call, file_ref

@@ -28,7 +28,7 @@ final class DevicePIM {
     // MARK: keychain
 
     /// Kept apart from the app's own items (the agent's credentials, D33).
-    private static let servicePrefix = "eu.ronacher.Pyslopnista.user:"
+    private static let servicePrefix = "eu.ronacher.Terrarium.user:"
 
     private func keychain(_ op: String, _ v: [String: Any]) throws -> Any? {
         func query(_ service: String, _ account: String) -> [String: Any] {
@@ -436,7 +436,7 @@ final class DevicePIM {
 }
 
 /// Taps on notifications (D40): open the URL the program gave it (a
-/// pyslopnista:// link runs a program), and show them while the app is open.
+/// terrarium:// link runs a program), and show them while the app is open.
 final class NotificationRouter: NSObject, UNUserNotificationCenterDelegate, Sendable {
     static let shared = NotificationRouter()
 

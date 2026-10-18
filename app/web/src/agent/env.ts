@@ -61,7 +61,7 @@ export class ProjectEnv implements ExecutionEnv {
   private flushed: Promise<unknown> | null = null;
 
   constructor(private options: ProjectEnvOptions) {
-    this.id = `pyslopnista:${options.project}`;
+    this.id = `terrarium:${options.project}`;
   }
 
   get project() {

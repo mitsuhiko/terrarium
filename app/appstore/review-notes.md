@@ -5,7 +5,7 @@ Fill in the sign-in fields there with a test API key (see the end).
 
 ---
 
-Pyslopnista is a Python IDE: the user writes Python and runs it on the device. It is meant for learning and writing programs (guideline 2.5.2's exception for apps that teach, develop or let users test code).
+Terrarium is a Python IDE: the user writes Python and runs it on the device. It is meant for learning and writing programs (guideline 2.5.2's exception for apps that teach, develop or let users test code).
 
 How code runs:
 - Python is CPython compiled to WebAssembly (Pyodide). It runs inside WKWebView and is executed only by WebKit's JavaScript engine. The app has no interpreter of its own and loads no native code.

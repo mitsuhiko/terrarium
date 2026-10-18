@@ -19,7 +19,7 @@
 // Events go back as sendEvent("<id>:<event>", JSON args). A new renderer asks
 // for a full snapshot ("0:resync"), so it can attach to a running app.
 //
-// This renderer is what published web apps use; inside the Pyslopnista app the
+// This renderer is what published web apps use; inside the Terrarium app the
 // same op stream drives native SwiftUI views (app/ios/Sources/UIRenderer).
 // Modifiers arrive as plain values (points, color names) and become CSS here.
 

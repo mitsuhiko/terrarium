@@ -24,7 +24,7 @@ Elements: layout (VStack, HStack, ZStack, Grid, ScrollView, Spacer, Divider,
 Card), navigation (NavigationStack, Screen, TabView, Tab, Sheet), lists
 (Section, Row), content (Text, Label, Icon, Image, ProgressView, Link, Canvas)
 and inputs (Button, TextField, TextArea, Toggle, Slider, Stepper, Picker,
-DatePicker, ColorPicker). Inside the Pyslopnista app they are native SwiftUI
+DatePicker, ColorPicker). Inside the Terrarium app they are native SwiftUI
 views; in a published web app the same tree is drawn with HTML.
 Dialogs: alert, confirm, prompt, choose, toast (async, use ``await``).
 """
@@ -1544,7 +1544,7 @@ class _App:
         try:
             import _uihost  # ty: ignore[unresolved-import]  # provided by the worker
         except ImportError:
-            raise RuntimeError("ui apps need the Pyslopnista app or a published page to show up") from None
+            raise RuntimeError("ui apps need the Terrarium app or a published page to show up") from None
         from pyodide.ffi import create_proxy  # ty: ignore[unresolved-import]
 
         self.host = _uihost
@@ -1639,7 +1639,7 @@ def run(app: Callable[[], Child] | Child, *, title: str | None = None, theme: st
     """Show ``app`` (a component function or an element) full screen.
 
     ``theme`` is "auto", "light" or "dark"; ``tint`` is the accent color.
-    In Pyslopnista the app's first screen has a close button that ends the
+    In Terrarium the app's first screen has a close button that ends the
     program (touch and hold it to restart). ``close_button=False`` leaves it
     out: the app ends itself with ``ui.close()``, and a two-finger swipe
     down still closes it. Running again replaces the previous app.
@@ -1648,7 +1648,7 @@ def run(app: Callable[[], Child] | Child, *, title: str | None = None, theme: st
 
 
 def close() -> None:
-    """End the app, like its close button. In Pyslopnista the program stops;
+    """End the app, like its close button. In Terrarium the program stops;
     on a web page the app's view is cleared."""
     if _app.root is None:
         return

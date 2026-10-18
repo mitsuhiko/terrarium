@@ -180,7 +180,7 @@ final class AgentHost: NSObject, ASWebAuthenticationPresentationContextProviding
     /// and the engine closes the sheet when the flow has what it needs.
     private func openAuthSession(_ url: URL) -> Bool {
         closeAuthSession()
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "pyslopnista-auth") { [weak self] _, _ in
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "terrarium-auth") { [weak self] _, _ in
             DispatchQueue.main.async { self?.authSession = nil }
         }
         session.presentationContextProvider = self

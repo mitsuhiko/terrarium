@@ -1,8 +1,8 @@
-# Pyslopnista Privacy Policy
+# Terrarium Privacy Policy
 
 Effective 2026-10-18.
 
-Pyslopnista is a Python editor for iPhone and iPad. This policy covers the
+Terrarium is a Python editor for iPhone and iPad. This policy covers the
 app. The short version: **the developer collects no data.** The app has no
 analytics, no advertising, no tracking and no accounts of its own.
 
@@ -45,7 +45,7 @@ you chose:
   open in the editor.
 
 The provider processes this data under its own terms and privacy policy.
-The developer of Pyslopnista does not receive it. You can sign out of a
+The developer of Terrarium does not receive it. You can sign out of a
 provider under Accounts in the agent's menu; this deletes its tokens or key
 from the device.
 

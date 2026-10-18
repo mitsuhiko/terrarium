@@ -7,10 +7,10 @@
 	     linked in for iphonesimulator only, which is why ENABLE_DEBUG_DYLIB is off: the
 	     section must be in the executable); the Keychain needs these. -->
 	<key>application-identifier</key>
-	<string>ZRL6J4P42H.eu.ronacher.Pyslopnista</string>
+	<string>ZRL6J4P42H.eu.ronacher.Terrarium</string>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>ZRL6J4P42H.eu.ronacher.Pyslopnista</string>
+		<string>ZRL6J4P42H.eu.ronacher.Terrarium</string>
 	</array>
 </dict>
 </plist>

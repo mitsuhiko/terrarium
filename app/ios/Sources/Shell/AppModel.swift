@@ -33,7 +33,7 @@ struct EditorSettings: Codable, Equatable {
     var fontSize = 15
     var wrap = true
     /// The code editor's color theme (web/src/editor/themes.ts, D39).
-    var theme = "pyslopnista"
+    var theme = "terrarium"
     /// The whole app's, so the editor's themes show their light or dark side.
     var appearance = Appearance.system
     static let fontSizes = 11...24
@@ -705,9 +705,9 @@ final class AppModel {
         restored = true
         for (i, p) in panes.enumerated() { if let a = p.active { await show(a, in: i) } }
         await launchHooks(fragment)
-        // Shortcuts and pyslopnista:// links (D38), including the one that launched the app.
+        // Shortcuts and terrarium:// links (D38), including the one that launched the app.
         LaunchRouter.attach { [weak self] action in self?.launch(action) }
-        PyslopnistaShortcuts.updateAppShortcutParameters()
+        TerrariumShortcuts.updateAppShortcutParameters()
     }
 
     /// Open or run a program for a Home Screen shortcut or a link (D38).

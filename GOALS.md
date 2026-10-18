@@ -124,11 +124,11 @@ Inside the app these use Pythonista's module names and API (D40): `clipboard`,
 ## iOS integration
 
 - [core] Native SwiftUI app; Python and analysis in a web view without UI (`app://` file serving, native bridge)
-- [core] Home Screen icons for programs: a "Run Python Program" Shortcuts action and `pyslopnista://run` links open the app and run one (D38)
+- [core] Home Screen icons for programs: a "Run Python Program" Shortcuts action and `terrarium://run` links open the app and run one (D38)
 - [later] Shortcuts / App Intents: run a script with inputs and return its outputs, without opening the app
 - [later] Share extension: send text, URLs or files to a script
 - [later] Home screen widgets fed by scripts
-- [later] Universal links to open or run scripts (the `pyslopnista://` scheme is there, D38)
+- [later] Universal links to open or run scripts (the `terrarium://` scheme is there, D38)
 - [maybe] Running scripts in the background (BGTaskScheduler)
 
 ## Coding agent (pi-durable)

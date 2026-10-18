@@ -1,6 +1,6 @@
 # Architecture and tradeoffs
 
-How Pyslopnista is put together, and why. The full reasoning and evidence
+How Terrarium is put together, and why. The full reasoning and evidence
 for each choice is in [`DECISIONS.md`](../DECISIONS.md).
 
 ## How it fits together

@@ -43,7 +43,7 @@ async function proxyHttp(req: import("node:http").IncomingMessage, res: import("
 // everything, /pyodide/ and /docs/ from vendor/, /pkgs/ proxied to the CDN.
 function hostShim(): Plugin {
   return {
-    name: "pyslopnista-host-shim",
+    name: "terrarium-host-shim",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
@@ -144,7 +144,7 @@ function licenseText(dir: string): string | null {
 
 function licenses(emit: boolean): Plugin {
   return {
-    name: "pyslopnista-licenses",
+    name: "terrarium-licenses",
     apply: "build",
     generateBundle(_, bundle) {
       for (const out of Object.values(bundle)) {

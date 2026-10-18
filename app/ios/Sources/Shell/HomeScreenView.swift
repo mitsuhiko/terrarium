@@ -3,7 +3,7 @@ import SwiftUI
 /// "Add to Home Screen" for a program (D38). Apps can't put icons on the
 /// Home Screen themselves; the Shortcuts app can, with our "Run Python
 /// Program" action. This sheet walks through it and offers the program's
-/// pyslopnista:// link for an "Open URL" action.
+/// terrarium:// link for an "Open URL" action.
 struct HomeScreenView: View {
     let path: String
     @Environment(AppModel.self) private var model
@@ -26,7 +26,7 @@ struct HomeScreenView: View {
                                         in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         VStack(alignment: .leading, spacing: 3) {
                             Text(name).font(.headline)
-                            Text("Opens Pyslopnista and runs \(basename(path)).").font(.subheadline).foregroundStyle(.secondary)
+                            Text("Opens Terrarium and runs \(basename(path)).").font(.subheadline).foregroundStyle(.secondary)
                         }
                     }
                     .padding(.vertical, 4)
@@ -35,7 +35,7 @@ struct HomeScreenView: View {
                 }
                 Section("In Shortcuts") {
                     step(1, "Tap **Open Shortcuts** below. A new shortcut opens.")
-                    step(2, "Tap **Add Action**, search for **Pyslopnista** and choose **Run Python Program**.")
+                    step(2, "Tap **Add Action**, search for **Terrarium** and choose **Run Python Program**.")
                     step(3, "Tap **Program** and pick **\(name)**.")
                     step(4, "Tap the name at the top, rename it to **\(name)** and choose **Add to Home Screen**. There you can also pick an icon.")
                 }

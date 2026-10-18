@@ -1,6 +1,6 @@
-# Pyslopnista Modules
+# Terrarium Modules
 
-Pyslopnista runs real Python (CPython, compiled to WebAssembly) on your
+Terrarium runs real Python (CPython, compiled to WebAssembly) on your
 iPhone or iPad. Next to the standard library it has modules for building
 apps, drawing and using the device. This part of the documentation covers
 them, and how programs run in the app.
@@ -46,7 +46,7 @@ for it often run unchanged.
 
 Each module asks for permission the first time it needs it. If access is
 denied, its functions raise `PermissionError`; you can allow access later
-in the Settings app under Pyslopnista.
+in the Settings app under Terrarium.
 
 ## How programs run
 
@@ -111,5 +111,5 @@ in the app (`notes.md#a-heading`, `main.py#L12` for a line), and
 
 **Shortcuts.** A program can get an icon on the Home Screen: "Add to Home
 Screen…" in the ⋯ menu shows how, with the "Run Python Program" action in
-the Shortcuts app. `pyslopnista://run?path=Folder/File.py` links run a
+the Shortcuts app. `terrarium://run?path=Folder/File.py` links run a
 program too.

@@ -49,9 +49,9 @@ const ctx = BACKGROUND_CONTEXT;
 type ModelRef = { provider: string; modelId: string };
 
 /** Our user entries: the model sees the message with the IDE context, the app shows the text and the file. */
-const USER_ENTRY = "pyslopnista.user";
+const USER_ENTRY = "terrarium.user";
 /** The IDE context, placed mid-turn when the user moved to another file (D36). */
-const IDE_ENTRY = "pyslopnista.ide";
+const IDE_ENTRY = "terrarium.ide";
 
 /** Radius (pi's gateway) comes first: in the account list and as the default model. */
 const FEATURED_PROVIDER = "radius";

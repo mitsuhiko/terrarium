@@ -3,9 +3,14 @@
 Text for App Store Connect. Limits are App Store Connect's; the lengths
 were checked on 2026-10-18.
 
+The store shows the name and the subtitle together: "Terrarium – Python IDE
+with a coding agent" (D52).
+
 ## Name (30)
 
-Pyslopnista
+Terrarium
+
+If App Store Connect says the name is taken: Terrarium – Python IDE
 
 ## Subtitle (30)
 
@@ -21,7 +26,7 @@ code,editor,programming,learn,notebook,jupyter,matplotlib,turtle,debugger,script
 
 ## Description (4000)
 
-Pyslopnista is a Python IDE for iPhone and iPad. Python 3.14 runs on your device, with no server and no account. Write a script, run it and see the output, a plot or an app of your own.
+Terrarium is a Python IDE for iPhone and iPad. Python 3.14 runs on your device, with no server and no account. Write a script, run it and see the output, a plot or an app of your own.
 
 EDIT
 • A code editor with Python highlighting, completions and an extra row of keys for brackets, quotes and indentation
@@ -62,7 +67,7 @@ FILES
 • Your projects are in the Files app. Link folders from iCloud Drive or other apps and work on them in place
 • Trash, favorites, templates, Quick Look and sharing
 
-Pyslopnista collects no data. Your code stays on your device.
+Terrarium collects no data. Your code stays on your device.
 
 ## What's New (first version)
 

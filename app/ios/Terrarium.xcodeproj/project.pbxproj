@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		D0000000000000000000A001 /* Pyslopnista.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pyslopnista.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0000000000000000000A001 /* Terrarium.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Terrarium.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -36,7 +36,7 @@
 		D0000000000000000000D002 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D0000000000000000000A001 /* Pyslopnista.app */,
+				D0000000000000000000A001 /* Terrarium.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -44,9 +44,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D0000000000000000000E001 /* Pyslopnista */ = {
+		D0000000000000000000E001 /* Terrarium */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D0000000000000000000F002 /* Build configuration list for PBXNativeTarget "Pyslopnista" */;
+			buildConfigurationList = D0000000000000000000F002 /* Build configuration list for PBXNativeTarget "Terrarium" */;
 			buildPhases = (
 				D0000000000000000000C001 /* Sources */,
 				D0000000000000000000C002 /* Frameworks */,
@@ -60,9 +60,9 @@
 			fileSystemSynchronizedGroups = (
 				D0000000000000000000B001 /* Sources */,
 			);
-			name = Pyslopnista;
-			productName = Pyslopnista;
-			productReference = D0000000000000000000A001 /* Pyslopnista.app */;
+			name = Terrarium;
+			productName = Terrarium;
+			productReference = D0000000000000000000A001 /* Terrarium.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -75,7 +75,7 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 			};
-			buildConfigurationList = D0000000000000000000F001 /* Build configuration list for PBXProject "Pyslopnista" */;
+			buildConfigurationList = D0000000000000000000F001 /* Build configuration list for PBXProject "Terrarium" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -89,7 +89,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D0000000000000000000E001 /* Pyslopnista */,
+				D0000000000000000000E001 /* Terrarium */,
 			);
 		};
 /* End PBXProject section */
@@ -177,7 +177,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Pyslopnista;
+				INFOPLIST_KEY_CFBundleDisplayName = Terrarium;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
@@ -200,8 +200,8 @@
 					"-Xlinker",
 					"$(PROJECT_DIR)/Simulator.entitlements",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.Pyslopnista;
-				PRODUCT_NAME = Pyslopnista;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.Terrarium;
+				PRODUCT_NAME = Terrarium;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -219,7 +219,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Pyslopnista;
+				INFOPLIST_KEY_CFBundleDisplayName = Terrarium;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
@@ -242,8 +242,8 @@
 					"-Xlinker",
 					"$(PROJECT_DIR)/Simulator.entitlements",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.Pyslopnista;
-				PRODUCT_NAME = Pyslopnista;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.Terrarium;
+				PRODUCT_NAME = Terrarium;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -253,7 +253,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D0000000000000000000F001 /* Build configuration list for PBXProject "Pyslopnista" */ = {
+		D0000000000000000000F001 /* Build configuration list for PBXProject "Terrarium" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0000000000000000000F101 /* Debug */,
@@ -262,7 +262,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D0000000000000000000F002 /* Build configuration list for PBXNativeTarget "Pyslopnista" */ = {
+		D0000000000000000000F002 /* Build configuration list for PBXNativeTarget "Terrarium" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0000000000000000000F201 /* Debug */,

@@ -23,7 +23,7 @@ final class DeviceBridge {
         var errorDescription: String? { "\(kind): \(message)" }
 
         static func permission(_ what: String) -> Failure {
-            Failure(kind: "PermissionError", message: "\(what) is not allowed. You can change this in the Settings app under Pyslopnista.")
+            Failure(kind: "PermissionError", message: "\(what) is not allowed. You can change this in the Settings app under Terrarium.")
         }
         static func value(_ message: String) -> Failure { Failure(kind: "ValueError", message: message) }
         static func io(_ message: String) -> Failure { Failure(kind: "IOError", message: message) }

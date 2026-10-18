@@ -350,6 +350,6 @@ const formatTool = defineTool({
 });
 
 export const ProjectTools = defineExtension({
-  name: "pyslopnista-tools",
+  name: "terrarium-tools",
   tools: [createReadTool(), withLint(createWriteTool()), withLint(createEditTool()), lsTool, findTool, grepTool, runPythonTool, checkTool, formatTool],
 });

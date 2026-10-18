@@ -286,7 +286,7 @@ export class MarkdownPreview {
     if (!href) return;
     if (href.startsWith("#")) return void this.scrollToAnchor(href.slice(1));
     if (hasScheme(href)) {
-      if (/^(https?|mailto|tel|docs|pyslopnista):/i.test(href)) this.host.openURL(href);
+      if (/^(https?|mailto|tel|docs|terrarium):/i.test(href)) this.host.openURL(href);
       return;
     }
     if (!this.path || href.startsWith("//")) return;

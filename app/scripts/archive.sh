@@ -2,7 +2,7 @@
 # Build the App Store archive and export it; --upload sends it to App Store
 # Connect (TestFlight, then review). D51; the checklist is app/appstore/README.md.
 #
-#   scripts/archive.sh            build/Pyslopnista.xcarchive and build/export/Pyslopnista.ipa
+#   scripts/archive.sh            build/Terrarium.xcarchive and build/export/Terrarium.ipa
 #   scripts/archive.sh --upload   the same, uploaded instead of exported
 #
 # Signing is automatic with the project's team; the first export creates the
@@ -25,7 +25,7 @@ for arg in "$@"; do
 done
 
 BUILD_NUMBER=${BUILD_NUMBER:-$(date -u +%Y%m%d.%H%M)}
-ARCHIVE=build/Pyslopnista.xcarchive
+ARCHIVE=build/Terrarium.xcarchive
 EXPORT=build/export
 mkdir -p build
 
@@ -42,17 +42,17 @@ fi
 # Release without SELFTEST_SPI: the self-test's private-API hooks are not compiled in.
 echo "archiving build $BUILD_NUMBER"
 rm -rf "$ARCHIVE"
-xcodebuild -project ios/Pyslopnista.xcodeproj -scheme Pyslopnista -configuration Release \
+xcodebuild -project ios/Terrarium.xcodeproj -scheme Terrarium -configuration Release \
   -destination "generic/platform=iOS" -archivePath "$ARCHIVE" -derivedDataPath build/dd-archive \
   -allowProvisioningUpdates CURRENT_PROJECT_VERSION="$BUILD_NUMBER" archive > build/archive.log 2>&1 \
   || { grep -E "error:" build/archive.log | head -20; tail -5 build/archive.log; exit 1; }
 
 # What review needs to find in the bundle, and what it must not.
-APP="$ARCHIVE/Products/Applications/Pyslopnista.app"
+APP="$ARCHIVE/Products/Applications/Terrarium.app"
 for f in PrivacyInfo.xcprivacy web/licenses.json web/runtimes.json web/engine.html; do
   [ -e "$APP/$f" ] || { echo "error: $f is missing from the app" >&2; exit 1; }
 done
-if strings "$APP/Pyslopnista" | grep -qE '_killWebContentProcess|UIKeyboardImpl|addInputString:'; then
+if strings "$APP/Terrarium" | grep -qE '_killWebContentProcess|UIKeyboardImpl|addInputString:'; then
   echo "error: the self-test's private-API hooks are in the binary (SELFTEST_SPI set?)" >&2
   exit 1
 fi
@@ -76,5 +76,5 @@ xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$EXPORT" -exportO
 if [ "$UPLOAD" = 1 ]; then
   echo "uploaded build $BUILD_NUMBER; it shows up in App Store Connect (TestFlight) after processing"
 else
-  echo "exported: $EXPORT/Pyslopnista.ipa"
+  echo "exported: $EXPORT/Terrarium.ipa"
 fi

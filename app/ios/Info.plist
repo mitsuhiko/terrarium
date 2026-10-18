@@ -34,16 +34,16 @@
 	<string>Your programs can read and change your reminders (the reminders module).</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Your programs can read the motion sensors (the motion module).</string>
-	<!-- pyslopnista://run?path=<path> runs a program (D38): Home Screen
+	<!-- terrarium://run?path=<path> runs a program (D38): Home Screen
 	     shortcuts made with an Open URL action, links. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>eu.ronacher.Pyslopnista</string>
+			<string>eu.ronacher.Terrarium</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>pyslopnista</string>
+				<string>terrarium</string>
 			</array>
 		</dict>
 	</array>

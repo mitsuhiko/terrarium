@@ -52,7 +52,7 @@ def available():
 def call(op, **args):
     """Run ``device.<op>`` in the app and return its (JSON) answer."""
     if not available():
-        raise NotImplementedError(f"{op.split('.')[0]} needs the Pyslopnista app")
+        raise NotImplementedError(f"{op.split('.')[0]} needs the Terrarium app")
     sys.stdout.flush()
     sys.stderr.flush()
     request = json.dumps({"op": f"device.{op}", "value": args}, default=_default)

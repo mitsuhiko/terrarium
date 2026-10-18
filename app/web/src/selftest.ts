@@ -1048,7 +1048,7 @@ export async function selftest() {
     await fs.mkdir("Tests/launch").catch(() => {});
     await fs.writeText("Tests/launch/hello.py", "print('launched', 6 * 7)\n");
     session.clear();
-    if (!(await appCall("openURL", "pyslopnista://run?path=Tests/launch/hello.py"))) throw new Error("link not taken");
+    if (!(await appCall("openURL", "terrarium://run?path=Tests/launch/hello.py"))) throw new Error("link not taken");
     await until(() => consoleText().includes("launched 42"), 20000);
     await until(idle);
     if ((await app.currentFile()) !== "Tests/launch/hello.py") throw new Error(`open: ${await app.currentFile()}`);
@@ -1244,13 +1244,13 @@ export async function selftest() {
   // The app's own modules in the docs (D42), and the example apps that use them.
   await step("app_docs", async () => {
     const hits = await call<{ ref: string }[]>("docs.search", { query: "photos.pick_image", version: "3.14", limit: 5 });
-    if (hits[0]?.ref !== "pyslopnista/photos.html#photos.pick_image") throw new Error(JSON.stringify(hits));
+    if (hits[0]?.ref !== "terrarium/photos.html#photos.pick_image") throw new Error(JSON.stringify(hits));
     const ui = await call<{ ref: string }[]>("docs.search", { query: "ui.Button", version: "3.15", limit: 5 });
-    if (ui[0]?.ref !== "pyslopnista/ui.html#ui.Button") throw new Error(`3.15: ${JSON.stringify(ui)}`);
-    const page = await call<{ markdown: string } | null>("docs.read", { ref: "pyslopnista/sound.html#sound.Player", version: "3.14" });
+    if (ui[0]?.ref !== "terrarium/ui.html#ui.Button") throw new Error(`3.15: ${JSON.stringify(ui)}`);
+    const page = await call<{ markdown: string } | null>("docs.read", { ref: "terrarium/sound.html#sound.Player", version: "3.14" });
     if (!page?.markdown.includes("play()") || !page.markdown.includes("finished_handler")) throw new Error(`read: ${page?.markdown.slice(0, 300)}`);
     const words = await call<{ ref: string }[]>("docs.search", { query: "record from the microphone", version: "3.14", limit: 8 });
-    if (!words.some((h) => h.ref.startsWith("pyslopnista/sound.html"))) throw new Error(`words: ${JSON.stringify(words.map((h) => h.ref))}`);
+    if (!words.some((h) => h.ref.startsWith("terrarium/sound.html"))) throw new Error(`words: ${JSON.stringify(words.map((h) => h.ref))}`);
     // help() opens the app's modules too.
     await fs.mkdir("Tests/device").catch(() => {});
     await fs.writeText("Tests/device/helpme.py", "import clipboard, sound\n");
@@ -1258,16 +1258,16 @@ export async function selftest() {
     await done;
     await session.runConsole("help(clipboard.get)");
     await until(idle);
-    await until(async () => (await appCall("docsState")).ref === "pyslopnista/clipboard.html#clipboard.get", 8000);
+    await until(async () => (await appCall("docsState")).ref === "terrarium/clipboard.html#clipboard.get", 8000);
     await session.runConsole("help(sound.Player)");
     await until(idle);
-    await until(async () => (await appCall("docsState")).ref === "pyslopnista/sound.html#sound.Player", 8000);
+    await until(async () => (await appCall("docsState")).ref === "terrarium/sound.html#sound.Player", 8000);
     await appCall("closeDocs");
     // Show Info on a device module links its page.
     const text = "import clipboard\nclipboard.set('x')\n";
     await openWith("Tests/device/info.py", text);
     const target = await appCall("docsTarget", "Tests/device/info.py", text, 2, 12);
-    if (target?.ref !== "pyslopnista/clipboard.html#clipboard.set") throw new Error(`show info: ${JSON.stringify(target)}`);
+    if (target?.ref !== "terrarium/clipboard.html#clipboard.set") throw new Error(`show info: ${JSON.stringify(target)}`);
   });
 
   await step("device_example_apps", async () => {
@@ -1294,9 +1294,9 @@ export async function selftest() {
   await step("editor_themes", async () => {
     await app.openFile("Examples/Hello.py");
     const themes = await editorCall<{ id: string }[]>("themes");
-    if (themes[0]?.id !== "pyslopnista" || themes.length < 4) throw new Error(`themes: ${JSON.stringify(themes.map((t) => t.id))}`);
+    if (themes[0]?.id !== "terrarium" || themes.length < 4) throw new Error(`themes: ${JSON.stringify(themes.map((t) => t.id))}`);
     let state = await editorCall<{ theme: string; bg: string; dark: boolean }>("themeState");
-    if (state.theme !== "pyslopnista") throw new Error(`default: ${JSON.stringify(state)}`);
+    if (state.theme !== "terrarium") throw new Error(`default: ${JSON.stringify(state)}`);
     await appCall("setTheme", "solarized");
     await appCall("setAppearance", "dark");
     state = await until(async () => {
@@ -1311,7 +1311,7 @@ export async function selftest() {
     }, 5000);
     if (state.bg !== "#fdf6e3") throw new Error(`solarized light: ${JSON.stringify(state)}`);
     await appCall("setAppearance", "system");
-    await appCall("setTheme", "pyslopnista");
+    await appCall("setTheme", "terrarium");
     return { themes: themes.length };
   });
 

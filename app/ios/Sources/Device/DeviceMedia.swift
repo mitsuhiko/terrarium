@@ -143,7 +143,7 @@ final class DeviceMedia {
             let jpeg = try bridge.fileData(v["file"], mount: v.mount)
             guard let input = await Self.editingInput(asset).value as? PHContentEditingInput else { throw DeviceBridge.Failure.io("the photo can't be edited") }
             let output = PHContentEditingOutput(contentEditingInput: input)
-            output.adjustmentData = PHAdjustmentData(formatIdentifier: Bundle.main.bundleIdentifier ?? "pyslopnista", formatVersion: "1.0", data: Data())
+            output.adjustmentData = PHAdjustmentData(formatIdentifier: Bundle.main.bundleIdentifier ?? "terrarium", formatVersion: "1.0", data: Data())
             try jpeg.write(to: output.renderedContentURL)
             try await PHPhotoLibrary.shared().performChanges { PHAssetChangeRequest(for: asset).contentEditingOutput = output }
             return Self.info(try Self.asset(asset.localIdentifier))

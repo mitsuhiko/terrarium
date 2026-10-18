@@ -7,7 +7,7 @@
 in runtimes.json, into vendor/docs-<python>/:
 
 - app/docs/*.md (D42): the app's own modules (ui, turtle in the app, the
-  device modules), rendered into pyslopnista/ in the same HTML as Sphinx's
+  device modules), rendered into terrarium/ in the same HTML as Sphinx's
   (sections, API entries as dl.py with their names as ids), so the viewer
   shows them in the same style and the index treats them like the rest.
 
@@ -41,7 +41,7 @@ APP = Path(__file__).resolve().parent.parent
 VENDOR = APP / "vendor"
 RUNTIMES = APP / "runtimes.json"
 APP_DOCS = APP / "docs"
-APP_DOCS_DIR = "pyslopnista"  # where they go in the HTML tree
+APP_DOCS_DIR = "terrarium"  # where they go in the HTML tree
 SCRIPT_HASH = hashlib.sha256(
     Path(__file__).read_bytes() + b"".join(p.read_bytes() for p in sorted(APP_DOCS.glob("*.md")))
 ).hexdigest()[:16]
@@ -63,7 +63,7 @@ OBJECT_KINDS = {
 }
 
 CSS = """\
-/* Pyslopnista: the docs in the app's viewer (scripts/build-docs.py). */
+/* Terrarium: the docs in the app's viewer (scripts/build-docs.py). */
 :root { color-scheme: light dark; -webkit-text-size-adjust: 100%; }
 html { scroll-padding-top: 8px !important; }
 body { margin: 0 !important; }
@@ -469,7 +469,7 @@ def _render(node: dict, page_module: str | None, parent_class: str | None = None
 
 
 def render_app_docs(root: Path, release: str) -> int:
-    """app/docs/*.md -> <root>/pyslopnista/*.html, in the archive's page layout."""
+    """app/docs/*.md -> <root>/terrarium/*.html, in the archive's page layout."""
     out = root / APP_DOCS_DIR
     out.mkdir(exist_ok=True)
     sources = sorted(APP_DOCS.glob("*.md"))
@@ -482,7 +482,7 @@ def render_app_docs(root: Path, release: str) -> int:
         content = "".join(_render(n, module) for n in tree)
         crumbs = f'<li><a href="../index.html">{release} Documentation</a> &#187;</li>\n'
         if stem != "index":
-            crumbs += '<li class="nav-item"><a href="index.html">Pyslopnista Modules</a> &#187;</li>\n'
+            crumbs += '<li class="nav-item"><a href="index.html">Terrarium Modules</a> &#187;</li>\n'
         crumbs += f'<li class="nav-item nav-item-this"><a href="">{title}</a></li>'
         page = f"""<!DOCTYPE html>
 <html lang="en" data-content_root="../">
@@ -501,7 +501,7 @@ def render_app_docs(root: Path, release: str) -> int:
 <div class="document"><div class="documentwrapper"><div class="bodywrapper"><div class="body" role="main">
 {content}
 </div></div></div></div>
-<div class="footer">The Pyslopnista modules' documentation is part of the app.</div>
+<div class="footer">The Terrarium modules' documentation is part of the app.</div>
 </body>
 </html>
 """
@@ -515,7 +515,7 @@ def link_app_docs(soup: BeautifulSoup) -> None:
     if ul is None:
         return
     li = BeautifulSoup(
-        f'<li class="biglink"><a class="biglink" href="{APP_DOCS_DIR}/index.html">Pyslopnista modules</a><br/>'
+        f'<li class="biglink"><a class="biglink" href="{APP_DOCS_DIR}/index.html">Terrarium modules</a><br/>'
         '<span class="linkdescr">ui apps, turtle, and the device: clipboard, dialogs, photos, location, sound, ...</span></li>',
         "html.parser",
     )

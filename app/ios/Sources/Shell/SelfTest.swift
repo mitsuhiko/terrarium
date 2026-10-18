@@ -44,7 +44,7 @@ enum SelfTest {
         case "currentFile":
             return model.file ?? NSNull()
         case "openURL":
-            // As iOS delivers a pyslopnista:// link (onOpenURL).
+            // As iOS delivers a terrarium:// link (onOpenURL).
             guard let action = URL(string: str(0) ?? "").flatMap(LaunchAction.init(url:)) else { return false }
             LaunchRouter.send(action)
             return true
@@ -111,7 +111,7 @@ enum SelfTest {
         case "kernel":
             return model.session.kernel.map { ["path": $0.path, "python": $0.python, "count": $0.count] as [String: Any] } ?? NSNull()
         case "setTheme":
-            model.updateSettings { $0.theme = str(0) ?? "pyslopnista" }
+            model.updateSettings { $0.theme = str(0) ?? "terrarium" }
         case "setAppearance":
             model.updateSettings { $0.appearance = EditorSettings.Appearance(rawValue: str(0) ?? "") ?? .system }
         case "docsState":

@@ -5,7 +5,7 @@ import requests
 repo = "python/cpython"
 r = requests.get(
     f"https://api.github.com/repos/{repo}",
-    headers={"User-Agent": "pyslopnista-example"},
+    headers={"User-Agent": "terrarium-example"},
     timeout=10,
 )
 r.raise_for_status()

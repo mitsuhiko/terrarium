@@ -139,7 +139,7 @@ struct DocsView: View {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button { browser.open(DocsTarget(version: browser.version, ref: nil)) } label: { Label("Start Page", systemImage: "house") }
-                        Button { browser.open(DocsTarget(version: browser.version, ref: "pyslopnista/index.html")) } label: { Label("Pyslopnista Modules", systemImage: "iphone") }
+                        Button { browser.open(DocsTarget(version: browser.version, ref: "terrarium/index.html")) } label: { Label("Terrarium Modules", systemImage: "iphone") }
                         Button { browser.open(DocsTarget(version: browser.version, ref: "py-modindex.html")) } label: { Label("Module Index", systemImage: "list.bullet") }
                         Button { browser.open(DocsTarget(version: browser.version, ref: "tutorial/index.html")) } label: { Label("Tutorial", systemImage: "graduationcap") }
                         Picker("Version", selection: Binding(get: { browser.version }, set: { browser.switchVersion($0) })) {

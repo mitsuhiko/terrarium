@@ -46,7 +46,7 @@ const searchTool = defineTool({
   name: "docs_search",
   description:
     "Search the documentation of the Python the project runs on: the official Python docs (standard library, language reference, tutorial, HOWTOs, glossary, What's New) " +
-    "and the app's own modules (ui, turtle in the app, clipboard, console, dialogs, haptics, keychain, location, motion, notification, photos, sound, speech, contacts, reminders; under pyslopnista/). " +
+    "and the app's own modules (ui, turtle in the app, clipboard, console, dialogs, haptics, keychain, location, motion, notification, photos, sound, speech, contacts, reminders; under terrarium/). " +
     "Finds API entries by name (json.loads, ui.Button, photos.pick_image, sound.Player.play) and sections by words. " +
     "Use it before relying on details you are unsure about, and for anything new in recent Python versions. Read a result with docs_read.",
   parameters: Type.Object({
@@ -98,6 +98,6 @@ const readTool = defineTool({
 });
 
 export const DocsTools = defineExtension({
-  name: "pyslopnista-docs",
+  name: "terrarium-docs",
   tools: [searchTool, readTool],
 });

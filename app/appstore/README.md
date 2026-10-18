@@ -30,7 +30,7 @@ to do by hand in App Store Connect, and the open risks for review.
   the web build from the npm packages that are in the bundle, plus
   `web/licenses-extra.json` (Pyodide, CPython, Emscripten).
 - **Archive and upload**: `make archive` (or `app/scripts/archive.sh`) builds
-  `build/Pyslopnista.xcarchive` and an `.ipa`. `make upload` uploads it with
+  `build/Terrarium.xcarchive` and an `.ipa`. `make upload` uploads it with
   the Xcode account, or with an App Store Connect API key (`ASC_KEY_ID`,
   `ASC_ISSUER_ID`, `ASC_KEY_PATH`). The build number is the UTC time
   (`YYYYMMDD.HHMM`). The version is `MARKETING_VERSION` in the project
@@ -44,10 +44,12 @@ to do by hand in App Store Connect, and the open risks for review.
 
 1. Agreements, Tax and Banking in App Store Connect: the Free Apps agreement
    is enough for a free app.
-2. App Store Connect → Apps → New App: iOS, name "Pyslopnista" (names are
-   unique across the store), primary language English (U.S.), bundle ID
-   `eu.ronacher.Pyslopnista` (it exists: automatic signing registered it),
-   SKU e.g. `pyslopnista`.
+2. App Store Connect → Apps → New App: iOS, name "Terrarium" (names are
+   unique across the store; if it is taken, "Terrarium – Python IDE", with
+   the app's display name still "Terrarium"), primary language English (U.S.), bundle ID
+   `eu.ronacher.Terrarium` (automatic signing registers it with the first
+   device build or archive),
+   SKU e.g. `terrarium`.
 3. App Information: categories and URLs from `metadata.md`.
    - Content rights: yes, it contains third-party content (the Python
      documentation, under the PSF license), and you have the rights.
@@ -72,7 +74,7 @@ to do by hand in App Store Connect, and the open risks for review.
 ## Each release
 
 1. `make selftest` (and `make device` with `--selftest`) pass.
-2. Bump `MARKETING_VERSION` in `ios/Pyslopnista.xcodeproj` for a new
+2. Bump `MARKETING_VERSION` in `ios/Terrarium.xcodeproj` for a new
    version (both target configurations).
 3. `make upload`. The first export creates the Apple Distribution
    certificate if the account has none. The build shows up in TestFlight
@@ -99,9 +101,10 @@ to do by hand in App Store Connect, and the open risks for review.
 - **Subscription sign-ins (Q21)**: Claude Pro/Max, ChatGPT and Copilot
   sign-ins from a third-party app may be against those providers' terms,
   and review may ask about them.
-- **Name**: "Pyslopnista" is close to "Pythonista" (guidelines 4.1 and
-  5.2.1), and "Py" names touch the Python trademark (the PSF's policy
-  allows "Py" prefixes).
+- **Name** (D52): "Terrarium" is a common word; other apps and
+  trademarks may use it. Check the store and trademarks before creating the
+  record. "Python" is only in the subtitle, which describes what the app
+  is for, as the PSF's trademark policy allows.
 - **4.8 / 5.1.1(v)**: the app has no login of its own; provider sign-ins
   are for using those services. If a Radius account can be created through
   the app's sign-in, account deletion must be reachable from the app too.

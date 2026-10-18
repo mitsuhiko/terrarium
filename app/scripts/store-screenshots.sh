@@ -18,7 +18,7 @@ KINDS=("$@")
 IPHONE=${IPHONE:-iPhone 18 Pro Max}
 IPAD=${IPAD:-iPad Pro 13-inch (M5)}
 APPEARANCE=${APPEARANCE:-light}
-BUNDLE_ID=eu.ronacher.Pyslopnista
+BUNDLE_ID=eu.ronacher.Terrarium
 
 # name|fragment|seconds to wait
 IPHONE_SCENES=(
