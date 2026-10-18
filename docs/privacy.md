@@ -72,5 +72,5 @@ children. It contains no advertising and collects no data from anyone.
 ## Changes and contact
 
 Changes to this policy are published in this file, with a new date. The
-history is in the [repository](https://github.com/mitsuhiko/pyslopnista).
-Questions: [open an issue](https://github.com/mitsuhiko/pyslopnista/issues).
+history is in the [repository](https://github.com/mitsuhiko/terrarium).
+Questions: [open an issue](https://github.com/mitsuhiko/terrarium/issues).

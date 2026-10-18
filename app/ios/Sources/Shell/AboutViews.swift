@@ -5,8 +5,8 @@ import SwiftUI
 // bundled, D51).
 
 enum AppInfo {
-    static let privacyPolicy = URL(string: "https://github.com/mitsuhiko/pyslopnista/blob/main/docs/privacy.md")!
-    static let support = URL(string: "https://github.com/mitsuhiko/pyslopnista/issues")!
+    static let privacyPolicy = URL(string: "https://github.com/mitsuhiko/terrarium/blob/main/docs/privacy.md")!
+    static let support = URL(string: "https://github.com/mitsuhiko/terrarium/issues")!
 
     static var version: String {
         let info = Bundle.main.infoDictionary ?? [:]

@@ -75,9 +75,9 @@ The first version.
 
 ## URLs
 
-- Support: https://github.com/mitsuhiko/pyslopnista/issues
-- Marketing: https://github.com/mitsuhiko/pyslopnista
-- Privacy policy: https://github.com/mitsuhiko/pyslopnista/blob/main/docs/privacy.md
+- Support: https://github.com/mitsuhiko/terrarium/issues
+- Marketing: https://github.com/mitsuhiko/terrarium
+- Privacy policy: https://github.com/mitsuhiko/terrarium/blob/main/docs/privacy.md
 
 ## Categories
 

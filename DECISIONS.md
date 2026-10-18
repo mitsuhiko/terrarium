@@ -1897,6 +1897,11 @@ personal team holds. The bundle ID is now `eu.ronacher.pyterrarium`
 (supersedes D52's bundle ID); the Keychain services and queue labels
 follow it. Installs start fresh again; nothing is published yet.
 
+The repository moved to `mitsuhiko/terrarium` (supersedes D52's
+"unchanged" note), and so did the privacy policy and support URLs in
+Settings → About and in `app/appstore/metadata.md`. GitHub redirects the old
+name, but only until a repository with that name exists again.
+
 ## Proposed (not yet decided)
 
 (none)
