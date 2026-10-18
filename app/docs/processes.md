@@ -77,7 +77,9 @@ block) are loaded in the new processes too.
 ## Differences from a computer
 
 - **No shared memory**: `multiprocessing.shared_memory` and numpy arrays on
-  top of an `Array` are not available. `Value` and `Array` work, but each
+  top of an `Array` are not available (a `SharedMemory` raises `OSError`;
+  importing the module works, so libraries that import it, like
+  scikit-learn through joblib, load fine). `Value` and `Array` work, but each
   access is a small message, so they are slower than on a computer.
 - **No managers**: `multiprocessing.Manager()` needs threads, which the app
   doesn't have; it raises `NotImplementedError`. `ThreadPool` and

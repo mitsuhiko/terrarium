@@ -330,6 +330,22 @@ def _make_multiprocessing_module():
     return mod
 
 
+def _make_posixshmem_module():
+    """_posixshmem without shared memory segments: multiprocessing's
+    resource_tracker and shared_memory import it (and joblib, so
+    scikit-learn, imports those once _multiprocessing works). Creating a
+    segment raises OSError."""
+    import errno
+
+    def unavailable(*args, **kwargs):
+        raise OSError(errno.ENOSYS, "shared memory segments are not available in Terrarium")
+
+    mod = types.ModuleType("_posixshmem")
+    mod.shm_open = unavailable
+    mod.shm_unlink = unavailable
+    return mod
+
+
 # ---------------------------------------------------------------------------
 # Shared memory: Value, Array, RawValue, RawArray, Barrier's buffer
 
@@ -1512,6 +1528,7 @@ def install():
     selectors.PollSelector._selector_cls = poll
     sys.executable = EXECUTABLE
     sys.modules["_multiprocessing"] = _make_multiprocessing_module()
+    sys.modules.setdefault("_posixshmem", _make_posixshmem_module())
     sys.meta_path.insert(0, _PostImportFinder())
     _after_import("subprocess", _patch_subprocess)
     _after_import("concurrent.futures", lambda m: _patch_futures())

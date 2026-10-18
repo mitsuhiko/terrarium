@@ -49,8 +49,10 @@ struct ButtonNode: View {
         case "plain": button.buttonStyle(.borderless)
         case "tinted": button.buttonStyle(.bordered)
         case "gray": button.buttonStyle(.bordered).tint(.secondary)
-        case "destructive": button.buttonStyle(.borderedProminent).tint(.red)
-        default: button.buttonStyle(.borderedProminent)
+        // White content: the icon of a Label would otherwise take the tint,
+        // which is the button's own color, and vanish.
+        case "destructive": button.buttonStyle(.borderedProminent).tint(.red).foregroundStyle(.white)
+        default: button.buttonStyle(.borderedProminent).foregroundStyle(.white)
         }
     }
 }
