@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// A traceback as data (D45, _pyslop_traceback.py), drawn for small screens:
+// A traceback as data (D45, _terrarium_traceback.py), drawn for small screens:
 // frames in Python's order (most recent call last), the innermost of the
 // program's own frames open with its source and the failing span marked,
 // library frames folded, the exception at the bottom with its message in

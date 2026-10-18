@@ -11,8 +11,8 @@ export const DEVICE_MODULES = [
 /** Modules programs import. */
 export const PUBLIC_MODULES = ["ui", "turtle", ...DEVICE_MODULES];
 
-/** Every file in /lib/pyslop. */
+/** Every file in /lib/terrarium. */
 export const RUNTIME_FILES = [
-  "_pyslop.py", "_pyslop_debug.py", "_pyslop_notebook.py", "_pyslop_turtle.py", "_pyslop_traceback.py", "_pyslop_procs.py", "_pyslop_warmup.py", "_device.py",
+  "_terrarium.py", "_terrarium_debug.py", "_terrarium_notebook.py", "_terrarium_turtle.py", "_terrarium_traceback.py", "_terrarium_procs.py", "_terrarium_warmup.py", "_device.py",
   ...PUBLIC_MODULES.map((m) => `${m}.py`),
 ];

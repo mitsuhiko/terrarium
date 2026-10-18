@@ -1,6 +1,6 @@
 // Turtle graphics on the page (D29). A TurtleScene mirrors the items of one
 // turtle screen (lines, polygons, images, text: Tk's canvas model, kept in
-// _pyslop_turtle.py) from the ops the program sends, queues taps and keys for
+// _terrarium_turtle.py) from the ops the program sends, queues taps and keys for
 // it. The native console draws the scene (D31): the engine forwards the ops and
 // state changes to the host through `turtleSync`.
 

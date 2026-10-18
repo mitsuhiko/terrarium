@@ -1877,9 +1877,13 @@ fallback is "Terrarium – Python IDE".
     types follow;
   - the Xcode project is `app/ios/Terrarium.xcodeproj` (target, scheme and
     product `Terrarium`).
+- Internal names follow: the runtime's Python modules are
+  `_terrarium*.py` in `/lib/terrarium` (was `_pyslop*`, `/lib/pyslop`), and
+  the host's headers are `X-Terrarium-*` (was `X-Pyslop-*`). The same goes
+  for `_terrariumhost`, `TerrariumShell` and the other `pyslop` prefixes.
+  Earlier decisions keep the old names.
 - Unchanged: the repository (`mitsuhiko/pyslopnista`, so the privacy and
-  support URLs too), the internal `_pyslop*` Python modules and `X-Pyslop`
-  headers, the spikes and earlier decisions.
+  support URLs too) and the spikes.
 
 ## Proposed (not yet decided)
 

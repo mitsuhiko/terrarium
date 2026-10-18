@@ -1,6 +1,6 @@
 """The visual debugger (D23): bdb on the ``monitoring`` backend, driven by the page.
 
-Every stop blocks in ``_pyslophost.debug()`` (a synchronous call through the
+Every stop blocks in ``_terrariumhost.debug()`` (a synchronous call through the
 worker's Atomics channel) until the page sends a command. Commands that only
 look at the program (variables, evaluate, scopes) are answered and the next
 command is awaited; resume commands (continue, next, stepIn, stepOut) return
@@ -26,7 +26,7 @@ import sys
 import traceback
 import types
 
-import _pyslophost
+import _terrariumhost
 
 PROJECT = "/home/pyodide/project"
 SIGPAUSE = signal.SIGUSR1
@@ -47,7 +47,7 @@ _HIDDEN_GLOBALS = (types.ModuleType, types.FunctionType, types.BuiltinFunctionTy
 
 def _call_page(message):
     """Blocking round trip to the page; None if the run was interrupted."""
-    reply = _pyslophost.debug(json.dumps(message))
+    reply = _terrariumhost.debug(json.dumps(message))
     return None if reply is None else json.loads(reply)
 
 
@@ -293,7 +293,7 @@ class Debugger(bdb.Bdb):
         frame = self.stack[index][0]
         local_vars = [
             (k, v) for k, v in frame.f_locals.items()
-            if not (k.startswith("__") and k.endswith("__")) and not k.startswith("__pyslop")  # runtime plumbing
+            if not (k.startswith("__") and k.endswith("__")) and not k.startswith("__terrarium")  # runtime plumbing
         ]
         if frame.f_globals is frame.f_locals or frame.f_code.co_name == "<module>":
             data = [(k, v) for k, v in local_vars if not isinstance(v, _HIDDEN_GLOBALS)]
@@ -429,7 +429,7 @@ def post_mortem(selected=0):
     stack = [(frame, line) for frame, line in traceback.walk_tb(exc.__traceback__) if debugger.is_user(frame)]
     stack.reverse()
     if not stack:
-        _pyslophost.status("The error did not happen in your code, so there is nothing to inspect.")
+        _terrariumhost.status("The error did not happen in your code, so there is nothing to inspect.")
         return
     summary = "".join(traceback.format_exception_only(type(exc), exc)).strip()
     selected = selected if 0 <= selected < len(stack) else 0

@@ -1,7 +1,7 @@
 import { fs, join } from "./host";
 
 const EXAMPLES_DIR = "Examples";
-const SEEDED_KEY = "pyslop.examples"; // name -> sha256 of the version we wrote
+const SEEDED_KEY = "terrarium.examples"; // name -> sha256 of the version we wrote
 
 // Earlier bundled versions (sha256). A copy matching one of them was never
 // edited, so it may be replaced, e.g. the D14 ui examples after P1.

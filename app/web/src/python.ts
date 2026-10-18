@@ -55,13 +55,13 @@ export interface RunOptions {
   breakpoints?: Record<string, number[]>; // project-relative path -> lines (D23)
 }
 
-/** Signals delivered through the interrupt buffer (see _pyslop_debug.py). */
+/** Signals delivered through the interrupt buffer (see _terrarium_debug.py). */
 export const SIGNAL = { interrupt: 2, pause: 10, breakpoints: 12 } as const;
 
 export interface RunResult {
   ok: boolean;
   error?: string;
-  /** The uncaught exception as data (D45): JSON from _pyslop_traceback. */
+  /** The uncaught exception as data (D45): JSON from _terrarium_traceback. */
   trace?: string;
   ms: number;
   killed?: boolean;
@@ -83,7 +83,7 @@ function workerOptions(python: string) {
     packageBaseUrl: new URL(`/pkgs/${python}/`, location.href).href,
     jspi: params.get("jspi") !== "0",
     gcTrampoline: params.get("gc") !== "0",
-    warm: params.get("warm") !== "0", // D49: _pyslop_warmup
+    warm: params.get("warm") !== "0", // D49: _terrarium_warmup
     pythonFiles: Object.fromEntries(RUNTIME_FILES.map((f) => [f, new URL(`/runtime/python/${f}`, location.href).href])),
   };
 }

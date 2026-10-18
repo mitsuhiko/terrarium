@@ -93,7 +93,7 @@ const api: Api = {
     return result === undefined ? null : result;
   },
 };
-(window as any).__pyslopKey = (action: string) => editor.key(action);
+(window as any).__terrariumKey = (action: string) => editor.key(action);
 (window as any).__editorView = editor.view; // debugging aid
 
 void editorEvent("ready");

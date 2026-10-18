@@ -18,7 +18,7 @@ setAnalysis(versionedAnalysis);
 
 // UI apps (D26) are drawn natively (D30); ops go to the host as they come.
 session.attachUI((json) => void call("ui.render", { json }).catch(() => {}));
-(window as any).__pyslopUI = {
+(window as any).__terrariumUI = {
   event: (id: string, args: string) => session.sendUIEvent(id, args),
   close: () => session.closeUI(),
 };

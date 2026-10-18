@@ -2,10 +2,10 @@
 // (D25): no CORS, and the response streams (server-sent events). Headers
 // fetch refuses to send (User-Agent, which pi-ai sets on every request, e.g.
 // `claude-cli/…` for Claude subscriptions) are read from the call before
-// WebKit drops them and travel in X-Pyslop-Headers, as Python's do.
+// WebKit drops them and travel in X-Terrarium-Headers, as Python's do.
 const PROXY = new URL("/__http", location.href).href;
 
-/** Headers fetch may not set; the proxy sets them from X-Pyslop-Headers. */
+/** Headers fetch may not set; the proxy sets them from X-Terrarium-Headers. */
 const FORBIDDEN = new Set(["user-agent", "cookie", "referer", "origin"]);
 /** Headers of our hop, never forwarded. */
 const HOP = new Set(["host", "connection", "accept-encoding", "content-length"]);
@@ -34,7 +34,7 @@ export function installProxyFetch() {
     });
     const hidden: Record<string, string> = {};
     for (const [name, value] of raw) if (FORBIDDEN.has(name.toLowerCase())) hidden[name.toLowerCase()] = String(value);
-    if (Object.keys(hidden).length) headers.set("X-Pyslop-Headers", JSON.stringify(hidden));
+    if (Object.keys(hidden).length) headers.set("X-Terrarium-Headers", JSON.stringify(hidden));
     const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
     return original(`${PROXY}?url=${encodeURIComponent(url.href)}`, { method: request.method, headers, body, signal: request.signal });
   };

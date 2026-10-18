@@ -103,7 +103,7 @@ export function scriptRequiresPython(source: string): string | null {
       const value = (parseToml(toml) as Record<string, unknown>)["requires-python"];
       return typeof value === "string" ? value : null;
     } catch {
-      return null; // the run reports a broken block (_pyslop.py)
+      return null; // the run reports a broken block (_terrarium.py)
     }
   }
   return null;

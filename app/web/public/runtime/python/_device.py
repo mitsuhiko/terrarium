@@ -13,9 +13,9 @@ import os
 import sys
 
 try:
-    import _pyslophost
+    import _terrariumhost
 except ImportError:  # outside the app (tests, a published web app)
-    _pyslophost = None
+    _terrariumhost = None
 
 PROJECT = "/home/pyodide/project"
 
@@ -46,7 +46,7 @@ def _default(value):
 
 
 def available():
-    return _pyslophost is not None and hasattr(_pyslophost, "device")
+    return _terrariumhost is not None and hasattr(_terrariumhost, "device")
 
 
 def call(op, **args):
@@ -57,7 +57,7 @@ def call(op, **args):
     sys.stderr.flush()
     request = json.dumps({"op": f"device.{op}", "value": args}, default=_default)
     try:
-        reply = _pyslophost.device(request)
+        reply = _terrariumhost.device(request)
     except (KeyboardInterrupt, SystemExit):
         raise
     except Exception as e:  # a JsException carrying the app's error
@@ -110,7 +110,7 @@ def temp_file(data_b64, name):
     """Bytes from the app as a file in the interpreter's temporary folder."""
     import tempfile
 
-    folder = tempfile.mkdtemp(prefix="pyslop-")
+    folder = tempfile.mkdtemp(prefix="terrarium-")
     path = os.path.join(folder, os.path.basename(name) or "file")
     with open(path, "wb") as f:
         f.write(base64.b64decode(data_b64))

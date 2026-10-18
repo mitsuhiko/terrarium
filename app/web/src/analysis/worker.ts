@@ -10,7 +10,7 @@ import type { AnalysisRequest, CompletionItem, DefinitionTarget, Problem } from 
 
 const ROOT = "/project";
 const STARTED_AT = Date.now();
-const STUBS = "/pyslop-stubs";
+const STUBS = "/terrarium-stubs";
 let ruff: RuffWorkspace;
 let ty: TyWorkspace;
 const handles = new Map<string, FileHandle>();

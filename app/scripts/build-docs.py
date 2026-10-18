@@ -190,7 +190,7 @@ def patch(soup: BeautifulSoup, rel: PurePosixPath, root: Path, python: str) -> N
     head = soup.head
     if head is not None:
         head.append(soup.new_tag("meta", attrs={"name": "color-scheme", "content": "light dark"}))
-        head.append(soup.new_tag("link", attrs={"rel": "stylesheet", "href": f"{up}_static/pyslop.css"}))
+        head.append(soup.new_tag("link", attrs={"rel": "stylesheet", "href": f"{up}_static/terrarium.css"}))
 
 
 def _normalize(parts: tuple[str, ...]) -> list[str]:
@@ -385,14 +385,14 @@ def _md(text: str) -> str:
 
     def stash(m):
         blocks.append(_highlight(m.group(2), m.group(1).strip()))
-        return f"\n\nPYSLOPCODE{len(blocks) - 1}\n\n"
+        return f"\n\nTERRARIUMCODE{len(blocks) - 1}\n\n"
 
     text = re.sub(r"^```(\w*)\n(.*?)^```\s*$", stash, text, flags=re.M | re.S)
     out = mdlib.markdown(text, extensions=["tables"])
     out = re.sub(r"<code>(.*?)</code>", r'<code class="docutils literal notranslate"><span class="pre">\1</span></code>', out, flags=re.S)
     out = out.replace("<table>", '<table class="docutils align-default">')
     for i, block in enumerate(blocks):
-        out = out.replace(f"<p>PYSLOPCODE{i}</p>", block)
+        out = out.replace(f"<p>TERRARIUMCODE{i}</p>", block)
     return out
 
 
@@ -561,7 +561,7 @@ def build(runtime: dict, update_pins: bool, force: bool) -> None:
             link_app_docs(soup)
         patch(soup, rel, root, python)
         page.write_text(str(soup), encoding="utf-8")
-    (root / "_static" / "pyslop.css").write_text(CSS)
+    (root / "_static" / "terrarium.css").write_text(CSS)
     db.executemany("INSERT INTO meta(key, value) VALUES (?, ?)", [
         ("python", python), ("release", release), ("archive_sha256", runtime["docs"]["sha256"]), ("source", runtime["docs"]["url"]),
     ])

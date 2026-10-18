@@ -11,7 +11,7 @@
   ``%%writefile``, ``obj?`` and a few more; ``!cmd`` explains that there is no
   shell.
 
-Outputs go to the page as JSON through ``_pyslophost.display``.
+Outputs go to the page as JSON through ``_terrariumhost.display``.
 """
 
 import ast
@@ -28,7 +28,7 @@ import sys
 import time
 import uuid
 
-import _pyslophost
+import _terrariumhost
 
 
 class UsageError(Exception):
@@ -49,7 +49,7 @@ def _flush_streams():
 def _send(message):
     # What the cell printed so far comes first.
     _flush_streams()
-    _pyslophost.display(json.dumps(message, default=str))
+    _terrariumhost.display(json.dumps(message, default=str))
 
 
 def publish_display_data(data, metadata=None, source=None, *, transient=None, **kwargs):
@@ -423,7 +423,7 @@ class _Events:
                 print(f"Error in a {event} callback: {e!r}", file=sys.stderr)
 
 
-class PyslopShell:
+class TerrariumShell:
     """What get_ipython() returns: enough for code that runs magics or looks for a shell."""
 
     config = {}
@@ -454,7 +454,7 @@ class PyslopShell:
         return "<terrarium notebook shell>"
 
 
-_shell = PyslopShell()
+_shell = TerrariumShell()
 
 
 def get_ipython():
@@ -510,7 +510,7 @@ sys.meta_path.insert(0, _IPythonShim())
 _index_url = None
 _MAGIC = re.compile(r"^(\s*)(%{1}(?!%)|!)(.*)$")
 _HELP = re.compile(r"^(\s*)(?:(\?\??)([A-Za-z_][\w.]*)|([A-Za-z_][\w.]*)(\?\??))\s*$")
-_NB = '__import__("_pyslop_notebook")'
+_NB = '__import__("_terrarium_notebook")'
 
 
 def _continued(lines):
@@ -741,9 +741,9 @@ async def pip(args):
     if command == "install":
         if not rest:
             raise UsageError("Usage: %pip install <packages>")
-        import _pyslop
+        import _terrarium
 
-        _pyslop._allow_app_scheme()
+        _terrarium._allow_app_scheme()
         kwargs = {"keep_going": True}
         if _index_url:
             kwargs["index_urls"] = [_index_url]
@@ -813,10 +813,10 @@ def _show_figures():
     if "matplotlib.pyplot" not in sys.modules:
         return
     try:
-        import _pyslop
+        import _terrarium
 
         if sys.modules["matplotlib.pyplot"].get_fignums():
-            _pyslop._show()
+            _terrarium._show()
     except Exception as e:
         print(f"Could not show the figure: {e}", file=sys.stderr)
 
@@ -825,10 +825,10 @@ def _error(e):
     if isinstance(e, UsageError):
         lines = [f"UsageError: {e}"]
     else:
-        import _pyslop_traceback
+        import _terrarium_traceback
 
         # Our own frames (and Pyodide's) go; the cell's stay. As data too (D45).
-        trace = _pyslop_traceback.describe(e)
+        trace = _terrarium_traceback.describe(e)
         return {
             "type": "error", "ename": type(e).__name__, "evalue": trace["exceptions"][-1]["message"],
             "traceback": trace["text"].split("\n"), "trace": trace,

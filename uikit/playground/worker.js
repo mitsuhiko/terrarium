@@ -25,9 +25,9 @@ async function boot({ indexURL, packageBaseUrl, uiUrl }) {
       dispatcher = fn;
     },
   });
-  py.FS.mkdirTree("/lib/pyslop");
-  py.FS.writeFile("/lib/pyslop/ui.py", new Uint8Array(await (await fetch(uiUrl)).arrayBuffer()));
-  py.runPython("import sys\nsys.path.append('/lib/pyslop')");
+  py.FS.mkdirTree("/lib/terrarium");
+  py.FS.writeFile("/lib/terrarium/ui.py", new Uint8Array(await (await fetch(uiUrl)).arrayBuffer()));
+  py.runPython("import sys\nsys.path.append('/lib/terrarium')");
   postMessage({ type: "ready", bootMs: performance.now() - t0, version: py.version });
 }
 

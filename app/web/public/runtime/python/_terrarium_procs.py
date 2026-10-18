@@ -568,7 +568,7 @@ async def install_pypi(requirements_json, index_url):
     await pyodide_js.loadPackage("micropip")
     import micropip
 
-    from _pyslop import _allow_app_scheme
+    from _terrarium import _allow_app_scheme
 
     _allow_app_scheme()
     await micropip.install(requirements, deps=False, index_urls=[index_url])

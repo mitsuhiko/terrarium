@@ -15,8 +15,8 @@ import WebKit
 /// - `/__http?url=<url>`: HTTP for Python programs (D25) and the agent's model
 ///   providers (D32). The request is made natively, so there is no CORS; the
 ///   worker routes cross-origin XHR and fetch here. Headers scripts may not
-///   set travel in `X-Pyslop-Headers` (JSON); network failures answer 502 with
-///   `X-Pyslop-Error`. The response streams: every chunk URLSession delivers
+///   set travel in `X-Terrarium-Headers` (JSON); network failures answer 502 with
+///   `X-Terrarium-Error`. The response streams: every chunk URLSession delivers
 ///   goes to the page right away (server-sent events need that).
 /// - `POST /__fs`: one file operation of a Python program (HostFS, D35), by
 ///   synchronous XHR from its worker. The mount token is in `X-Fs-Mount`, the
@@ -128,10 +128,10 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelega
     /// Headers that describe our hop, not the program's request. `user-agent`
     /// is WebKit's own: servers treat it as a browser (Anthropic's token
     /// endpoint answers it with a fake 429). A User-Agent the code set itself
-    /// arrives in X-Pyslop-Headers; otherwise URLSession's applies.
+    /// arrives in X-Terrarium-Headers; otherwise URLSession's applies.
     private static let hopHeaders: Set<String> = [
         "host", "origin", "referer", "connection", "content-length", "accept-encoding", "user-agent",
-        "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest", "x-pyslop-headers",
+        "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest", "x-terrarium-headers",
     ]
     /// Response headers that no longer apply (URLSession already decoded the
     /// body) or would override our cross-origin isolation headers (D9).
@@ -154,7 +154,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelega
         for (name, value) in incoming.allHTTPHeaderFields ?? [:] where !Self.hopHeaders.contains(name.lowercased()) {
             request.setValue(value, forHTTPHeaderField: name)
         }
-        if let hidden = incoming.value(forHTTPHeaderField: "X-Pyslop-Headers"),
+        if let hidden = incoming.value(forHTTPHeaderField: "X-Terrarium-Headers"),
            let extra = try? JSONSerialization.jsonObject(with: Data(hidden.utf8)) as? [String: String] {
             for (name, value) in extra { request.setValue(value, forHTTPHeaderField: name) }
         }
@@ -180,7 +180,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelega
                 guard let name = key as? String, !Self.droppedResponseHeaders.contains(name.lowercased()) else { continue }
                 headers[name] = "\(value)"
             }
-            headers["X-Pyslop-Final-Url"] = response.url?.absoluteString ?? entry.target.absoluteString
+            headers["X-Terrarium-Final-Url"] = response.url?.absoluteString ?? entry.target.absoluteString
             headers["Content-Type"] = http?.value(forHTTPHeaderField: "Content-Type") ?? "application/octet-stream"
             headers.merge(Self.isolationHeaders) { _, new in new }
             headers["Cache-Control"] = "no-store"
@@ -205,7 +205,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelega
             proxyTasks.removeValue(forKey: ObjectIdentifier(entry.task))
             if let error, !entry.responded {
                 let message = error.localizedDescription.replacingOccurrences(of: "\n", with: " ")
-                respond(entry.task, status: 502, body: Data(message.utf8), mime: "text/plain", extra: ["X-Pyslop-Error": message])
+                respond(entry.task, status: 502, body: Data(message.utf8), mime: "text/plain", extra: ["X-Terrarium-Error": message])
                 return
             }
             guard activeTasks.remove(ObjectIdentifier(entry.task)) != nil else { return }

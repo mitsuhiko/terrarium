@@ -63,15 +63,15 @@ import { createRelayClient } from "./relay-client.js";
     }
     send(body) {
       if (this._relay) return this._sendRelayed(body);
-      if (this._via && Object.keys(this._hidden).length) super.setRequestHeader("X-Pyslop-Headers", JSON.stringify(this._hidden));
+      if (this._via && Object.keys(this._hidden).length) super.setRequestHeader("X-Terrarium-Headers", JSON.stringify(this._hidden));
       super.send(body);
-      const error = this._via && this._sync ? this.getResponseHeader("X-Pyslop-Error") : null;
+      const error = this._via && this._sync ? this.getResponseHeader("X-Terrarium-Error") : null;
       if (error) throw networkError(error);
     }
     _sendRelayed(body) {
       const relay = this._relay;
       const headers = { ...relay.headers };
-      if (Object.keys(this._hidden).length) headers["X-Pyslop-Headers"] = JSON.stringify(this._hidden);
+      if (Object.keys(this._hidden).length) headers["X-Terrarium-Headers"] = JSON.stringify(this._hidden);
       const [bytes, type] = ["GET", "HEAD"].includes(relay.method) ? [null, null] : bodyBytes(body);
       if (type && !Object.keys(headers).some((h) => h.toLowerCase() === "content-type")) headers["Content-Type"] = type;
       let response;
@@ -81,9 +81,9 @@ import { createRelayClient } from "./relay-client.js";
         if (e.timeout) throw new DOMException("The request timed out", "TimeoutError");
         throw networkError(e.message.replace(/^Network error: /, ""));
       }
-      if (response.headers["x-pyslop-error"]) throw networkError(response.headers["x-pyslop-error"]);
+      if (response.headers["x-terrarium-error"]) throw networkError(response.headers["x-terrarium-error"]);
       relay.done = response;
-      self._pyslopRelayedRequests = (self._pyslopRelayedRequests ?? 0) + 1; // for the self-test
+      self._terrariumRelayedRequests = (self._terrariumRelayedRequests ?? 0) + 1; // for the self-test
       for (const type of ["readystatechange", "load", "loadend"]) this.dispatchEvent(new ProgressEvent(type));
     }
     _text() {
@@ -134,11 +134,11 @@ import { createRelayClient } from "./relay-client.js";
     getAllResponseHeaders() {
       if (!this._relay) return super.getAllResponseHeaders();
       const headers = this._relay.done?.headers ?? {};
-      return Object.entries(headers).filter(([name]) => !name.startsWith("x-pyslop-")).map(([name, value]) => `${name}: ${value}\r\n`).join("");
+      return Object.entries(headers).filter(([name]) => !name.startsWith("x-terrarium-")).map(([name, value]) => `${name}: ${value}\r\n`).join("");
     }
     get responseURL() {
-      if (this._relay) return this._relay.done?.headers["x-pyslop-final-url"] ?? "";
-      return (this._via && this.getResponseHeader("X-Pyslop-Final-Url")) || super.responseURL;
+      if (this._relay) return this._relay.done?.headers["x-terrarium-final-url"] ?? "";
+      return (this._via && this.getResponseHeader("X-Terrarium-Final-Url")) || super.responseURL;
     }
   };
 
@@ -158,12 +158,12 @@ import { createRelayClient } from "./relay-client.js";
     const headers = new Headers(request.headers);
     const hidden = {};
     for (const [name, value] of rawHeaders(init?.headers)) if (FORBIDDEN.has(String(name).toLowerCase())) hidden[name] = String(value);
-    if (Object.keys(hidden).length) headers.set("X-Pyslop-Headers", JSON.stringify(hidden));
+    if (Object.keys(hidden).length) headers.set("X-Terrarium-Headers", JSON.stringify(hidden));
     const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
     const response = await nativeFetch(via, { method: request.method, headers, body, signal: request.signal, redirect: "follow" });
-    const error = response.headers.get("X-Pyslop-Error");
+    const error = response.headers.get("X-Terrarium-Error");
     if (error) throw new TypeError(`Network error: ${error}`);
-    const final = response.headers.get("X-Pyslop-Final-Url");
+    const final = response.headers.get("X-Terrarium-Final-Url");
     if (final) Object.defineProperty(response, "url", { value: final });
     return response;
   };
@@ -180,10 +180,10 @@ let mounted = null; // {token, cwd}
 let flushTimer = null;
 let plumbing; // a private namespace for our own Python, so the program's globals stay clean
 let interruptBuffer = null; // the SharedArrayBuffer behind Stop and the debugger's signals
-let procs = null; // this interpreter as a process (D47): _procs and _pyslop_procs are installed
+let procs = null; // this interpreter as a process (D47): _procs and _terrarium_procs are installed
 let fetchSync = null; // blocking requests through the page's fetch relay (Q25); null: synchronous XHR
 
-// Turtle graphics (D29): ops from _pyslop_turtle.py, sent to the page at most
+// Turtle graphics (D29): ops from _terrarium_turtle.py, sent to the page at most
 // every 16 ms, and always before the program blocks, sleeps or prints (so the
 // console keeps the order) and when it ends.
 let turtleBatches = [];
@@ -423,7 +423,7 @@ async function boot({ interrupt, channel, relay, memory, jspi, gcTrampoline, war
     // Sleeps without burning CPU; any signal wakes it early. KeyboardInterrupt
     // (Stop) is then raised by CPython's own signal check right after we
     // return, not thrown through JavaScript (which WebKit reports as an
-    // uncaught worker error). _pyslop_debug wraps this into time.sleep.
+    // uncaught worker error). _terrarium_debug wraps this into time.sleep.
     sleep: (seconds) => {
       flushTurtle();
       flushFiles();
@@ -434,12 +434,12 @@ async function boot({ interrupt, channel, relay, memory, jspi, gcTrampoline, war
       if (signal !== 0 && signal !== 2) py.checkInterrupt();
     },
   });
-  py.registerJsModule("_pyslophost", {
+  py.registerJsModule("_terrariumhost", {
     image: (b64) => postMessage({ type: "output", stream: "image", text: b64 }),
     // Rich outputs and errors of notebook cells, display() (D44): JSON.
     display: (json) => (flushTurtle(), postMessage({ type: "display", json })),
     status: (text) => postMessage({ type: "output", stream: "system", text: text + "\n" }),
-    // The debugger's blocking round trip (_pyslop_debug.py); null when interrupted.
+    // The debugger's blocking round trip (_terrarium_debug.py); null when interrupted.
     debug: (json) => {
       const reply = syncCall("debug", JSON.parse(json));
       return reply == null ? null : JSON.stringify(reply);
@@ -488,19 +488,19 @@ async function boot({ interrupt, channel, relay, memory, jspi, gcTrampoline, war
     },
   });
   // Our runtime modules live outside the project dir.
-  py.FS.mkdirTree("/lib/pyslop");
+  py.FS.mkdirTree("/lib/terrarium");
   for (const [name, url] of Object.entries(pythonFiles ?? {})) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`failed to fetch ${url}: ${res.status}`);
-    py.FS.writeFile(`/lib/pyslop/${name}`, new Uint8Array(await res.arrayBuffer()));
+    py.FS.writeFile(`/lib/terrarium/${name}`, new Uint8Array(await res.arrayBuffer()));
   }
   plumbing = py.runPython("dict()");
-  runPlumbing("import sys\nsys.path.append('/lib/pyslop')");
+  runPlumbing("import sys\nsys.path.append('/lib/terrarium')");
   // Deeper recursion through C code before the native stack runs out (D49).
-  if (warm) runPlumbing("import _pyslop_warmup\n_pyslop_warmup.run()\ndel _pyslop_warmup, sys.modules['_pyslop_warmup']");
+  if (warm) runPlumbing("import _terrarium_warmup\n_terrarium_warmup.run()\ndel _terrarium_warmup, sys.modules['_terrarium_warmup']");
   runPlumbing([
-    "import _pyslop, _pyslop_debug, _pyslop_notebook, _pyslop_traceback",
-    interruptInts ? "import host\n_pyslop_debug.install(host.sleep)\ndel host" : "_pyslop_debug.install()",
+    "import _terrarium, _terrarium_debug, _terrarium_notebook, _terrarium_traceback",
+    interruptInts ? "import host\n_terrarium_debug.install(host.sleep)\ndel host" : "_terrarium_debug.install()",
   ].join("\n"));
   // A spare for child processes imports what a spawned child needs anyway
   // (like forkserver's preload, D47).
@@ -551,7 +551,7 @@ async function callRuntime(module, name, ...args) {
 
 /** What a notebook cell is as Python (its magics as calls), for finding its imports. */
 function cellPython(code) {
-  const nb = py.pyimport("_pyslop_notebook");
+  const nb = py.pyimport("_terrarium_notebook");
   try {
     return nb.transform_cell(code);
   } catch {
@@ -570,13 +570,13 @@ function installProcs({ control, pid, ppid, cpuCount, objects }) {
     objects: new Map(objects ?? []), pid, ppid, cpuCount,
   });
   py.registerJsModule("_procs", procs.api);
-  runPlumbing("import _pyslop_procs\n_pyslop_procs.install()");
+  runPlumbing("import _terrarium_procs\n_terrarium_procs.install()");
 }
 
 async function run({ code, filename, cwd, mount: token, repl, cell, indexURL, breakpoints, procs: procsInit }) {
   const t0 = performance.now();
   try {
-    runPlumbing("_pyslop_traceback.mark()");
+    runPlumbing("_terrarium_traceback.mark()");
     if (token && cwd) {
       mount(token, cwd);
       startFlushing();
@@ -590,11 +590,11 @@ async function run({ code, filename, cwd, mount: token, repl, cell, indexURL, br
     const index = indexURL ?? new URL("/pypi/simple", location.href).href;
     if (cell) {
       // A notebook kernel's first cell (D44): the notebook's dependencies first.
-      if (cell.prepare != null) await callRuntime("_pyslop", "prepare_environment", cell.prepare, cwd ?? "/home/pyodide", index);
+      if (cell.prepare != null) await callRuntime("_terrarium", "prepare_environment", cell.prepare, cwd ?? "/home/pyodide", index);
     } else if (!repl) {
       // Declared dependencies (PEP 723 or pyproject.toml) first, then
       // Pyodide packages that are imported but not declared.
-      await callRuntime("_pyslop", "prepare_environment", code, cwd ?? "/home/pyodide", index);
+      await callRuntime("_terrarium", "prepare_environment", code, cwd ?? "/home/pyodide", index);
     }
     // A cell's magics are no Python; IPython is our shim, not Pyodide's package.
     const python = (cell ? cellPython(code) : code).replace(/^[ \t]*(import|from)[ \t]+IPython\b.*$/gm, "");
@@ -617,26 +617,26 @@ async function run({ code, filename, cwd, mount: token, repl, cell, indexURL, br
       runPlumbing("try:\n    import urllib3.contrib.emscripten.fetch as _f\n    _f.HEADERS_TO_IGNORE = ()\nexcept ImportError:\n    pass");
     }
     if (cell) {
-      await callRuntime("_pyslop_notebook", "run_cell", code, cell.count, index);
+      await callRuntime("_terrarium_notebook", "run_cell", code, cell.count, index);
     } else if (repl) {
-      await callRuntime("_pyslop", "repl", code);
+      await callRuntime("_terrarium", "repl", code);
     } else {
       // The script's path: multiprocessing's children import it from there (D47).
       if (filename && cwd) runPlumbing(`import __main__\n__main__.__file__ = ${JSON.stringify(`${cwd}/${filename}`)}`);
-      await callRuntime("_pyslop_debug", "start", JSON.stringify(breakpoints ?? {}));
+      await callRuntime("_terrarium_debug", "start", JSON.stringify(breakpoints ?? {}));
       try {
         try {
           const result = await py.runPythonAsync(code, { filename: filename ?? "<main>" });
           result?.destroy?.();
           // A turtle program with event handlers keeps running, as in IDLE.
-          runPlumbing("import sys\nif '_pyslop_turtle' in sys.modules: sys.modules['_pyslop_turtle'].finish()");
+          runPlumbing("import sys\nif '_terrarium_turtle' in sys.modules: sys.modules['_terrarium_turtle'].finish()");
         } finally {
           // What the interpreter would do at exit: join child processes. A ui
           // app hasn't exited; its processes live as long as it does.
-          if (procs && !uiDispatcher) runPlumbing("_pyslop_procs.program_finished()");
+          if (procs && !uiDispatcher) runPlumbing("_terrarium_procs.program_finished()");
         }
       } finally {
-        await callRuntime("_pyslop_debug", "finished");
+        await callRuntime("_terrarium_debug", "finished");
       }
     }
     finishTurtle();
@@ -672,10 +672,10 @@ async function runProcess({ task, payload, packages, mount: token, cwd, indexURL
     installProcs(init);
     if (task.pypi?.length) {
       const index = indexURL ?? new URL("/pypi/simple", location.href).href;
-      await callRuntime("_pyslop_procs", "install_pypi", JSON.stringify(task.pypi), index);
+      await callRuntime("_terrarium_procs", "install_pypi", JSON.stringify(task.pypi), index);
     }
     postMessage({ type: "process-started" });
-    const mod = py.pyimport("_pyslop_procs");
+    const mod = py.pyimport("_terrarium_procs");
     try {
       code = mod.run_task(JSON.stringify(task), payload ?? undefined);
     } catch (e) {
@@ -696,7 +696,7 @@ async function runProcess({ task, payload, packages, mount: token, cwd, indexURL
 /** The run's uncaught exception as data (D45): JSON, or undefined. */
 function lastTrace() {
   try {
-    return py.runPython("_pyslop_traceback.last_json()", { globals: plumbing }) || undefined;
+    return py.runPython("_terrarium_traceback.last_json()", { globals: plumbing }) || undefined;
   } catch {
     return undefined; // the interpreter is gone (a crash)
   }
@@ -705,7 +705,7 @@ function lastTrace() {
 /** Send what the program drew last (also when it failed). */
 function finishTurtle() {
   try {
-    runPlumbing("import sys\nif '_pyslop_turtle' in sys.modules: sys.modules['_pyslop_turtle'].flush_all()");
+    runPlumbing("import sys\nif '_terrarium_turtle' in sys.modules: sys.modules['_terrarium_turtle'].flush_all()");
   } catch {
     // the interpreter is unusable; nothing to send
   }

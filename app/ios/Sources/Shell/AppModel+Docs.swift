@@ -81,7 +81,7 @@ extension AppModel {
     /// The standard library module of a ty definition target ("ext:vendored://stdlib/json/__init__.pyi" -> "json").
     static func stdlibModule(_ target: String) -> String? {
         // The app's own modules (ui, clipboard, ...) are documented too (D42).
-        if let range = target.range(of: "/pyslop-stubs/") {
+        if let range = target.range(of: "/terrarium-stubs/") {
             let file = String(target[range.upperBound...])
             return file.hasPrefix("_") ? nil : (file as NSString).deletingPathExtension
         }

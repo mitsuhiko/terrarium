@@ -1624,14 +1624,14 @@ async def _guard(awaitable):
 def _report(exc: BaseException):
     """Print a traceback without this module's frames (in the app: as data, D45)."""
     try:
-        import _pyslop_traceback  # type: ignore[import-not-found]
+        import _terrarium_traceback  # type: ignore[import-not-found]
     except ImportError:  # a published web app, the tests
         te = traceback.TracebackException.from_exception(exc)
         frames = [f for f in te.stack if f.filename != __file__]
         te.stack = traceback.StackSummary.from_list(frames)
         sys.stderr.write("".join(te.format()))
     else:
-        _pyslop_traceback.report(exc)
+        _terrarium_traceback.report(exc)
 
 
 def run(app: Callable[[], Child] | Child, *, title: str | None = None, theme: str = "auto",

@@ -525,7 +525,7 @@ export class Session {
     const worker = this.worker;
     if (!worker || !this.canInspect) return;
     this.flushOutput();
-    const result = await worker.run(`import _pyslop_debug\n_pyslop_debug.post_mortem(${Math.max(0, Math.floor(frame) || 0)})`, { repl: true, cwd: PROJECT_ROOT });
+    const result = await worker.run(`import _terrarium_debug\n_terrarium_debug.post_mortem(${Math.max(0, Math.floor(frame) || 0)})`, { repl: true, cwd: PROJECT_ROOT });
     if (this.worker !== worker) return;
     this.set({ debug: null });
     if (!result.ok && result.error) this.appendError(result);
@@ -671,7 +671,7 @@ export class Session {
     if (cell) this.emit(cell.path, { type: "output", cell: cell.id, output });
   }
 
-  /** A rich output (display(), a cell's value, its error), as JSON from _pyslop_notebook. */
+  /** A rich output (display(), a cell's value, its error), as JSON from _terrarium_notebook. */
   private display(json: string) {
     let msg: any;
     try {
@@ -910,14 +910,14 @@ export class Session {
 
 /** Drop Pyodide's own frames from a traceback. */
 export function cleanTraceback(text: string): string {
-  const dep = /_pyslop\.DependencyError: ([\s\S]*)$/.exec(text.trim());
+  const dep = /_terrarium\.DependencyError: ([\s\S]*)$/.exec(text.trim());
   if (dep) return `Dependency error: ${dep[1]}`;
   // Project files are shown relative to the program's folder (its cwd).
   const lines = text.replace(/\n+$/, "").replaceAll(`File "${PROJECT_ROOT}/`, 'File "').split("\n");
   const out: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.startsWith('  File "') && (line.includes("/_pyodide/") || line.includes("_pyslop.py") || line.includes('"<dependencies>"'))) {
+    if (line.startsWith('  File "') && (line.includes("/_pyodide/") || line.includes("_terrarium.py") || line.includes('"<dependencies>"'))) {
       while (i + 1 < lines.length && lines[i + 1].startsWith("    ")) i++;
       continue;
     }

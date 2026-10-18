@@ -231,7 +231,7 @@ export async function selftest() {
       throw new Error(`console: ${JSON.stringify(frames)}`);
     }
     // An exception the runtime catches and shows (a ui callback, a turtle event handler) comes as data too.
-    await fs.writeText("Tests/tb_report.py", "import _pyslop_traceback\n\ndef handler():\n    {}['missing']\n\ntry:\n    handler()\nexcept Exception as e:\n    _pyslop_traceback.report(e)\nprint('still running')\n");
+    await fs.writeText("Tests/tb_report.py", "import _terrarium_traceback\n\ndef handler():\n    {}['missing']\n\ntry:\n    handler()\nexcept Exception as e:\n    _terrarium_traceback.report(e)\nprint('still running')\n");
     const { done } = await runFile("Tests/tb_report.py");
     await done;
     await until(idle);
@@ -1160,14 +1160,14 @@ export async function selftest() {
       "print('start', flush=True)",
       "import contacts, reminders, notification, location, photos, sys",
       "print('imported', contacts.is_authorized(), flush=True)",
-      "p = contacts.Person(); p.first_name = 'Pyslop'; p.last_name = 'Selftest'; p.email = [(contacts.WORK, 't@example.com')]",
+      "p = contacts.Person(); p.first_name = 'Terrarium'; p.last_name = 'Selftest'; p.email = [(contacts.WORK, 't@example.com')]",
       "contacts.add_person(p); contacts.save(); print('saved contact', flush=True)",
       "found = contacts.find('Selftest')",
       "print('contact', [x.full_name for x in found], found[0].email)",
       "contacts.remove_person(found[0]); contacts.save()",
       "print('contact2', len(contacts.find('Selftest')))",
-      "r = reminders.Reminder(); r.title = 'Pyslop selftest'; r.save()",
-      "print('rem', any(x.title == 'Pyslop selftest' for x in reminders.get_reminders(completed=False)))",
+      "r = reminders.Reminder(); r.title = 'Terrarium selftest'; r.save()",
+      "print('rem', any(x.title == 'Terrarium selftest' for x in reminders.get_reminders(completed=False)))",
       "print('del', reminders.delete_reminder(r))",
       // The self-test can't answer the notification permission prompt, so it isn't asked.
       "try:",
@@ -1185,7 +1185,7 @@ export async function selftest() {
       "print('photos', len(assets) > 0)",
       "if assets: print('image', assets[-1].get_image().size == (assets[-1].pixel_width, assets[-1].pixel_height))",
     ].join("\n"), [], 90000);
-    expectLines(out, ["contact ['Pyslop Selftest'] [('_$!<Work>!$_', 't@example.com')]", "contact2 0", "rem True", "del True", "notif", "loc True True", "photos True", "image True"]);
+    expectLines(out, ["contact ['Terrarium Selftest'] [('_$!<Work>!$_', 't@example.com')]", "contact2 0", "rem True", "del True", "notif", "loc True True", "photos True", "image True"]);
   });
 
   // -- file management (D41) -------------------------------------------------------
@@ -1502,7 +1502,7 @@ export async function selftest() {
     await fs.mkdir("Tests").catch(() => {});
     await fs.writeText("Tests/webcheck.py", [
       "import requests, urllib.request",
-      "r = requests.get('https://httpbin.org/get', params={'q': 'x'}, headers={'User-Agent': 'pyslop-test/1'}, timeout=20)",
+      "r = requests.get('https://httpbin.org/get', params={'q': 'x'}, headers={'User-Agent': 'terrarium-test/1'}, timeout=20)",
       "print('get', r.status_code, r.json()['args'], r.json()['headers']['User-Agent'])",
       "r = requests.post('https://httpbin.org/post', json={'a': 1}, timeout=20)",
       "print('post', r.status_code, r.json()['json'])",
@@ -1519,7 +1519,7 @@ export async function selftest() {
       "x.setRequestHeader('X-Test', 'yes')",
       "x.send('body text')",
       "d = __import__('json').loads(x.responseText)",
-      "print('relayed', x.status, x.readyState, d['data'], d['headers']['X-Test'], d['args'], js._pyslopRelayedRequests > 1)",
+      "print('relayed', x.status, x.readyState, d['data'], d['headers']['X-Test'], d['args'], js._terrariumRelayedRequests > 1)",
       "try:",
       "    requests.get('https://does-not-exist.invalid/', timeout=5)",
       "except requests.ConnectionError:",
@@ -1531,7 +1531,7 @@ export async function selftest() {
     await done;
     await until(idle, 60000);
     const out = consoleText();
-    for (const want of ["get 200 {'q': 'x'} pyslop-test/1", "post 200 {'a': 1}", "urllib 201", "httpx 202", "pyfetch 203", "relayed 200 4 body text yes {'a': '1'} True", "connection error ok"]) {
+    for (const want of ["get 200 {'q': 'x'} terrarium-test/1", "post 200 {'a': 1}", "urllib 201", "httpx 202", "pyfetch 203", "relayed 200 4 body text yes {'a': '1'} True", "connection error ok"]) {
       if (!out.includes(want)) throw new Error(out.slice(-600));
     }
     return { ms: Math.round(performance.now() - t0) };

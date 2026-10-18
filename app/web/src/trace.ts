@@ -1,4 +1,4 @@
-// Tracebacks as data (D45), from _pyslop_traceback.py: the console (native)
+// Tracebacks as data (D45), from _terrarium_traceback.py: the console (native)
 // and notebook outputs (editor/trace.ts) draw them instead of the text.
 
 export interface TraceFrame {
@@ -71,7 +71,7 @@ export async function crashTrace(
     const m = /^\s+File "(.+)", line (\d+) in (.+?)\s*$/.exec(line);
     if (!m) continue;
     const [, path, lineText, name] = m;
-    if (path.startsWith("/lib/pyslop/") || path.includes("/_pyodide/") || path === "<dependencies>") continue;
+    if (path.startsWith("/lib/terrarium/") || path.includes("/_pyodide/") || path === "<dependencies>") continue;
     const absolute = path.startsWith("/") ? path : `${PROJECT}/${path}`;
     const app = path.startsWith("<") ? /^<(console|cell)/.test(path) : absolute.startsWith(`${PROJECT}/`) && !absolute.includes("/site-packages/");
     const file = absolute.startsWith(`${PROJECT}/`) && !path.startsWith("<") ? absolute.slice(PROJECT.length + 1) : path.replace(LIBRARY, "");
@@ -88,7 +88,7 @@ export async function crashTrace(
     if (prev && prev.file === f.file && prev.line === f.line && prev.name === f.name) prev.repeat = (prev.repeat ?? 0) + 1;
     else frames.push(f);
   }
-  // As _pyslop_traceback.py: the first 20 and the last 40 of a long stack.
+  // As _terrarium_traceback.py: the first 20 and the last 40 of a long stack.
   if (frames.length > 60) frames = [...frames.slice(0, 20), { kind: "omitted", count: frames.length - 60 }, ...frames.slice(-40)];
   for (const f of frames) {
     if (f.kind !== "app" || !f.file || f.file.startsWith("<") || !f.line) continue;

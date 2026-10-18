@@ -56,11 +56,11 @@ def write_link(title, link_url):
 
 def show_image(image_path):
     """Show an image file (PNG, JPEG, GIF, ...) in the console."""
-    import _pyslophost
+    import _terrariumhost
 
     sys.stdout.flush()
     with open(image_path, "rb") as f:
-        _pyslophost.image(base64.b64encode(f.read()).decode("ascii"))
+        _terrariumhost.image(base64.b64encode(f.read()).decode("ascii"))
 
 
 def _cancelled(value):

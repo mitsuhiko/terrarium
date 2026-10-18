@@ -4,7 +4,7 @@
 it) with each exception's frames (most recent call last), their spans
 (character columns), a few lines of source around them and whether they are
 the program's own ("app") or the standard library's and installed packages'
-("library"). The runtime's frames (Pyodide, ``/lib/pyslop``) are dropped, as
+("library"). The runtime's frames (Pyodide, ``/lib/terrarium``) are dropped, as
 in ``text``, the classic traceback that goes with it.
 
 - ``last_json()``: the uncaught exception of the run that just failed
@@ -22,7 +22,7 @@ import sys
 import traceback
 
 PROJECT = "/home/pyodide/project"
-RUNTIME = "/lib/pyslop/"
+RUNTIME = "/lib/terrarium/"
 CONTEXT = 3  # lines before and after an app frame's line
 MAX_SPAN_LINES = 8
 MAX_LINE = 400  # characters of a source line
@@ -145,7 +145,7 @@ def _frames(tb, debug=False):
     user = []
     if debug:
         try:
-            from _pyslop_debug import debugger
+            from _terrarium_debug import debugger
 
             user = [id(t) for t in _walk(tb) if debugger.is_user(t.tb_frame)]
         except Exception:
@@ -316,7 +316,7 @@ def last_json():
     exc = getattr(sys, "last_exc", None)
     if exc is None or exc is _marked:
         return ""
-    if type(exc).__name__ == "DependencyError" and type(exc).__module__ == "_pyslop":
+    if type(exc).__name__ == "DependencyError" and type(exc).__module__ == "_terrarium":
         return ""
     return to_json(exc, debug=True)
 
@@ -329,11 +329,11 @@ def report(exc):
         except Exception:
             pass
     try:
-        import _pyslophost
+        import _terrariumhost
 
         trace = describe(exc)
         last = trace["exceptions"][-1]
-        _pyslophost.display(json.dumps({
+        _terrariumhost.display(json.dumps({
             "type": "exception", "ename": type(exc).__name__, "evalue": last["message"],
             "traceback": trace["text"].split("\n"), "trace": trace,
         }))

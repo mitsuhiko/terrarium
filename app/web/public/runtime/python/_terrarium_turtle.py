@@ -25,9 +25,9 @@ import traceback
 import types
 
 try:
-    import _pyslophost
+    import _terrariumhost
 except ImportError:  # outside the app, e.g. tests on the host
-    _pyslophost = None
+    _terrariumhost = None
 
 __all__ = ["TK", "Canvas", "ScrolledCanvas", "_Root", "TurtleScreenBase"]
 
@@ -99,17 +99,17 @@ def _image_size(data):
 # -- host calls -------------------------------------------------------------------------
 
 def _send(message):
-    if _pyslophost is not None:
-        _pyslophost.turtle(json.dumps(message, separators=(",", ":")))
+    if _terrariumhost is not None:
+        _terrariumhost.turtle(json.dumps(message, separators=(",", ":")))
 
 
 def _host_call(request):
     """A blocking round trip to the page (events, dialogs); None if impossible."""
     global _events_ok
-    if _pyslophost is None or not _events_ok:
+    if _terrariumhost is None or not _events_ok:
         return None
     try:
-        reply = _pyslophost.turtle_call(json.dumps(request, separators=(",", ":")))
+        reply = _terrariumhost.turtle_call(json.dumps(request, separators=(",", ":")))
     except (KeyboardInterrupt, SystemExit):
         raise
     except Exception:
@@ -162,10 +162,10 @@ def _resolve_color(color):
 
 
 def _browser_color(name):
-    if _pyslophost is None:
+    if _terrariumhost is None:
         return name if re.fullmatch(r"[a-z]+", name) else None
     try:
-        return _pyslophost.css_color(name)
+        return _terrariumhost.css_color(name)
     except AttributeError:
         return name
 
@@ -194,9 +194,9 @@ def _font_css(font):
 
 
 def _measure(font_css, text):
-    if _pyslophost is not None:
+    if _terrariumhost is not None:
         try:
-            width = _pyslophost.measure_text(font_css, text)
+            width = _terrariumhost.measure_text(font_css, text)
             if width is not None:
                 return float(width)
         except AttributeError:
@@ -209,13 +209,13 @@ def _measure(font_css, text):
 def _report(exc):
     """Show a traceback without our frames (a failing event handler), as data (D45)."""
     try:
-        import _pyslop_traceback
+        import _terrarium_traceback
     except ImportError:  # outside the app
         te = traceback.TracebackException.from_exception(exc)
         te.stack = traceback.StackSummary.from_list([f for f in te.stack if not f.filename.startswith(_HERE)])
         sys.stderr.write("".join(te.format()))
     else:
-        _pyslop_traceback.report(exc)
+        _terrarium_traceback.report(exc)
 
 
 # -- the canvas ---------------------------------------------------------------------------

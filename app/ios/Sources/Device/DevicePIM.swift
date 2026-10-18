@@ -92,7 +92,7 @@ final class DevicePIM {
             let actions = v["actions"] as? [[String: Any]] ?? []
             if !actions.isEmpty {
                 info["actions"] = actions.map { $0.string("url") ?? "" }
-                let category = UNNotificationCategory(identifier: "pyslop.\(id)", actions: actions.enumerated().map { i, a in
+                let category = UNNotificationCategory(identifier: "terrarium.\(id)", actions: actions.enumerated().map { i, a in
                     var options: UNNotificationActionOptions = [.foreground]
                     if a.bool("destructive") == true { options.insert(.destructive) }
                     if a.bool("text_input") == true {

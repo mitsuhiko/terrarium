@@ -1,4 +1,4 @@
-"""Runtime support for Terrarium (installed into /lib/pyslop at boot).
+"""Runtime support for Terrarium (installed into /lib/terrarium at boot).
 
 - inline matplotlib: ``plt.show()`` sends PNGs to the console
 - ``repl(source)``: run console input in ``__main__`` with REPL semantics
@@ -15,7 +15,7 @@ import importlib.machinery
 import io
 import sys
 
-import _pyslophost
+import _terrariumhost
 
 
 # -- inline matplotlib -----------------------------------------------------------
@@ -27,7 +27,7 @@ def _show(*args, **kwargs):
         fig = plt.figure(num)
         buf = io.BytesIO()
         fig.savefig(buf, format="png", dpi=144, bbox_inches="tight")
-        _pyslophost.image(base64.b64encode(buf.getvalue()).decode("ascii"))
+        _terrariumhost.image(base64.b64encode(buf.getvalue()).decode("ascii"))
     plt.close("all")
 
 
@@ -269,7 +269,7 @@ async def prepare_environment(source, cwd, index_url):
     import micropip
 
     before = {name: pkg.version for name, pkg in micropip.list().items()}
-    _pyslophost.status(f"Installing {', '.join(deps)} …")
+    _terrariumhost.status(f"Installing {', '.join(deps)} …")
     try:
         await micropip.install(deps, keep_going=True, index_urls=[index_url])
     except Exception as e:
@@ -277,14 +277,14 @@ async def prepare_environment(source, cwd, index_url):
     after = micropip.list()
     added = sorted(f"{name} {pkg.version}" for name, pkg in after.items() if name not in before)
     if added:
-        _pyslophost.status(f"Installed {', '.join(added)}")
+        _terrariumhost.status(f"Installed {', '.join(added)}")
 
 
 def _allow_app_scheme():
     """micropip only downloads http(s)/file URLs; our cached index serves app:// URLs."""
     from micropip import wheelinfo
 
-    if getattr(wheelinfo.WheelInfo, "_pyslop_patched", False):
+    if getattr(wheelinfo.WheelInfo, "_terrarium_patched", False):
         return
     original = wheelinfo.WheelInfo._fetch_bytes
 
@@ -294,4 +294,4 @@ def _allow_app_scheme():
         return await original(self, url, fetch_kwargs, compat_layer)
 
     wheelinfo.WheelInfo._fetch_bytes = _fetch_bytes
-    wheelinfo.WheelInfo._pyslop_patched = True
+    wheelinfo.WheelInfo._terrarium_patched = True
