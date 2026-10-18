@@ -9,7 +9,17 @@ struct AgentView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
     @State private var renaming: AgentConversation?
+    @State private var consent: SharingConsent?
     @FocusState private var composing: Bool
+
+    /// A message held back until the user allows sending to its provider (guideline 5.1.2(i), D51).
+    private struct SharingConsent: Identifiable {
+        let id = UUID()
+        let provider: String
+        let providerName: String
+        let project: String
+        let text: String
+    }
 
     var body: some View {
         let state = model.agent.state
@@ -61,6 +71,18 @@ struct AgentView: View {
             }
             .navigationDestination(isPresented: Binding(get: { model.agentListShown }, set: { model.agentListShown = $0 })) { ConversationsView() }
             .renameConversation($renaming)
+            .alert(consent.map { "Send to \($0.providerName)?" } ?? "",
+                   isPresented: Binding(get: { consent != nil }, set: { if !$0 { consent = nil } }),
+                   presenting: consent) { c in
+                Button("Allow") {
+                    model.agentAllowSharing(c.provider)
+                    draft = ""
+                    model.agentSend(c.text)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { c in
+                Text("To answer, the agent sends your messages and what it reads in \u{201C}\(c.project)\u{201D} (files, code, program output and errors) to \(c.providerName), the model provider you chose. \(c.providerName)'s terms and privacy policy apply to that data. You can sign out under Accounts at any time.")
+            }
         }
         .task { await model.loadAgentModels() }
         .onAppear { model.agentSetVisible(true) }
@@ -94,6 +116,9 @@ struct AgentView: View {
     private func intro(_ state: AgentState) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Ask about the code in “\(state.project.map(displayName) ?? "this folder")”, have it write a program, or explain an error. It can read and change the files here, run Python, and check and format code.")
+                .foregroundStyle(.secondary)
+            Text("Your messages, and the files and output the agent reads, go to the model provider you sign in to. The app asks before it sends anything to a provider for the first time.")
+                .font(.footnote)
                 .foregroundStyle(.secondary)
             if !state.signedIn {
                 Button { model.agentAccountsShown = true } label: { Label("Sign In to a Model Provider", systemImage: "person.crop.circle.badge.plus") }
@@ -174,6 +199,12 @@ struct AgentView: View {
     private func send() {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+        let state = model.agent.state
+        if let m = state.model, !model.agentSharingAllowed(m.provider) {
+            let name = model.agentModels.first { $0.provider == m.provider }?.providerName ?? m.provider
+            consent = SharingConsent(provider: m.provider, providerName: name, project: state.project.map(displayName) ?? "this folder", text: text)
+            return
+        }
         draft = ""
         model.agentSend(text)
     }

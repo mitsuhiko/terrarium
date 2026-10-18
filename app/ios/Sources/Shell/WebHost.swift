@@ -227,13 +227,18 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
     }
 
     /// Ends the page's web content process, as iOS does under memory pressure
-    /// (self-test only; WKWebViewPrivate's `_killWebContentProcess`).
+    /// (self-test only; WKWebViewPrivate's `_killWebContentProcess`). Not in
+    /// App Store builds, which don't set SELFTEST_SPI (D51).
     func killWebContent(_ webView: WKWebView) -> Bool {
+        #if SELFTEST_SPI
         let selector = NSSelectorFromString("_killWebContentProcess")
         guard webView.responds(to: selector) else { return false }
         expectedTermination = ObjectIdentifier(webView)
         webView.perform(selector)
         return true
+        #else
+        return false
+        #endif
     }
 
     // MARK: native dialogs for alert/confirm/prompt (turtle's textinput, ...)

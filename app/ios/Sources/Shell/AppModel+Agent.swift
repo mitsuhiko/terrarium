@@ -87,6 +87,18 @@ extension AppModel {
         }
     }
 
+    /// Whether the user allowed sending messages and project data to this model provider (D51).
+    func agentSharingAllowed(_ provider: String) -> Bool {
+        (UserDefaults.standard.stringArray(forKey: "agent.sharingAllowed") ?? []).contains(provider)
+    }
+
+    func agentAllowSharing(_ provider: String) {
+        var allowed = UserDefaults.standard.stringArray(forKey: "agent.sharingAllowed") ?? []
+        guard !allowed.contains(provider) else { return }
+        allowed.append(provider)
+        UserDefaults.standard.set(allowed, forKey: "agent.sharingAllowed")
+    }
+
     /// The tabs or the active file changed: a working agent hears about it at its next step.
     func agentIDEChanged() {
         guard agent.state.busy else { return }

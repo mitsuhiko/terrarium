@@ -102,6 +102,8 @@ final class KeyboardAccessory: NSObject, UIInputViewAudioFeedback {
             notes.append(content.becomeFirstResponder() ? "became first responder" : "could not become first responder")
             try? await Task.sleep(nanoseconds: 700_000_000)
         }
+        // UIKeyboardImpl and the traits are SPI: only in builds for the self-test (D51).
+        #if SELFTEST_SPI
         let impl: NSObject? = {
             guard via == "keyboard", let cls = NSClassFromString("UIKeyboardImpl") as? NSObject.Type else { return nil }
             let sel = NSSelectorFromString("activeInstance")
@@ -117,12 +119,18 @@ final class KeyboardAccessory: NSObject, UIInputViewAudioFeedback {
             notes.append("traits(\(name)) autocap=\(get("autocapitalizationType")) autocorrect=\(get("autocorrectionType")) quotes=\(get("smartQuotesType"))")
             break
         }
+        #else
+        if via == "keyboard" { notes.append("no UIKeyboardImpl (built without SELFTEST_SPI)") }
+        #endif
         for ch in text {
+            #if SELFTEST_SPI
             if let impl, impl.responds(to: NSSelectorFromString("addInputString:")) {
                 impl.perform(NSSelectorFromString("addInputString:"), with: String(ch))
-            } else if let input = content as? UIKeyInput {
-                input.insertText(String(ch))
+                try? await Task.sleep(nanoseconds: 120_000_000)
+                continue
             }
+            #endif
+            (content as? UIKeyInput)?.insertText(String(ch))
             try? await Task.sleep(nanoseconds: 120_000_000)
         }
         return notes.joined(separator: ", ")

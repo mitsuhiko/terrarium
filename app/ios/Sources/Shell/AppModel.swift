@@ -234,6 +234,10 @@ final class AppModel {
         if selftest {
             try? FileManager.default.removeItem(at: WebHost.documentURL(".probe-result.json"))
             try? FileManager.default.removeItem(at: WebHost.documentURL(".probe-log.txt"))
+        } else if let size = (try? FileManager.default.attributesOfItem(atPath: WebHost.documentURL(".probe-log.txt").path))?[.size] as? Int,
+                  size > 256 * 1024 {
+            // The host's diagnostics log grows with every launch; keep it small outside the self-test.
+            try? FileManager.default.removeItem(at: WebHost.documentURL(".probe-log.txt"))
         }
         if args.contains("--reset") {
             for url in (try? FileManager.default.contentsOfDirectory(at: files.root, includingPropertiesForKeys: nil)) ?? [] {

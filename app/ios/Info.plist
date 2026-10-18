@@ -10,6 +10,11 @@
 	     generate this one from INFOPLIST_KEY_UIFileSharingEnabled. -->
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<!-- Export compliance (D51): the app's own encryption is HTTPS through
+	     URLSession and WebKit and the Keychain, all Apple's; Python's hashlib
+	     only hashes. App Store Connect then asks no questions per build. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!-- What programs may ask for through the device modules (D40). -->
 	<key>NSCameraUsageDescription</key>
 	<string>Your programs can take photos with the camera (photos.capture_image).</string>

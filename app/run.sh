@@ -65,8 +65,10 @@ fi
 # Xcode 27's devicectl lists simulators too (Reality: simulated); older ones said "physical".
 DEVICE="${DEVICE:-$(xcrun devicectl list devices 2>/dev/null | grep -v simulated | grep -E 'available|connected' | grep -oE '[0-9A-F]{8}-[0-9A-F]{16}' | head -1 || true)}"
 [ -n "$DEVICE" ] || { echo "no paired device" >&2; exit 1; }
+# Release, but with the self-test's private-API hooks (SELFTEST_SPI, D51); scripts/archive.sh builds without them.
 xcodebuild -project ios/Pyslopnista.xcodeproj -scheme Pyslopnista -configuration Release \
-  -destination "id=$DEVICE" -derivedDataPath build/dd -allowProvisioningUpdates build > build/xcodebuild.log 2>&1 \
+  -destination "id=$DEVICE" -derivedDataPath build/dd -allowProvisioningUpdates \
+  SWIFT_ACTIVE_COMPILATION_CONDITIONS=SELFTEST_SPI build > build/xcodebuild.log 2>&1 \
   || { grep -E "error:" build/xcodebuild.log | head -20; exit 1; }
 xcrun devicectl device install app --device "$DEVICE" build/dd/Build/Products/Release-iphoneos/Pyslopnista.app > build/install.log 2>&1 \
   || { cat build/install.log; exit 1; }

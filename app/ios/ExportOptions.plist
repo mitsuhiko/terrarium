@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- How scripts/archive.sh exports the archive for App Store Connect (D51).
+     archive.sh switches destination to "upload" for --upload. -->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>export</string>
+	<key>teamID</key>
+	<string>ZRL6J4P42H</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>uploadSymbols</key>
+	<true/>
+	<!-- Build numbers come from archive.sh (BUILD_NUMBER), not App Store Connect. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<!-- Uploaded builds can go to external TestFlight testers and review. -->
+	<key>testFlightInternalTestingOnly</key>
+	<false/>
+</dict>
+</plist>

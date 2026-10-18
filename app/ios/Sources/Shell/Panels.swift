@@ -334,6 +334,7 @@ struct SettingsView: View {
                 } footer: {
                     Text("Programs run on the default unless their requires-python or a .python-version file in their folder asks for another version.")
                 }
+                AboutSection()
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)

@@ -217,7 +217,11 @@ enum SelfTest {
                 try? await Task.sleep(for: .milliseconds(200))
                 _ = model.host.killWebContent(webView)
             }
+            #if SELFTEST_SPI
             return webView.responds(to: NSSelectorFromString("_killWebContentProcess"))
+            #else
+            return false
+            #endif
         default:
             throw NSError(domain: "selftest", code: 1, userInfo: [NSLocalizedDescriptionKey: "unknown app method \(method)"])
         }
@@ -282,12 +286,16 @@ enum SelfTest {
     /// What the software keyboard's own hide key does (iPad): UIKeyboardImpl's
     /// hideKeyboard, which keeps the field focused (dismissKeyboard resigns it).
     private static func hideKeyboard() -> Any {
+        #if !SELFTEST_SPI
+        return "built without SELFTEST_SPI"
+        #else
         guard let cls = NSClassFromString("UIKeyboardImpl") as? NSObject.Type,
               let impl = cls.perform(NSSelectorFromString("activeInstance"))?.takeUnretainedValue() as? NSObject else { return "no UIKeyboardImpl" }
         let sel = NSSelectorFromString("hideKeyboard")
         guard impl.responds(to: sel) else { return "no hideKeyboard" }
         impl.perform(sel)
         return true
+        #endif
     }
 
     /// Tap keys on the key bar of whatever has focus, by their labels (also

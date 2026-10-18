@@ -1820,6 +1820,40 @@ fills the budget, writing every page) got `MemoryError` at 624 MB and
 survived with the 680 MB budget; with budgets of 925 MB and more, iOS
 ended the process first.
 
+## D51: Ready for the App Store: privacy manifest, consent for the agent, store builds without test SPI
+
+2026-10-18 - Accepted
+
+What a submission needs is in the repository; `app/appstore/README.md`
+lists it, the steps left in App Store Connect and the open risks.
+- **Privacy:** `PrivacyInfo.xcprivacy` declares no tracking and no
+  collected data, with the required reasons for UserDefaults and file
+  timestamps. The policy is `docs/privacy.md`. Settings has an About
+  section with it, support, the version and the acknowledgements.
+- **The agent asks first** (guideline 5.1.2(i)): before the first message
+  to a model provider, an alert names the provider and what goes to it
+  (messages, files, program output). The answer is kept per provider. The
+  agent's intro says the same.
+- **Store builds leave out the self-test's SPI:** `SELFTEST_SPI` compiles
+  in `_killWebContentProcess` and `UIKeyboardImpl`. Debug builds and
+  `run.sh --device` set it. `scripts/archive.sh` does not set it, and it
+  checks the binary. The SPI the features use (120 Hz pages, the key bar's
+  WKContentView subclass, keyboard traits, programmatic focus) stays. It
+  is listed as a review risk with its fallbacks.
+- **Export compliance:** `ITSAppUsesNonExemptEncryption` is NO. The app's
+  encryption is Apple's (HTTPS, Keychain).
+- **Acknowledgements:** the web build writes `licenses.json` from the npm
+  packages in the bundle (pages and workers) and `licenses-extra.json`
+  (Pyodide, CPython, Emscripten).
+- **Shipping:** `make archive` and `make upload` (`app/scripts/archive.sh`,
+  `ios/ExportOptions.plist`: App Store Connect, automatic signing, build
+  number from the time). `app/scripts/store-screenshots.sh` takes the
+  6.9" iPhone and 13" iPad screenshots.
+
+Evidence: a Release archive (2026-10-18) has the manifest,
+`licenses.json` and the encryption key. None of the self-test's selectors
+are in its binary. Not yet uploaded or reviewed.
+
 ## Proposed (not yet decided)
 
 (none)

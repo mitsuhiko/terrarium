@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Pyodide",
+    "license": "MPL-2.0",
+    "url": "https://github.com/pyodide/pyodide",
+    "text": "Pyodide is licensed under the Mozilla Public License, version 2.0. The text of the license is at https://mozilla.org/MPL/2.0/.\n\nThe app bundles Pyodide's core, unmodified. Its source code is available at https://github.com/pyodide/pyodide (the versions listed here are tags there)."
+  },
+  {
+    "name": "Python",
+    "license": "PSF-2.0",
+    "url": "https://www.python.org/",
+    "docs": "license.html",
+    "text": "CPython, its standard library and its documentation are licensed under the Python Software Foundation License Version 2, with parts under other licenses. The full history and terms, including the licenses of the third-party software in CPython, are in the bundled Python documentation (\"History and License\").\n\nCopyright © 2001 Python Software Foundation. All rights reserved.\n\nThe app's turtle module is derived from CPython's Lib/turtle.py."
+  },
+  {
+    "name": "Emscripten",
+    "license": "MIT",
+    "url": "https://emscripten.org/",
+    "text": "Copyright (c) 2010-2014 Emscripten authors, see AUTHORS file.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+  },
+  {
+    "name": "Python packages",
+    "license": "various",
+    "text": "Packages a program installs (with micropip, %pip or a PEP 723 block) are downloaded from PyPI and Pyodide's package index under their own licenses. They are not part of the app."
+  }
+]
