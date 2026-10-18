@@ -36,9 +36,19 @@ to do by hand in App Store Connect, and the open risks for review.
   (`YYYYMMDD.HHMM`). The version is `MARKETING_VERSION` in the project
   (now 0.1).
 - **Screenshots**: `app/scripts/store-screenshots.sh` takes them in the
-  iPhone 6.9" and iPad 13" simulators (`build/screenshots/`). Those are the
-  two sizes App Store Connect needs; it scales them down for smaller
-  devices.
+  iPhone 6.9" and iPad 13" simulators into `screenshots/` (committed; the
+  top-level README shows them). Those are the two sizes App Store Connect
+  needs; it scales them down for smaller devices. Upload them in file order (the first three show in search):
+  - iPhone (9): plot, agent, editor with a ty diagnostic, notebook, ui app,
+    debugger, turtle, docs, files.
+  - iPad (7): split view, agent, notebook, completions, debugger, ui app,
+    docs.
+  - The scenes use the launch hooks (`AppModel.launchHooks`). The agent's
+    is a scripted model (`web/src/agent/demo.ts`) whose tool calls really
+    edit, check and run `Examples/Plot.py`.
+  - The status bar says 9:41 (12-hour format: the script switches the
+    simulator to en_US for the run). iPads show the window resize handle of
+    iPadOS's default windowed mode.
 
 ## By hand, once
 

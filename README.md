@@ -10,17 +10,30 @@ WebAssembly) and has a coding agent built in.
 > not on the App Store yet and not affiliated with Pythonista.
 
 <p>
-  <img src="docs/screenshots/iphone-agent.png" width="24%" alt="The coding agent wrote and ran a program">
-  <img src="docs/screenshots/iphone-plot.png" width="24%" alt="Editor and console with an inline matplotlib plot">
-  <img src="docs/screenshots/iphone-debug.png" width="24%" alt="The debugger paused at a breakpoint">
-  <img src="docs/screenshots/iphone-todo.png" width="24%" alt="A Reminders-style todo app built with the ui module">
+  <a href="app/appstore/screenshots/iphone/1-plot.png"><img src="app/appstore/screenshots/iphone/1-plot.png" width="24%" alt="Editor and console with an inline matplotlib plot"></a>
+  <a href="app/appstore/screenshots/iphone/2-agent.png"><img src="app/appstore/screenshots/iphone/2-agent.png" width="24%" alt="The coding agent edited, checked and ran a program"></a>
+  <a href="app/appstore/screenshots/iphone/3-editor.png"><img src="app/appstore/screenshots/iphone/3-editor.png" width="24%" alt="The editor with the key bar and a ty diagnostic"></a>
+  <a href="app/appstore/screenshots/iphone/4-notebook.png"><img src="app/appstore/screenshots/iphone/4-notebook.png" width="24%" alt="A Jupyter notebook with a plot"></a>
 </p>
 <p>
-  <img src="docs/screenshots/ipad-split.png" width="49%" alt="iPad: split view with a turtle drawing in the console">
-  <img src="docs/screenshots/ipad-debug.png" width="49%" alt="iPad: split view and the debugger">
+  <a href="app/appstore/screenshots/iphone/6-debugger.png"><img src="app/appstore/screenshots/iphone/6-debugger.png" width="24%" alt="The debugger paused at a breakpoint"></a>
+  <a href="app/appstore/screenshots/iphone/5-todo.png"><img src="app/appstore/screenshots/iphone/5-todo.png" width="24%" alt="A Reminders-style todo app built with the ui module"></a>
+  <a href="app/appstore/screenshots/iphone/7-turtle.png"><img src="app/appstore/screenshots/iphone/7-turtle.png" width="24%" alt="Turtle graphics in the console"></a>
+  <a href="app/appstore/screenshots/iphone/8-docs.png"><img src="app/appstore/screenshots/iphone/8-docs.png" width="24%" alt="The Python documentation, offline"></a>
+</p>
+<p>
+  <a href="app/appstore/screenshots/ipad/1-split.png"><img src="app/appstore/screenshots/ipad/1-split.png" width="49%" alt="iPad: split view with a plot in the console"></a>
+  <a href="app/appstore/screenshots/ipad/2-agent.png"><img src="app/appstore/screenshots/ipad/2-agent.png" width="49%" alt="iPad: the coding agent"></a>
+</p>
+<p>
+  <a href="app/appstore/screenshots/ipad/3-notebook.png"><img src="app/appstore/screenshots/ipad/3-notebook.png" width="49%" alt="iPad: a notebook with a plot and a pandas table"></a>
+  <a href="app/appstore/screenshots/ipad/4-editor.png"><img src="app/appstore/screenshots/ipad/4-editor.png" width="49%" alt="iPad: completions from ty"></a>
 </p>
 
-<sub>iPhone 17 and iPad Pro 13" simulators, iOS 27.</sub>
+<sub>The App Store screenshots (all of them: <a href="app/appstore/screenshots">app/appstore/screenshots</a>),
+from <code>app/scripts/store-screenshots.sh</code> in the iPhone 18 Pro Max and
+iPad Pro 13-inch (M5) simulators, iOS 27. The agent's replies there are
+scripted; its tools really ran.</sub>
 
 ## Features
 
