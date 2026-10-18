@@ -10,7 +10,8 @@ apps are native views (D30).
 - **Files**: projects live in the app's Documents folder, which also shows up
   in the Files app ("On My iPhone"). Create, rename, duplicate and delete files
   and folders (native dialogs). Examples are copied into `Examples/` on first
-  launch.
+  launch (subfolders too); `Examples/Start Here.md` links them by topic.
+  Untouched ones are updated with the app.
 - **File management** (D41): delete goes to a Trash (at the bottom of the
   file list; restore or delete for good, emptied after 30 days); drag a
   row onto a folder or use Move… to move it; images, PDFs, audio and
@@ -37,6 +38,7 @@ apps are native views (D30).
   checks), a problem bar above the keyboard that shows the problem at the
   cursor with its quick fixes (touch has no hover), a problem count badge,
   ty-powered completions, and "Format Code" (ruff format) in the ⋯ menu.
+  Example: `Types.py` (five mistakes to fix).
   Imports that Pyodide can install by itself are not flagged.
 - **Dependencies**: a PEP 723 block (`# /// script` … `dependencies = [...]`),
   the format `uv run` uses, or `pyproject.toml` in the folder. They are
@@ -62,8 +64,12 @@ apps are native views (D30).
   `speech`, `contacts` and `reminders`, plus `haptics`; `webbrowser.open()`
   opens links. Dialogs block until answered; images are PIL images;
   permissions are asked on first use. Not available in the agent's runs.
-  Examples: `Device Tour.py`, and the apps `Photo Booth.py`, `Level.py`
-  and `Birthdays.py`.
+  Examples: `Device Tour.py`, `Clipboard Tools.py`, and the apps
+  `Photo Booth.py`, `Level.py`, `Birthdays.py`, `Voice Memos.py`
+  (Recorder, Player, speech recognition), `Pomodoro.py` (notifications),
+  `Journal.py` (keychain, SQLite), `Weather.py` (location, httpx),
+  `Brick Breaker.py` (motion, sound, haptics), `Piano.py` and
+  `Drum Machine.py` (sounds synthesized with numpy).
 - **Docs for the app's modules** (D42): `ui`, turtle in the app and the
   device modules have pages in the docs viewer next to the Python docs
   (sources in `docs/*.md`), found by its search, `help()`, Show Info and
@@ -157,7 +163,9 @@ apps are native views (D30).
     load its packages. Their output goes to the console.
   - Stop ends the whole tree. At most 10 processes, and `os.cpu_count()`
     is at most 4.
-  - Example: `Processes.py`; docs: `docs/processes.md`.
+  - `_posixshmem` is a stub (no segments), so `multiprocessing.resource_tracker`
+    imports, and with it joblib and scikit-learn.
+  - Examples: `Processes.py`, `Mandelbrot.py`; docs: `docs/processes.md`.
 - **Notebooks** (D44): Jupyter notebooks (`.ipynb`) and `.py` files with
   `# %%` cells.
   - A `.ipynb` shows as cells, with a toolbar (Run All, Restart, Clear,
@@ -181,7 +189,7 @@ apps are native views (D30).
     Jupyter writes it. ruff and ty check the code cells and leave out
     what doesn't apply to cells.
   - New File has a Notebook template; examples: `Notebook.ipynb`,
-    `Cells.py`. Docs: `docs/notebooks.md`.
+    `Cells.py`, `Earthquakes.ipynb` (live data, pandas, maps). Docs: `docs/notebooks.md`.
 - **Markdown** (D46): a `.md` opens as a preview, or as its source when
   there is nothing to read yet (a new note).
   - The button where Run is (also the ⋯ menu and ⌘⇧V) switches views and
@@ -208,12 +216,13 @@ apps are native views (D30).
   - `breakpoint()` works too.
   - After an error, Inspect opens the same view on the failing line.
   - Breakpoints cost nothing while they are not hit.
+  - Example: `Debug Me.py` (a bug to find).
 - **Turtle graphics** (D29): `import turtle` is CPython's own module, drawn
   on a canvas inline in the console, animated at turtle's speeds. Taps
   (`onclick`, `onscreenclick`, drag and release), hardware keys (`onkey`),
   timers and `textinput`/`numinput` work. A program with handlers keeps
   running until Stop (or `bye()`), even without `done()`. Examples:
-  `Turtle.py`, `Catch the Turtle.py`.
+  `Turtle.py`, `Turtle Fractals.py`, `Catch the Turtle.py`.
 - **UI apps**: programs using `import ui` open full screen as native SwiftUI
   views (D30); the × button ends the program, touch and hold restarts it,
   and `ui.run(close_button=False)` with `ui.close()` lets an app own its exit (D43). The module is Solid-style (D26): components run once, and
@@ -222,7 +231,10 @@ apps are native views (D30).
   `uikit/README.md`). Files the app writes while it runs (e.g. saved data)
   reach the disk right away (D35). `Examples/Todo App.py` is a
   complete Reminders-style app that keeps its data in an SQLite database
-  (`todos.db`).
+  (`todos.db`). More examples: the uikit ones (`Paint`, `Bounce`,
+  `Navigation`, `Tabs`, `Settings`, `Async Data`), games and drawing
+  (`Brick Breaker`, `Game of Life`, `Mandelbrot`, `Draw a Digit` with
+  scikit-learn) and `Adventure/` (a program in several files).
 - **Coding agent** (D34, D36): the ✨ button (in the editor and the file
   browser, or ⌘⇧A) opens a conversation about the current project (the
   top-level folder, or a linked folder).
@@ -320,7 +332,7 @@ app/
                           device modules (clipboard.py, dialogs.py, photos.py, ..., D40),
                           python/_terrarium_debug.py (debugger), python/turtle.py (generated by
                           scripts/make-turtle.py) + python/_terrarium_turtle.py (its backend)
-    public/examples/      seeded into Documents/Examples
+    public/examples/      seeded into Documents/Examples (index.json lists them, folders allowed)
     src/                  session (runs, console, debugger), python (worker pool), runtimes (which Python
                           a program runs on, D37), turtle (scenes and events), host (bridge), selftest
                           (runs in the engine, drives the app)

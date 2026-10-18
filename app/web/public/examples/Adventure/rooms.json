@@ -1,0 +1,53 @@
+{
+  "title": "The Glasshouse",
+  "intro": "Your grandmother left you her garden, and a note: \"Save the moon orchid.\"",
+  "start": "garden",
+  "rooms": {
+    "garden": {
+      "name": "Overgrown garden",
+      "description": "Weeds have taken over the beds. A glasshouse glitters to the north. A shed leans to the east, a pond lies to the west, and an orchard rustles to the south.",
+      "exits": {"north": "glasshouse", "east": "shed", "west": "pond", "south": "orchard"},
+      "locked": {"north": {"needs": "key", "message": "The glasshouse door is locked. A small keyhole is rusty but intact."}},
+      "items": ["note"]
+    },
+    "shed": {
+      "name": "Garden shed",
+      "description": "Dusty shelves, clay pots and a smell of old soil. The garden is back to the west.",
+      "exits": {"west": "garden"},
+      "items": ["can"]
+    },
+    "pond": {
+      "name": "Pond",
+      "description": "Still green water and lily pads. Something glints at the bottom, out of reach. The garden is to the east.",
+      "exits": {"east": "garden"},
+      "items": []
+    },
+    "orchard": {
+      "name": "Orchard",
+      "description": "Old apple trees in crooked rows. A fishing net hangs from a branch. The garden is to the north.",
+      "exits": {"north": "garden"},
+      "items": ["net", "apple"]
+    },
+    "glasshouse": {
+      "name": "Glasshouse",
+      "description": "Warm, damp air and dirty glass. On a table in the middle, a pale orchid droops in dry soil. The door to the south leads out.",
+      "exits": {"south": "garden"},
+      "items": []
+    }
+  },
+  "items": {
+    "note": {"name": "a note", "words": ["note", "letter"], "description": "\"The key is where the fish used to be. Water her, she gets thirsty. Love, Grandma.\""},
+    "can": {"name": "an empty watering can", "words": ["can", "watering can"], "description": "A tin watering can. Empty."},
+    "full_can": {"name": "a watering can full of pond water", "words": ["can", "watering can", "water"], "description": "It sloshes."},
+    "net": {"name": "a fishing net", "words": ["net", "fishing net"], "description": "A net on a long bamboo pole."},
+    "apple": {"name": "an apple", "words": ["apple"], "description": "Red, a bit wrinkly, probably fine."},
+    "key": {"name": "a brass key", "words": ["key", "brass key"], "description": "Small, brass, still shiny under the mud."}
+  },
+  "actions": [
+    {"item": "net", "room": "pond", "once": true, "gives": "key", "message": "You sweep the net along the bottom of the pond and pull up a brass key!"},
+    {"item": "can", "room": "pond", "replace": "full_can", "message": "You fill the watering can with pond water."},
+    {"item": "full_can", "room": "glasshouse", "win": true, "message": "You water the orchid. The soil darkens, and slowly the stem straightens. A single white flower opens, glowing faintly like the moon."},
+    {"item": "full_can", "message": "You water the weeds. They look grateful. You'd better fill the can again.", "replace": "can"},
+    {"item": "apple", "consume": true, "message": "Crunchy and sweet. You feel ready for anything."}
+  ]
+}
