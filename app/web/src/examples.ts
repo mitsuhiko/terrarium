@@ -6,6 +6,7 @@ const SEEDED_KEY = "terrarium.examples"; // name -> sha256 of the version we wro
 // Earlier bundled versions (sha256). A copy matching one of them was never
 // edited, so it may be replaced, e.g. the D14 ui examples after P1.
 const PREVIOUS: Record<string, string[]> = {
+  "Plot.py": ["e988e219dfe3aec1227905a4940b29e83818b8a6c871c40900bb98ebd985d345"], // before the wider figure
   "Counter App.py": ["31315c9546a3972c997cfe2a6e69cb1ff78a916fab5f040582c451f58ca1192f"],
   "Todo App.py": [
     "8d60cead56a4abf497c78ff36302fbd7c57bee1bbb456843ef896c35e7e6397e",

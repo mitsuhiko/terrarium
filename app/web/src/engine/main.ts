@@ -35,7 +35,7 @@ breakpoints.onChange = (data) => void call("breakpoints.changed", { data }).catc
 // up a turn an earlier page left running.
 const AGENT_METHODS = new Set([
   "open", "newConversation", "switchTo", "rename", "archive", "importConversations", "renamed", "setVisible", "ideChanged",
-  "submit", "abort", "setModel", "accounts", "availableModels", "login", "cancelLogin", "logout", "state",
+  "submit", "abort", "setModel", "accounts", "availableModels", "login", "cancelLogin", "logout", "state", "demo",
 ]);
 const loadAgent = () => import("../agent/service").then((m) => m.agent);
 

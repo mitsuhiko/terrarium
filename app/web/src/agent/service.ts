@@ -698,10 +698,21 @@ export class AgentService {
   /** A scripted model (pi-ai's faux provider, as "selftest") for the self-test. */
   useFaux(): FauxProviderHandle {
     if (!this.faux) {
-      this.faux = fauxProvider({ provider: "selftest" });
+      // "demo" has no name: the composer leaves it out in the store screenshots.
+      this.faux = fauxProvider({ provider: "selftest", models: [{ id: "faux-1" }, { id: "demo", name: "" }] });
       this.models.setProvider(this.faux.provider);
     }
     return this.faux;
+  }
+
+  /** A scripted conversation with real tool calls, for the App Store screenshots (`agent=demo`). */
+  async demo(project: string, ide?: IDEState | null) {
+    const { demoScript, DEMO_PROMPT } = await import("./demo");
+    const faux = this.useFaux();
+    await this.newConversation(project);
+    await this.setModel("selftest", "demo");
+    faux.setResponses(await demoScript((ide?.file && projectPath(project, ide.file)) || undefined));
+    await this.submit(DEMO_PROMPT, ide);
   }
 }
 

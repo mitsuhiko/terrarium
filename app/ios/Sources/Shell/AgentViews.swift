@@ -103,6 +103,8 @@ struct AgentView: View {
                 }
                 Text(state.root.map(displayName) ?? "").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
             }
+            // The principal item isn't limited by the buttons beside it: long titles truncate here.
+            .frame(maxWidth: model.wide ? 360 : 190)
         }
         .tint(.primary)
         .accessibilityLabel("Conversations")
@@ -165,7 +167,7 @@ struct AgentView: View {
 
     private func composer(_ state: AgentState) -> some View {
         VStack(spacing: 4) {
-            if let m = state.model {
+            if let m = state.model, !m.name.isEmpty {
                 Text(m.name).font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
             }
             HStack(alignment: .bottom, spacing: 8) {
@@ -302,6 +304,7 @@ private struct AgentItemView: View {
         }
         .padding(10)
         .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .onAppear { if model.agentExpandEdits && item.tool == "edit" { expanded = true } }
     }
 
     /// An IDE tool: one line with what it did to the editor (all of it when tapped).

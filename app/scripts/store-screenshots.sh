@@ -1,64 +1,108 @@
 #!/bin/bash
 # App Store screenshots (D51): the sizes App Store Connect asks for, from the
-# simulators, with a clean status bar, into build/screenshots/<device>/.
+# simulators, with a clean status bar, into appstore/screenshots/<device>/
+# (committed; the README shows them).
 #
 #   scripts/store-screenshots.sh              iPhone 6.9" and iPad 13"
 #   scripts/store-screenshots.sh iphone       one of them
+#   scripts/store-screenshots.sh iphone 3     only the scenes whose name starts with 3
 #   IPHONE="iPhone 18 Pro Max" IPAD="iPad Pro 13-inch (M5)" APPEARANCE=dark ...
 #
 # Each scene starts from a fresh app state (settings cleared, examples
 # re-seeded with --reset) and uses the launch hooks (AppModel.launchHooks).
-# The simulators' Documents are wiped. The plot and the notebook need the
-# network the first time (numpy and matplotlib come from Pyodide's CDN).
+# The simulators' Documents are wiped. The plot, the notebook and the agent
+# need the network the first time (numpy and matplotlib come from Pyodide's
+# CDN). The agent's scene is scripted (web/src/agent/demo.ts): its tools
+# really read, edit, check and run Examples/Plot.py.
+#
+# The status bar shows 9:41 in the 12-hour format, so the simulator's region
+# is set to en_US for the run (a reboot when it was another one) and put back
+# afterwards (in effect after the simulator's next boot).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-KINDS=("$@")
+KINDS=()
+ONLY=""
+for arg in "$@"; do
+  case "$arg" in
+    iphone|ipad) KINDS+=("$arg") ;;
+    *) ONLY=$arg ;;
+  esac
+done
 [ ${#KINDS[@]} -gt 0 ] || KINDS=(iphone ipad)
 IPHONE=${IPHONE:-iPhone 18 Pro Max}
 IPAD=${IPAD:-iPad Pro 13-inch (M5)}
 APPEARANCE=${APPEARANCE:-light}
 BUNDLE_ID=eu.ronacher.pyterrarium
 
+# Hello.py with a typo for ty to find, typed after the last line (%0A is a newline, @@ the cursor).
+TYPO='cursor=9:1&focus&type=%0Asquares = [i * i for i in range(1, 6)]%0Aprint(nmae, "gets", sum(squares))@@'
+
+# Todo App.py: a helper typed between two functions, with ty's completions open (iPad: no keyboard).
+COMPLETION='cursor=24:1&focus&type=%0A%0Adef tomorrow() -> str:%0A    return (datetime.date.today() + datetime.timedelta(days=1)).isof@@'
+
 # name|fragment|seconds to wait
 IPHONE_SCENES=(
   "1-plot|open=Examples/Plot.py&run&pane=console|25"
-  "2-debugger|open=Examples/Countdown.py&bp=5&run&pane=console|12"
-  "3-todo|open=Examples/Todo App.py&run|12"
-  "4-notebook|open=Examples/Notebook.ipynb&cells|25"
-  "5-turtle|open=Examples/Turtle.py&run&pane=console|20"
-  "6-docs|docs=3.14/library/json.html|8"
+  "2-agent|open=Examples/Plot.py&agent=demo|40"
+  "3-editor|open=Examples/Hello.py&$TYPO|16"
+  "4-notebook|open=Examples/Notebook.ipynb&cells&top=## Plots|35"
+  "5-todo|open=Examples/Todo App.py&run|14"
+  "6-debugger|open=Examples/Cells.py&bp=16&run&pane=console|16"
+  "7-turtle|open=Examples/Turtle.py&run&pane=console|22"
+  "8-docs|docs=3.14/library/json.html|8"
+  "9-files|folder=Examples|10"
 )
 IPAD_SCENES=(
-  "1-split|open=Examples/Plot.py&split=Examples/Turtle.py&run|25"
-  "2-debugger|open=Examples/Countdown.py&bp=5&run|12"
-  "3-notebook|open=Examples/Notebook.ipynb&cells|25"
-  "4-todo|open=Examples/Todo App.py&run|12"
-  "5-docs|docs=3.14/library/json.html|8"
+  "1-split|open=Examples/Turtle.py&split=Examples/Plot.py&run&folder=Examples|25"
+  "2-agent|open=Examples/Plot.py&folder=Examples&agent=demo|40"
+  "3-notebook|open=Examples/Notebook.ipynb&folder=Examples&cells&top=## Plots&pane=editor|35"
+  "4-editor|open=Examples/Todo App.py&folder=Examples&pane=editor&$COMPLETION|16"
+  "5-debugger|open=Examples/Cells.py&folder=Examples&bp=16&run|16"
+  "6-todo|open=Examples/Todo App.py&run|14"
+  "7-docs|docs=3.14/library/json.html|8"
 )
+
+running() { xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -q "UIKitApplication:$BUNDLE_ID\["; }
 
 for kind in "${KINDS[@]}"; do
   case "$kind" in
     iphone) NAME=$IPHONE; SCENES=("${IPHONE_SCENES[@]}") ;;
     ipad) NAME=$IPAD; SCENES=("${IPAD_SCENES[@]}") ;;
-    *) echo "unknown device $kind (iphone or ipad)" >&2; exit 2 ;;
   esac
   UDID=$(./scripts/simulator.sh "$kind" "$NAME")
   echo "$kind: $NAME ($UDID)"
+  LOCALE=$(xcrun simctl spawn "$UDID" defaults read -g AppleLocale 2>/dev/null || true)
+  if [ "$LOCALE" != en_US ]; then
+    xcrun simctl spawn "$UDID" defaults write -g AppleLocale en_US
+    xcrun simctl shutdown "$UDID"
+    xcrun simctl boot "$UDID"
+    xcrun simctl bootstatus "$UDID" > /dev/null
+  fi
   SIM=$UDID ./run.sh   # build, install and launch once
   xcrun simctl ui "$UDID" appearance "$APPEARANCE"
   xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
     --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
-  OUT=build/screenshots/$kind
+  OUT=appstore/screenshots/$kind
+  [ -n "$ONLY" ] || rm -rf "$OUT"   # scenes that were renamed or dropped
   mkdir -p "$OUT"
   for scene in "${SCENES[@]}"; do
     IFS='|' read -r shot fragment wait <<< "$scene"
+    [ -z "$ONLY" ] || [[ "$shot" == "$ONLY"* ]] || continue
+    # terminate returns before the app is gone; a launch then may not start a new one.
     xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+    for _ in $(seq 1 50); do running || break; sleep 0.2; done
     xcrun simctl spawn "$UDID" defaults delete "$BUNDLE_ID" 2>/dev/null || true
     xcrun simctl launch "$UDID" "$BUNDLE_ID" --reset --fragment "$fragment" > /dev/null
     sleep "$wait"
+    rm -f "$OUT/$shot.png"
     xcrun simctl io "$UDID" screenshot "$OUT/$shot.png" > /dev/null 2>&1
+    for _ in $(seq 1 50); do [ -s "$OUT/$shot.png" ] && break; sleep 0.2; done   # written a moment later
     echo "  $OUT/$shot.png ($(sips -g pixelWidth -g pixelHeight "$OUT/$shot.png" | awk '/pixel/ {print $2}' | paste -sd x -))"
   done
   xcrun simctl status_bar "$UDID" clear
+  if [ "$LOCALE" != en_US ]; then
+    if [ -n "$LOCALE" ]; then xcrun simctl spawn "$UDID" defaults write -g AppleLocale "$LOCALE"
+    else xcrun simctl spawn "$UDID" defaults delete -g AppleLocale; fi
+  fi
 done

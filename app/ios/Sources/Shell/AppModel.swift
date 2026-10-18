@@ -148,6 +148,8 @@ final class AppModel {
     var agentModels: [AgentModelOption] = []
     var agentLoginError: String?
     var agentAccountsShown = false
+    /// Edits in the transcript start expanded (the agent=demo launch hook, for screenshots).
+    var agentExpandEdits = false
     var agentListShown = false
     /// The agent sheet's height on iPhone: it makes room when the agent opens a file.
     var agentDetent: PresentationDetent = .large
@@ -407,6 +409,7 @@ final class AppModel {
         case (.engine, "engine.ready"):
             engine.markReady()
             host.unmountAll() // left by a page that reloaded
+            fileListVersion += 1 // the engine seeds the examples before it is ready (a first launch lists them)
             let lost = lostSession
             lostSession = nil
             Task {
@@ -1287,7 +1290,7 @@ final class AppModel {
         toggleBreakpoint(c.path, line: c.line, text: c.text)
     }
 
-    // MARK: launch hooks for screenshots: open=<path>[&bp=<lines>][&split=<path>][&run][&cells][&pane=files|editor|console][&focus[=console]][&agent[=accounts|conversations]][&ask=<prompt>][&docs=<version>/<ref, # as %23>][&settings][&newfile=<dir>][&move=<path>][&trash]
+    // MARK: launch hooks for screenshots: open=<path>[&bp=<lines>][&split=<path>][&run][&cells][&top=<text>][&folder=<dir>][&pane=files|editor|console][&cursor=<line>:<col>][&focus[=console]][&type=<text, @@ for the cursor>][&agent[=accounts|conversations|demo]][&ask=<prompt>][&docs=<version>/<ref, # as %23>][&settings][&newfile=<dir>][&move=<path>][&trash]
 
     private func launchHooks(_ fragment: String) async {
         guard !fragment.hasPrefix("#selftest") else { return }
@@ -1316,15 +1319,31 @@ final class AppModel {
             try? await Task.sleep(for: .milliseconds(300))
             notebookCommand("runAll")
         }
+        if let text = hook["top"] {
+            // After the program or the cells finish (outputs change the heights).
+            try? await Task.sleep(for: .milliseconds(1000))
+            for _ in 0..<120 where session.running { try? await Task.sleep(for: .milliseconds(500)) }
+            try? await Task.sleep(for: .milliseconds(800))
+            _ = await editorCall(focused, "scrollToText", [text])
+        }
+        if let dir = hook["folder"] { route = [.folder(dir)] }
         switch hook["pane"] {
         case "console": if wide { consoleDocked = true } else { consoleDetent = .half }
         case "files": if !wide { route = [] }
+        case "editor": if wide { consoleDocked = false }
         default: break
         }
         if let agentHook = hook["agent"] {
             openAgent()
             if agentHook == "accounts" { agentAccountsShown = true }
             if agentHook == "conversations" { agentListShown = true }
+            if agentHook == "demo" {
+                agentExpandEdits = true
+                // A scripted model with real tools (web/src/agent/demo.ts), for the store screenshots.
+                for _ in 0..<50 where agent.state.root == nil { try? await Task.sleep(for: .milliseconds(200)) }
+                await saveAll()
+                if let project = agent.state.root { await agentCall("demo", [project, await ideState()]) }
+            }
             if let prompt = hook["ask"] {
                 // A fresh conversation in the folder, then the prompt as if typed.
                 for _ in 0..<50 where agent.state.root == nil { try? await Task.sleep(for: .milliseconds(200)) }
@@ -1340,6 +1359,10 @@ final class AppModel {
             try? await Task.sleep(for: .milliseconds(300))
             _ = openDocsLink(url)
         }
+        if let at = hook["cursor"] {
+            let p = at.split(separator: ":").compactMap { Int($0) }
+            _ = await editorCall(focused, "setCursor", [p.first ?? 1, p.count > 1 ? p[1] : 1])
+        }
         if hook["focus"] == "console" {
             try? await Task.sleep(for: .milliseconds(600))
             focusedField = .console
@@ -1350,6 +1373,12 @@ final class AppModel {
                 if KeyboardAccessory.shared.focusForTesting() { break }
                 try? await Task.sleep(for: .milliseconds(500))
             }
+        }
+        if let text = hook["type"] {
+            // As if typed (completions open); "@@" is where the cursor ends up.
+            try? await Task.sleep(for: .milliseconds(500))
+            let parts = text.components(separatedBy: "@@")
+            _ = await editorCall(focused, "insert", [parts.joined(), parts[0].utf16.count])
         }
     }
 }

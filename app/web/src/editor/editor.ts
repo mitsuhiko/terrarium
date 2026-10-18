@@ -721,6 +721,15 @@ export class PaneEditor {
     }
   }
 
+  /** Scroll the first line that contains `text` to the top, without selecting it (screenshot launch hook); false if none. */
+  scrollToText(text: string) {
+    const view = this.view;
+    const at = view.state.doc.toString().indexOf(text);
+    if (at < 0) return false;
+    view.dispatch({ effects: EditorView.scrollIntoView(view.state.doc.lineAt(at).from, { y: "start", yMargin: 8 }) });
+    return true;
+  }
+
   /** Jump to a line (traceback, definition, outline): select it, scroll, flash. */
   reveal(line: number, column = 1, visibleFraction = 0.85) {
     const view = this.view;
