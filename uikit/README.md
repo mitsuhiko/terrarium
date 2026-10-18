@@ -5,7 +5,7 @@ reactivity in the style of SolidJS, replacing D14's re-render model (D26).
 Inside the app the elements are native SwiftUI views (D30,
 `app/ios/Sources/UIRenderer/`); published web apps draw the same tree with the
 HTML renderer in `web/`. This folder is the source of truth;
-`scripts/install.sh` copies `ui.py` into the app.
+`scripts/install.sh` copies `ui.py` and the shipped examples into the app.
 
 ```python
 import ui
@@ -154,7 +154,8 @@ change.
 
 ## In the app
 
-`scripts/install.sh` copies `python/ui.py` and `examples/Todo App.py` into
+`scripts/install.sh` copies `python/ui.py` and the examples the app ships
+(Todo App, Paint, Bounce, Navigation, Tabs, Settings, Async Data) into
 `app/web`. The app's copies are generated: edit them here. The app side:
 - The engine page forwards the op stream to the host, which applies it to the
   native renderer (D30). Events go back through the engine to the worker.

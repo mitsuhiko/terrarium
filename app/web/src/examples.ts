@@ -19,8 +19,18 @@ async function sha256(text: string) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Make the folders above an example in a subfolder ("Adventure/world.py"). */
+async function makeParents(path: string) {
+  const parts = path.split("/").slice(0, -1);
+  for (let i = 1; i <= parts.length; i++) {
+    const dir = parts.slice(0, i).join("/");
+    if (!(await fs.exists(dir))) await fs.mkdir(dir);
+  }
+}
+
 /** Copy the bundled examples into Documents/Examples. New examples are added
- * and untouched ones updated; edited or deleted examples are left alone. */
+ * and untouched ones updated; edited or deleted examples are left alone.
+ * Names may have folders: "Adventure/Adventure.py". */
 export async function seedExamples() {
   const fresh = !(await fs.exists(EXAMPLES_DIR));
   if (fresh) await fs.mkdir(EXAMPLES_DIR);
@@ -34,7 +44,7 @@ export async function seedExamples() {
   }
   const names: string[] = await (await fetch("/examples/index.json")).json();
   for (const name of names) {
-    const text = await (await fetch(`/examples/${encodeURIComponent(name)}`)).text();
+    const text = await (await fetch(`/examples/${name.split("/").map(encodeURIComponent).join("/")}`)).text();
     const hash = await sha256(text);
     if (seeded[name] === hash) continue;
     const path = join(EXAMPLES_DIR, name);
@@ -46,6 +56,7 @@ export async function seedExamples() {
     } else if (!fresh && name in seeded) {
       continue; // the user deleted it
     } else {
+      await makeParents(path);
       await fs.writeText(path, text);
     }
     seeded[name] = hash;

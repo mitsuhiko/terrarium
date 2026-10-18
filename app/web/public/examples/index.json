@@ -1,5 +1,7 @@
 [
+  "Async Data.py",
   "Birthdays.py",
+  "Bounce.py",
   "Catch the Turtle.py",
   "Cells.py",
   "Countdown.py",
@@ -10,10 +12,14 @@
   "Guess the Number.py",
   "Hello.py",
   "Level.py",
+  "Navigation.py",
   "Notebook.ipynb",
+  "Paint.py",
   "Photo Booth.py",
   "Plot.py",
   "Processes.py",
+  "Settings.py",
+  "Tabs.py",
   "Todo App.py",
   "Turtle.py",
   "Web Requests.py"

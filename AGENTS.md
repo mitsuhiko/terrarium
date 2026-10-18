@@ -14,7 +14,7 @@ agent. Early research phase.
 - `uikit/`: the `ui` module (D26, Solid-style signals): `python/ui.py`, the
   web renderer for published apps (`web/renderer.js`, `web/ui.css`), examples
   and a playground. Edit it there, then run `uikit/scripts/install.sh` to copy
-  `ui.py` into `app/web`. Test with `uikit/run.sh --selftest` (host pytest +
+  `ui.py` (and the uikit examples the app ships) into `app/web`. Test with `uikit/run.sh --selftest` (host pytest +
   headless Chrome). A change to the op protocol needs both renderers: the web
   one and `app/ios/Sources/UIRenderer/`.
 
