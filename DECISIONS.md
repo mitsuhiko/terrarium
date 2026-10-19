@@ -1932,6 +1932,14 @@ CodeMirror's updates while scrolling) is now held near 60 fps.
 keyboard SPI (programmatic focus, the key bar's content view subclass,
 plain traits) stays: other store apps ship the same.
 
+Note on D53 (2026-10-19): there is no second team. `ZRL6J4P42H` itself
+became the paid team (Apple Developer Program, individual, renewed
+2027-10-20), so the project and `ExportOptions.plist` keep it. Xcode kept
+the team's free status cached ("Failed to Use Accounts: App Store Connect
+access is required") until the Apple Account was signed out and in again.
+The export then signs with Apple Distribution and an App Store profile for
+`eu.ronacher.pyterrarium`.
+
 ## Proposed (not yet decided)
 
 (none)

@@ -78,4 +78,4 @@ Done:
   the simulator. Prefer the app over Safari for automated runs; driving Safari
   with `simctl openurl` reuses tabs and is unreliable.
 - Never claim a result from the simulator or Safari applies to a real device or to WKWebView; say which one was tested.
-- Device runs: `spikes/device-perf/run.sh` (paired iPhone 14 Pro, personal team `ZRL6J4P42H`). The phone must be unlocked; ask the user first.
+- Device runs: `spikes/device-perf/run.sh` (paired iPhone 14 Pro, team `ZRL6J4P42H` (paid, individual)). The phone must be unlocked; ask the user first.
