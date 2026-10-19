@@ -1896,6 +1896,24 @@ The repository is `mitsuhiko/terrarium`, and the privacy policy and
 support URLs in Settings → About and in `app/appstore/metadata.md` point
 there.
 
+## D54: The app needs iOS 27
+
+2026-10-18 - Accepted
+
+The deployment target is iOS 27.0 (it was 26.0). On iOS 26, WKWebView
+pages from a custom scheme are not cross-origin isolated, whatever the
+COOP/COEP headers say, so the engine page cannot share memory with Python's
+workers (D9). Every program fails ("The object can not be cloned."), and
+`input()`, Stop, `time.sleep`, blocking HTTP and processes all depend on it.
+The editor, analysis, docs and files work. Supporting iOS 26 would mean
+serving the pages over loopback HTTP instead of `app://`: Safari 26.4
+isolates `http://localhost` with the same headers, but WKWebView was not
+tried. Not worth it for a first version.
+
+Evidence: the self-test's `environment` step (simulator, iPhone 17 Pro):
+`crossOriginIsolated` is false on iOS 26.0 and 26.4 and true on 27.0, and
+JSPI is only on 27.0. Safari 26.4 on `http://localhost`: isolated.
+
 ## Proposed (not yet decided)
 
 (none)

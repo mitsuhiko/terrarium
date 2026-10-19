@@ -157,7 +157,7 @@ Built last (D8), on top of everything above.
 
 ## Platforms
 
-- [core] iPhone and iPad (iOS 26+)
+- [core] iPhone and iPad (iOS 27+)
 - [later] macOS (SwiftUI)
 - [maybe] Android (would need its own native UI)
 - Dropped: the IDE in desktop browsers (D31). Published apps still run in any browser.

@@ -34,7 +34,8 @@ to do by hand in App Store Connect, and the open risks for review.
   the Xcode account, or with an App Store Connect API key (`ASC_KEY_ID`,
   `ASC_ISSUER_ID`, `ASC_KEY_PATH`). The build number is the UTC time
   (`YYYYMMDD.HHMM`). The version is `MARKETING_VERSION` in the project
-  (now 0.1).
+  (now 0.1). The minimum is iOS 27.0 (D54): Python needs WKWebView's
+  cross-origin isolation on `app://`, which iOS 26 does not have.
 - **Screenshots**: `app/scripts/store-screenshots.sh` takes them in the
   iPhone 6.9" and iPad 13" simulators into `screenshots/` (committed; the
   top-level README shows them). Those are the two sizes App Store Connect
