@@ -62,6 +62,8 @@ screenshots, the build, and an internal TestFlight group. Mac and Vision
 Pro availability are off (never tested). The review contact and notes are
 in, without a demo account (the agent needs the user's own provider
 account). Not a trader under the DSA; available in all 175 countries.
+Submitted for review on 2026-10-19 (version 0.1, build 20261019.1852),
+released automatically after approval.
 
 1. Agreements, Tax and Banking in App Store Connect: the Free Apps agreement
    is enough for a free app.

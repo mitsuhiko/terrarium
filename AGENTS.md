@@ -45,7 +45,7 @@ source, with links between files (D46), and processes: `multiprocessing`
 and `subprocess`, each process a Pyodide worker (D47), and robustness:
 blocking HTTP through the fetch relay (D48), warmed-up interpreters and
 stack overflows shown as a RecursionError (D49), a memory budget for
-Python's heaps and the console kept when iOS ends the engine (D50). All of it works on the iPhone 14 Pro (2026-10-17). Ready for an App Store submission (D51: privacy manifest, consent before the agent sends to a provider, store builds without the self-test's SPI, `make archive`/`make upload`; checklist and risks in `app/appstore/README.md`). Next: the first TestFlight upload, then the rest of D34's list (write
+Python's heaps and the console kept when iOS ends the engine (D50). All of it works on the iPhone 14 Pro (2026-10-17). Ready for an App Store submission (D51: privacy manifest, consent before the agent sends to a provider, store builds without the self-test's SPI, `make archive`/`make upload`; checklist and risks in `app/appstore/README.md`). Version 0.1 (build 20261019.1852) is in TestFlight and was submitted for review on 2026-10-19. Next: the rest of D34's list (write
 conflicts, per-turn undo, teaching mode, iPad panel), then the gaps in
 `app/README.md` (Q16-Q18). `app/scripts/build-ty.sh` needs Rust + wasm-pack.
 Bundled Python versions and docs archives are pinned in `app/runtimes.json`
