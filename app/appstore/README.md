@@ -59,9 +59,9 @@ through App Store Connect's web API from a signed-in browser: the listing
 from `metadata.md`, categories, copyright, content rights, the age rating,
 price (free), App Privacy ("Data Not Collected", published), the
 screenshots, the build, and an internal TestFlight group. Mac and Vision
-Pro availability are off (never tested). Still open: the review contact's
-phone and the review notes, country availability with the EU trader status
-(DSA), and a test key for the agent.
+Pro availability are off (never tested). The review contact and notes are
+in, without a demo account (the agent needs the user's own provider
+account). Not a trader under the DSA; available in all 175 countries.
 
 1. Agreements, Tax and Banking in App Store Connect: the Free Apps agreement
    is enough for a free app.
