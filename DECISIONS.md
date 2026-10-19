@@ -1940,6 +1940,12 @@ access is required") until the Apple Account was signed out and in again.
 The export then signs with Apple Distribution and an App Store profile for
 `eu.ronacher.pyterrarium`.
 
+Since it is the same team, the bundle ID is `eu.ronacher.Terrarium` again
+(the one D53 replaced; the Keychain services and queue labels follow it).
+"Terrarium" is taken as a store name, so the App Store Connect record is
+"Terrarium – Python IDE" (D52's fallback) with the subtitle "With a coding
+agent"; the name on the Home Screen stays "Terrarium".
+
 ## Proposed (not yet decided)
 
 (none)

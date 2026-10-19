@@ -19,7 +19,7 @@ final class AgentDatabase: @unchecked Sendable {
     private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     private static let maxSafeInteger: Int64 = 9_007_199_254_740_991
 
-    let queue = DispatchQueue(label: "eu.ronacher.pyterrarium.agent.sql")
+    let queue = DispatchQueue(label: "eu.ronacher.Terrarium.agent.sql")
     private let directory: URL
     private var databases: [String: OpaquePointer] = [:]
     private var statements: [String: [String: OpaquePointer]] = [:]

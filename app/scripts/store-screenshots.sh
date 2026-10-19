@@ -33,7 +33,7 @@ done
 IPHONE=${IPHONE:-iPhone 18 Pro Max}
 IPAD=${IPAD:-iPad Pro 13-inch (M5)}
 APPEARANCE=${APPEARANCE:-light}
-BUNDLE_ID=eu.ronacher.pyterrarium
+BUNDLE_ID=eu.ronacher.Terrarium
 
 # Hello.py with a typo for ty to find, typed after the last line (%0A is a newline, @@ the cursor).
 TYPO='cursor=9:1&focus&type=%0Asquares = [i * i for i in range(1, 6)]%0Aprint(nmae, "gets", sum(squares))@@'

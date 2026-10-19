@@ -28,7 +28,7 @@ final class DevicePIM {
     // MARK: keychain
 
     /// Kept apart from the app's own items (the agent's credentials, D33).
-    private static let servicePrefix = "eu.ronacher.pyterrarium.user:"
+    private static let servicePrefix = "eu.ronacher.Terrarium.user:"
 
     private func keychain(_ op: String, _ v: [String: Any]) throws -> Any? {
         func query(_ service: String, _ account: String) -> [String: Any] {

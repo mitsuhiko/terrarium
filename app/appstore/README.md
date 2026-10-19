@@ -55,10 +55,10 @@ to do by hand in App Store Connect, and the open risks for review.
 
 1. Agreements, Tax and Banking in App Store Connect: the Free Apps agreement
    is enough for a free app.
-2. App Store Connect → Apps → New App: iOS, name "Terrarium" (names are
-   unique across the store; if it is taken, "Terrarium – Python IDE", with
-   the app's display name still "Terrarium"), primary language English (U.S.), bundle ID
-   `eu.ronacher.pyterrarium` (automatic signing registers it with the first
+2. App Store Connect → Apps → New App: iOS, name "Terrarium – Python IDE"
+   ("Terrarium" is taken; the app's display name stays "Terrarium"),
+   primary language English (U.S.), bundle ID
+   `eu.ronacher.Terrarium` (automatic signing registers it with the first
    device build or archive),
    SKU e.g. `terrarium`.
 3. App Information: categories and URLs from `metadata.md`.

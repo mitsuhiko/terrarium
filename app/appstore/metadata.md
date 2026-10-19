@@ -4,17 +4,17 @@ Text for App Store Connect. Limits are App Store Connect's; the lengths
 were checked on 2026-10-18.
 
 The store shows the name and the subtitle together: "Terrarium – Python IDE
-with a coding agent" (D52).
+with a coding agent" (D52). "Terrarium" alone is taken on the store
+(2026-10-19), so the name is D52's fallback and the subtitle carries the
+rest. The name on the Home Screen stays "Terrarium".
 
 ## Name (30)
 
-Terrarium
-
-If App Store Connect says the name is taken: Terrarium – Python IDE
+Terrarium – Python IDE
 
 ## Subtitle (30)
 
-Python IDE with a coding agent
+With a coding agent
 
 ## Promotional text (170)
 

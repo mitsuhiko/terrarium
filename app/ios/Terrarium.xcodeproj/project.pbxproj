@@ -200,7 +200,7 @@
 					"-Xlinker",
 					"$(PROJECT_DIR)/Simulator.entitlements",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.pyterrarium;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.Terrarium;
 				PRODUCT_NAME = Terrarium;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;
@@ -242,7 +242,7 @@
 					"-Xlinker",
 					"$(PROJECT_DIR)/Simulator.entitlements",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.pyterrarium;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.ronacher.Terrarium;
 				PRODUCT_NAME = Terrarium;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;

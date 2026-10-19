@@ -5,7 +5,7 @@ import Security
 /// provider, holding pi-ai's credential JSON (API key or OAuth tokens). This device only, readable after first unlock (so
 /// a refresh can happen while the phone is locked).
 enum AgentKeychain {
-    static let service = "eu.ronacher.pyterrarium.agent.credentials"
+    static let service = "eu.ronacher.Terrarium.agent.credentials"
 
     struct KeychainError: Error, CustomStringConvertible {
         let status: OSStatus
