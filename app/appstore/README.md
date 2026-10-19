@@ -53,6 +53,16 @@ to do by hand in App Store Connect, and the open risks for review.
 
 ## By hand, once
 
+Status (2026-10-19): the app record exists (Apple ID 6824631585, bundle ID
+`eu.ronacher.Terrarium`, version 0.1 to match `MARKETING_VERSION`). Set
+through App Store Connect's web API from a signed-in browser: the listing
+from `metadata.md`, categories, copyright, content rights, the age rating,
+price (free), App Privacy ("Data Not Collected", published), the
+screenshots, the build, and an internal TestFlight group. Mac and Vision
+Pro availability are off (never tested). Still open: the review contact's
+phone and the review notes, country availability with the EU trader status
+(DSA), and a test key for the agent.
+
 1. Agreements, Tax and Banking in App Store Connect: the Free Apps agreement
    is enough for a free app.
 2. App Store Connect → Apps → New App: iOS, name "Terrarium – Python IDE"
