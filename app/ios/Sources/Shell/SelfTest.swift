@@ -17,6 +17,7 @@ enum SelfTest {
                 case "test.turtle": reply(turtle(model, value), nil)
                 case "test.keybar": reply(await keyBar(value["keys"] as? [String] ?? []), nil)
                 case "test.hideKeyboard": reply(hideKeyboard(), nil)
+                case "test.editorKeyboard": reply(editorKeyboard(model), nil)
                 case "test.link":
                     // Link a folder outside Documents without the picker.
                     let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -281,6 +282,25 @@ enum SelfTest {
             try? await Task.sleep(for: .milliseconds(60))
         }
         return notes.joined(separator: ", ")
+    }
+
+    /// The focused editor's keyboard: whether its content view has it, the key
+    /// bar, and (SELFTEST_SPI) the traits WebKit gave it.
+    private static func editorKeyboard(_ model: AppModel) -> Any {
+        let webView = model.editors[model.focused].webView
+        guard let content = webView.scrollView.subviews.first(where: { $0 is UITextInput }) else { return "no content view" }
+        var out: [String: Any] = ["firstResponder": content.isFirstResponder]
+        if let bar = content.inputAccessoryView {
+            out["bar"] = bar.intrinsicContentSize.height > 0 && !bar.subviews.allSatisfy(\.isHidden)
+        }
+        #if SELFTEST_SPI
+        let sel = NSSelectorFromString("textInputTraits")
+        if content.responds(to: sel), let t = content.perform(sel)?.takeUnretainedValue() as? NSObject {
+            let g = { (k: String) in (t.value(forKey: k) as? Int).map(String.init) ?? "?" }
+            out["traits"] = "autocap=\(g("autocapitalizationType")) autocorrect=\(g("autocorrectionType")) spell=\(g("spellCheckingType")) quotes=\(g("smartQuotesType")) dashes=\(g("smartDashesType"))"
+        }
+        #endif
+        return out
     }
 
     /// What the software keyboard's own hide key does (iPad): UIKeyboardImpl's

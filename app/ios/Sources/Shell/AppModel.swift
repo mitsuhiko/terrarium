@@ -448,7 +448,7 @@ final class AppModel {
                                      pointer: value["pointer"] as? Bool ?? false, keys: value["keys"] as? Bool ?? false)
             }
             reply(nil, nil)
-        case (.engine, "test.link"), (.engine, "test.ui"), (.engine, "test.type"), (.engine, "test.turtle"), (.engine, "test.keybar"), (.engine, "test.hideKeyboard"), (.engine, "app"):
+        case (.engine, "test.link"), (.engine, "test.ui"), (.engine, "test.type"), (.engine, "test.turtle"), (.engine, "test.keybar"), (.engine, "test.hideKeyboard"), (.engine, "test.editorKeyboard"), (.engine, "app"):
             SelfTest.handle(self, op, value, reply)
         case (.editor(let pane), "editor.event"):
             editorEvent(pane, value)

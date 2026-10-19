@@ -1946,6 +1946,37 @@ Since it is the same team, the bundle ID is `eu.ronacher.Terrarium` again
 "Terrarium – Python IDE" (D52's fallback) with the subtitle "With a coding
 agent"; the name on the Home Screen stays "Terrarium".
 
+## D56: No private keyboard API
+
+2026-10-19 - Accepted
+
+The editor's keyboard uses public API only. The two swizzled WebKit
+selectors (D51's review risk) are gone:
+- **Plain traits:** `_updateTextInputTraits:` forced no capitalization,
+  autocorrection, spell checking or smart punctuation. On iOS 27 WebKit
+  derives all of them from CodeMirror's `autocapitalize="off"
+  autocorrect="off" spellcheck="false"` (smart quotes and dashes follow
+  `autocorrect`).
+- **Focus without a tap:** `_elementDidFocus:…` claimed every focus came from
+  the user. Now the page asks the host first (`keyboard.take`, through
+  `takeFocus` in the editor), the host makes WebKit's content view first
+  responder, and then the page focuses; WebKit brings up the keyboard for an
+  element focused while its content view is first responder. A tap in the
+  page needs neither.
+
+The key bar's runtime subclass of the content view stays: it overrides
+only `inputAccessoryView`, and the view is found as the scroll view's
+`UITextInput` subview, not by its private class name. `archive.sh` fails if
+a private WebKit selector is in the binary.
+
+Evidence (simulator, iOS 27, 2026-10-19): with each patch switched off in
+turn, the content view's traits stay none/no/no/no/no without
+`_updateTextInputTraits:`; focus from the page alone shows no keyboard
+(with or without the patches), and the content view made first responder
+before or after the page's focus shows the keyboard with the key bar. The
+self-test's `editor_keyboard_from_native` step checks it (iPhone; iPad with
+a hardware keyboard).
+
 ## Proposed (not yet decided)
 
 (none)

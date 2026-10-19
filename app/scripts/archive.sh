@@ -56,6 +56,11 @@ if strings "$APP/Terrarium" | grep -qE '_killWebContentProcess|UIKeyboardImpl|ad
   echo "error: the self-test's private-API hooks are in the binary (SELFTEST_SPI set?)" >&2
   exit 1
 fi
+# No private WebKit selectors in the features either (D55, D56).
+if strings "$APP/Terrarium" | grep -qE '_elementDidFocus|_updateTextInputTraits|_setEnabled:forFeature:|textInputTraits'; then
+  echo "error: private WebKit selectors in the binary" >&2
+  exit 1
+fi
 if find "$APP" -name "*.map" | grep -q .; then
   echo "error: source maps in the bundle" >&2
   exit 1

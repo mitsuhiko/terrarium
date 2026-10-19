@@ -16,6 +16,7 @@ import {
 } from "../notebook/ipynb";
 import type { CellRequest, KernelEvent, KernelState, Output } from "../notebook/types";
 import { renderMarkdown, renderOutput, type RenderContext } from "./outputs";
+import { takeFocus } from "./focus";
 
 export interface NotebookHooks {
   run(cells: CellRequest[], source: string): void;
@@ -352,7 +353,7 @@ export function insertCell(view: EditorView, after = activeIndex(view.state), ty
     const end = view.state.doc.length;
     const insert = `${end && !view.state.doc.toString().endsWith("\n") ? "\n" : ""}${end ? "\n" : ""}${marker}\n`;
     view.dispatch({ changes: { from: end, insert }, selection: { anchor: end + insert.length }, scrollIntoView: true, userEvent: "cell.insert" });
-    view.focus();
+    takeFocus(view);
     return;
   }
   if (after < 0) {
@@ -368,7 +369,7 @@ export function insertCell(view: EditorView, after = activeIndex(view.state), ty
     infos.splice(Math.min(after, data.cells.length - 1) + 1, 0, newCell(type));
   }
   view.dispatch({ changes: change, selection: { anchor: cursor }, effects: cellsEffect.of(infos), scrollIntoView: true, userEvent: "cell.insert" });
-  view.focus();
+  takeFocus(view);
 }
 
 export function deleteCell(view: EditorView, index = activeIndex(view.state)) {

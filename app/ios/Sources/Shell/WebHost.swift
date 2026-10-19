@@ -95,6 +95,11 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
             KeyboardAccessory.shared.webView = webView
             KeyboardAccessory.shared.setMode(KeyboardAccessory.Mode(rawValue: value["mode"] as? String ?? "") ?? .plain)
             replyHandler(nil, nil)
+        case "keyboard.take":
+            // The page is about to focus a field without a tap (D56).
+            KeyboardAccessory.shared.webView = webView
+            KeyboardAccessory.shared.takeKeyboard()
+            replyHandler(nil, nil)
         case "echo": replyHandler(body["value"], nil)
         case "haptic":
             UIImpactFeedbackGenerator(style: .light).impactOccurred()

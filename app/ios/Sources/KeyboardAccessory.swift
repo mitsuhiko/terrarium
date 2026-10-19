@@ -7,9 +7,15 @@ import WebKit
 /// WKWebView's content view. It also replaces the default prev/next/done bar.
 ///
 /// The web app tells us which kind of field has focus (`keyboard.mode`):
-/// "code" (editor) and "console" (>>>, input()) show the keys and get plain
-/// keyboard traits (no capitalization, autocorrect or smart punctuation);
-/// "plain" (file search, UI apps) shows nothing and keeps the element's traits.
+/// "code" (editor) and "console" (>>>, input()) show the keys; "plain" (file
+/// search, UI apps) shows nothing. Plain keyboard traits (no capitalization,
+/// autocorrection or smart punctuation) come from the editor's HTML
+/// attributes (`autocapitalize`, `autocorrect`, `spellcheck`), which WebKit
+/// maps to all of them.
+///
+/// No private selectors (D56): the content view is found as the scroll
+/// view's `UITextInput` subview, and only `inputAccessoryView`, a public
+/// UIResponder property, is overridden.
 @MainActor
 final class KeyboardAccessory: NSObject, UIInputViewAudioFeedback {
     /// code: the editor (keys + code actions), console: >>> and input() (keys), plain: anything else.
@@ -90,63 +96,17 @@ final class KeyboardAccessory: NSObject, UIInputViewAudioFeedback {
         contentView?.reloadInputViews()
     }
 
-    /// Self-test hook: type like the software keyboard does, one character at
-    /// a time. "keyboard" goes through UIKeyboardImpl (the keyboard's own
-    /// input handling: shift, autocorrection, prediction), "insert" calls
-    /// UIKeyInput.insertText on WKContentView directly.
-    func typeForTesting(_ text: String, via: String) async -> String {
-        guard let content = contentView else { return "no content view" }
-        var notes = [content.isFirstResponder ? "first responder" : "NOT first responder"]
-        if !content.isFirstResponder {
-            // What a tap on the field does: the content view takes the keyboard.
-            notes.append(content.becomeFirstResponder() ? "became first responder" : "could not become first responder")
-            try? await Task.sleep(nanoseconds: 700_000_000)
-        }
-        // UIKeyboardImpl and the traits are SPI: only in builds for the self-test (D51).
-        #if SELFTEST_SPI
-        let impl: NSObject? = {
-            guard via == "keyboard", let cls = NSClassFromString("UIKeyboardImpl") as? NSObject.Type else { return nil }
-            let sel = NSSelectorFromString("activeInstance")
-            guard cls.responds(to: sel) else { return nil }
-            return cls.perform(sel)?.takeUnretainedValue() as? NSObject
-        }()
-        if via == "keyboard" { notes.append(impl == nil ? "no UIKeyboardImpl" : "UIKeyboardImpl") }
-        // The traits the keyboard sees (BrowserEngineKit or legacy).
-        for name in ["extendedTraitsDelegate", "textInputTraits"] {
-            let sel = NSSelectorFromString(name)
-            guard content.responds(to: sel), let traits = content.perform(sel)?.takeUnretainedValue() as? NSObject else { continue }
-            let get = { (key: String) in (traits.value(forKey: key) as? Int).map(String.init) ?? "?" }
-            notes.append("traits(\(name)) autocap=\(get("autocapitalizationType")) autocorrect=\(get("autocorrectionType")) quotes=\(get("smartQuotesType"))")
-            break
-        }
-        #else
-        if via == "keyboard" { notes.append("no UIKeyboardImpl (built without SELFTEST_SPI)") }
-        #endif
-        for ch in text {
-            #if SELFTEST_SPI
-            if let impl, impl.responds(to: NSSelectorFromString("addInputString:")) {
-                impl.perform(NSSelectorFromString("addInputString:"), with: String(ch))
-                try? await Task.sleep(nanoseconds: 120_000_000)
-                continue
-            }
-            #endif
-            (content as? UIKeyInput)?.insertText(String(ch))
-            try? await Task.sleep(nanoseconds: 120_000_000)
-        }
-        return notes.joined(separator: ", ")
-    }
-
     // MARK: installing
 
+    /// WebKit's content view: the view that takes the keyboard (UITextInput).
     private var contentView: UIView? {
-        webView?.scrollView.subviews.first { NSStringFromClass(type(of: $0)).hasPrefix("WKContent") }
+        webView?.scrollView.subviews.first { $0 is UITextInput }
     }
 
     /// Swap WKContentView's class for a subclass whose inputAccessoryView is ours.
     func install(on webView: WKWebView) {
         self.webView = webView
         guard let content = contentView else { return }
-        Self.allowProgrammaticFocus(contentClass: object_getClass(content)!)
         let base: AnyClass = object_getClass(content)!
         // install runs again after each navigation: the view may already be ours
         // (subclassing it again would chain every override twice).
@@ -159,73 +119,19 @@ final class KeyboardAccessory: NSObject, UIInputViewAudioFeedback {
             }
             let selector = #selector(getter: UIResponder.inputAccessoryView)
             class_addMethod(created, selector, imp_implementationWithBlock(block), "@@:")
-            Self.addPlainTraits(to: created, base: base)
             objc_registerClassPair(created)
             subclass = created
         }
         if let subclass { object_setClass(content, subclass) }
     }
 
-    /// Code fields (editor, >>>, input()) get no auto-capitalization, autocorrection,
-    /// spell checking or smart punctuation, whatever WebKit derived from the
-    /// element: WKContentView builds the keyboard traits in _updateTextInputTraits:
-    /// (legacy and BrowserEngineKit traits alike), so we adjust them after it.
-    private static func addPlainTraits(to subclass: AnyClass, base: AnyClass) {
-        let selector = sel_getUid("_updateTextInputTraits:")
-        guard let method = class_getInstanceMethod(base, selector) else {
-            WebHost.appendDocument(".probe-log.txt", "[keyboard] _updateTextInputTraits: not found\n")
-            return
-        }
-        typealias Original = @convention(c) (AnyObject, Selector, AnyObject) -> Void
-        let original = unsafeBitCast(method_getImplementation(method), to: Original.self)
-        let block: @convention(block) (AnyObject, AnyObject) -> Void = { me, traits in
-            original(me, selector, traits)
-            guard MainActor.assumeIsolated({ KeyboardAccessory.shared.mode != .plain }), let traits = traits as? NSObject else { return }
-            let values: [(String, Int)] = [
-                ("autocapitalizationType", UITextAutocapitalizationType.none.rawValue),
-                ("autocorrectionType", UITextAutocorrectionType.no.rawValue),
-                ("spellCheckingType", UITextSpellCheckingType.no.rawValue),
-                ("smartQuotesType", UITextSmartQuotesType.no.rawValue),
-                ("smartDashesType", UITextSmartDashesType.no.rawValue),
-                ("smartInsertDeleteType", UITextSmartInsertDeleteType.no.rawValue),
-            ]
-            for (key, value) in values {
-                let setter = sel_getUid("set\(key.prefix(1).uppercased())\(key.dropFirst()):")
-                guard traits.responds(to: setter) else { continue }
-                // Only write a changed value: setting a trait can make UIKit ask for
-                // the traits again, which must not turn into a loop.
-                if (traits.value(forKey: key) as? Int) != value { traits.setValue(value, forKey: key) }
-            }
-        }
-        class_addMethod(subclass, selector, imp_implementationWithBlock(block), method_getTypeEncoding(method))
-    }
-
-    /// Let element.focus() from JavaScript show the keyboard without a tap (for
-    /// input() and new files), like Capacitor's keyboardDisplayRequiresUserAction.
-    private static var focusPatched = false
-    private static func allowProgrammaticFocus(contentClass: AnyClass) {
-        guard !focusPatched else { return }
-        let selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
-        guard let method = class_getInstanceMethod(contentClass, selector) else {
-            // Log candidates so a WebKit change is easy to diagnose.
-            var count: UInt32 = 0
-            let names = (class_copyMethodList(contentClass, &count).map { list in
-                (0..<Int(count)).map { NSStringFromSelector(method_getName(list[$0])) }
-            } ?? []).filter { $0.contains("lementDidFocus") }
-            WebHost.appendDocument(".probe-log.txt", "[keyboard] focus selector not found; candidates: \(names)\n")
-            return
-        }
-        WebHost.appendDocument(".probe-log.txt", "[keyboard] programmatic focus enabled\n")
-        focusPatched = true
-        // WebKit: _elementDidFocus:(const FocusedElementInformation&) userIsInteracting:(BOOL)
-        //   blurPreviousNode:(BOOL) activityStateChanges:(OptionSet<ActivityState>) userObject:(id)
-        // The option set is forwarded untouched as a full register.
-        typealias Original = @convention(c) (AnyObject, Selector, UnsafeMutableRawPointer?, Bool, Bool, UInt64, AnyObject?) -> Void
-        let original = unsafeBitCast(method_getImplementation(method), to: Original.self)
-        let block: @convention(block) (AnyObject, UnsafeMutableRawPointer?, Bool, Bool, UInt64, AnyObject?) -> Void = { me, node, _, blur, changes, user in
-            original(me, selector, node, true, blur, changes, user)
-        }
-        method_setImplementation(method, imp_implementationWithBlock(block))
+    /// Before the page focuses a field without a tap (a native command, a
+    /// problem in the list, a new cell): WebKit only brings up the keyboard on
+    /// its own for focus from a user gesture in the page, or when its content
+    /// view is already first responder (`keyboard.take`).
+    func takeKeyboard() {
+        guard let content = contentView, !content.isFirstResponder else { return }
+        content.becomeFirstResponder()
     }
 
     // MARK: the bar

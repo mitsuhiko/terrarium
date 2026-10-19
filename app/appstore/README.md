@@ -106,27 +106,20 @@ released automatically after approval.
 
 ## Open risks for review
 
-- **Private API in features (not only tests)**. WebKit has no public API
-  for any of these (checked in the iOS 27.1 SDK headers). What other apps
-  in the store do (their sources, 2026-10-18):
-  - `_elementDidFocus:userIsInteracting:…` for programmatic focus: the same
-    swizzle is in Capacitor's core (`WKWebView+Capacitor.swift`, so in every
-    Capacitor app), react-native-webview
-    (`keyboardDisplayRequiresUserAction`), Blink Shell, a-Shell and Code
-    App. Widely shipped; keep it.
-  - A WKContentView subclass that overrides `inputAccessoryView` (a public
-    UIResponder selector) for the key bar: react-native-webview
-    (`hideKeyboardAccessoryView`), Code App (Monaco's key bar), Ionic's
-    keyboard plugin (`HideFormAccessoryBar`). Keep it.
-  - `_updateTextInputTraits:` for plain traits in the editor: Blink's
-    `KBWebViewBase.m`, copied into a-Shell and Code App, replaces it outright
-    to turn off smart quotes, dashes and autocorrection. Keep it; CodeMirror's
-    `autocapitalize`/`autocorrect`/`spellcheck` attributes are the fallback
-    (smart quotes and dashes have no HTML attribute).
-  - Removed (D55): `_features` / `_setEnabled:forFeature:` on WKPreferences
-    for 120 Hz page rendering. None of those apps do this, and it called
-    WKPreferencesPrivate methods directly, the kind of call review's scan
-    flags.
+- **Private API in features**: none since D56 (`archive.sh` checks the
+  binary). What other store apps do instead (their sources, 2026-10-18):
+  - `_elementDidFocus:userIsInteracting:…` for focus without a tap is in
+    Capacitor's core (so in every Capacitor app), react-native-webview,
+    Blink Shell, a-Shell and Code App. We make WebKit's content view first
+    responder before focusing instead (D56).
+  - `_updateTextInputTraits:` (Blink, a-Shell, Code App) for plain traits:
+    on iOS 27, CodeMirror's `autocorrect="off"` already turns off smart
+    quotes and dashes too (D56).
+  - The key bar still comes from a runtime subclass of WebKit's content view
+    that overrides `inputAccessoryView`, a public UIResponder property; the
+    view is found as the `UITextInput` subview, not by its class name.
+    react-native-webview, Code App and Ionic's keyboard plugin do the same.
+  - WKPreferences' `_setEnabled:forFeature:` for 120 Hz pages: removed (D55).
 - **2.5.2 / 4.7 (Q9)**: packages download from PyPI and run in WebKit. The
   review notes explain this. Pythonista, Pyto, Carnets and a-Shell ship
   similar features.

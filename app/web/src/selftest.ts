@@ -2209,6 +2209,30 @@ export async function selftest() {
     return { collapsedAfterHide: true };
   });
 
+  await step("editor_keyboard_from_native", async () => {
+    // Focus without a tap in the page (a native command, a problem in the
+    // list): the keyboard comes up with the key bar and plain traits (D56).
+    const path = "Examples/Hello.py";
+    await app.openFile(path);
+    await until(async () => (await app.currentFile()) === path && (await app.editorPath()) === path);
+    await sleep(800);
+    await editorCall("focus");
+    try {
+      const state = await until(async () => {
+        const s = await call<{ firstResponder: boolean; bar?: boolean; traits?: string } | string>("test.editorKeyboard", {});
+        return typeof s !== "string" && s.firstResponder ? s : null;
+      }, 5000).catch(async () => { throw new Error(`no keyboard: ${JSON.stringify(await call("test.editorKeyboard", {}))}`); });
+      // UITextAutocapitalizationType.none = 0, the others' .no = 1.
+      if (state.bar === undefined) throw new Error("no key bar on the content view");
+      if (state.traits !== undefined && state.traits !== "autocap=0 autocorrect=1 spell=1 quotes=1 dashes=1") throw new Error(`traits: ${state.traits}`);
+      return state;
+    } finally {
+      await editorCall("blur");
+      await app.blurFields();
+      await sleep(600);
+    }
+  });
+
   await step("typing_plain_traits", async () => {
     await app.showPane("console");
     await app.focusField("console");

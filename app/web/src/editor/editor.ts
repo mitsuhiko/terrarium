@@ -28,6 +28,7 @@ import {
   breakpointLines, debugExtensions, pausedCompartment, pausedExtension, setBreakpointsEffect, setDebugLineEffect,
 } from "../debug/codemirror";
 import { call } from "../host";
+import { takeFocus } from "./focus";
 import { parseIpynb } from "../notebook/ipynb";
 import type { KernelEvent } from "../notebook/types";
 import { settings } from "../settings";
@@ -922,7 +923,7 @@ export class PaneEditor {
     const p = this.problemList()[index];
     if (!p) return;
     this.view.dispatch({ selection: { anchor: p.from, head: p.to }, effects: EditorView.scrollIntoView(p.from, { y: "center" }) });
-    this.view.focus();
+    takeFocus(this.view);
   }
 
   relint() {
@@ -930,7 +931,7 @@ export class PaneEditor {
   }
 
   focus() {
-    if (!this.previewing()) this.view.focus();
+    if (!this.previewing()) takeFocus(this.view);
   }
 
   blur() {
