@@ -111,14 +111,10 @@ to do by hand in App Store Connect, and the open risks for review.
     to turn off smart quotes, dashes and autocorrection. Keep it; CodeMirror's
     `autocapitalize`/`autocorrect`/`spellcheck` attributes are the fallback
     (smart quotes and dashes have no HTML attribute).
-  - `_features` / `_setEnabled:forFeature:` on WKPreferences (120 Hz page
-    rendering, `WebHost.renderAtDisplayRate`): none of those apps do this,
-    and it calls WKPreferencesPrivate methods directly, the kind of call
-    review's scan flags. Since D31 the shell is native: navigation and
-    animations are SwiftUI, and scrolling in the editor is UIKit's (async
-    scrolling in the UI process), at the display's rate either way. Only
-    what the page itself paints (typing, the caret, CodeMirror's updates while
-    scrolling) is held near 60 fps. The safest choice is to drop it.
+  - Removed (D55): `_features` / `_setEnabled:forFeature:` on WKPreferences
+    for 120 Hz page rendering. None of those apps do this, and it called
+    WKPreferencesPrivate methods directly, the kind of call review's scan
+    flags.
 - **2.5.2 / 4.7 (Q9)**: packages download from PyPI and run in WebKit. The
   review notes explain this. Pythonista, Pyto, Carnets and a-Shell ship
   similar features.

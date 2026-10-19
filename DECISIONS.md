@@ -1914,6 +1914,24 @@ Evidence: the self-test's `environment` step (simulator, iPhone 17 Pro):
 `crossOriginIsolated` is false on iOS 26.0 and 26.4 and true on 27.0, and
 JSPI is only on 27.0. Safari 26.4 on `http://localhost`: isolated.
 
+## D55: Pages render at WebKit's default rate (no 120 Hz SPI)
+
+2026-10-19 - Accepted
+
+The web views no longer turn off WebKit's
+`PreferPageRenderingUpdatesNear60FPSEnabled` through WKPreferences'
+`_features` / `_setEnabled:forFeature:` (added before D31, when the whole
+IDE was a page). It was the only private API in the features that no other
+store app ships (`app/appstore/README.md` lists what Capacitor,
+react-native-webview, Blink, a-Shell and Code App do), and a direct call
+to private methods that review's scan looks for. Since D31 navigation and
+animations are SwiftUI, and the editor scrolls in UIKit, at the display's
+rate either way. Only what the editor page paints (typing, the caret,
+CodeMirror's updates while scrolling) is now held near 60 fps.
+`CADisableMinimumFrameDurationOnPhone` stays for the native views. The
+keyboard SPI (programmatic focus, the key bar's content view subclass,
+plain traits) stays: other store apps ship the same.
+
 ## Proposed (not yet decided)
 
 (none)

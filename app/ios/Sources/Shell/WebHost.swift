@@ -41,7 +41,6 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
 
     func makeWebView(role: Role, page: String) -> WKWebView {
         let config = WKWebViewConfiguration()
-        Self.renderAtDisplayRate(config.preferences)
         // The engine is never on screen: it must keep running anyway.
         config.preferences.inactiveSchedulingPolicy = .none
         config.setURLSchemeHandler(schemeHandler, forURLScheme: AppSchemeHandler.scheme)
@@ -275,20 +274,6 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
     }
 
     // MARK: helpers
-
-    /// WebKit renders pages near 60 fps by default, even on 120 Hz displays.
-    /// Turn that off through the experimental-features SPI (WKPreferencesPrivate.h).
-    private static func renderAtDisplayRate(_ preferences: WKPreferences) {
-        let featuresSel = NSSelectorFromString("_features")
-        let setSel = NSSelectorFromString("_setEnabled:forFeature:")
-        guard WKPreferences.responds(to: featuresSel), preferences.responds(to: setSel),
-              let features = WKPreferences.perform(featuresSel)?.takeUnretainedValue() as? [NSObject],
-              let feature = features.first(where: { ($0.value(forKey: "key") as? String) == "PreferPageRenderingUpdatesNear60FPSEnabled" })
-        else { return }
-        typealias SetEnabled = @convention(c) (AnyObject, Selector, Bool, AnyObject) -> Void
-        let set = unsafeBitCast(preferences.method(for: setSel), to: SetEnabled.self)
-        set(preferences, setSel, false, feature)
-    }
 
     nonisolated static func documentURL(_ name: String) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
