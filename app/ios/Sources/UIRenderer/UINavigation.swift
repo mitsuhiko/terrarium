@@ -7,6 +7,7 @@ import SwiftUI
 struct UIAppRoot: View {
     let store: UIStore
     var inHalf = false
+    var sizeToggle: UISizeToggle?
 
     var body: some View {
         RootContent(root: store.root)
@@ -14,6 +15,7 @@ struct UIAppRoot: View {
             .environment(store)
             .environment(\.uiAppRoot, true)
             .environment(\.uiInHalf, inHalf)
+            .environment(\.uiSizeToggle, sizeToggle)
             .tint(UIColorParser.color(store.tint))
             .preferredColorScheme(store.theme == "dark" ? .dark : store.theme == "light" ? .light : nil)
             .background {
@@ -26,13 +28,18 @@ struct UIAppRoot: View {
 }
 
 /// The app's close button on its first screen: a tap ends the program,
-/// touch and hold offers Restart.
+/// touch and hold offers Restart (and on a wide screen, full screen or next
+/// to the code, D59).
 private struct CloseAppButton: View {
     @Environment(UIStore.self) private var store
+    @Environment(\.uiSizeToggle) private var sizeToggle
 
     var body: some View {
         Menu {
             Button("Restart", systemImage: "arrow.clockwise") { store.restart() }
+            if let sizeToggle {
+                Button(sizeToggle.title, systemImage: sizeToggle.symbol, action: sizeToggle.action)
+            }
         } label: {
             Label("Close", systemImage: "xmark")
         } primaryAction: {

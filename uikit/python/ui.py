@@ -1635,7 +1635,7 @@ def _report(exc: BaseException):
 
 
 def run(app: Callable[[], Child] | Child, *, title: str | None = None, theme: str = "auto",
-        tint: str | None = None, close_button: bool = True) -> None:
+        tint: str | None = None, close_button: bool = True, full_screen: bool = False) -> None:
     """Show ``app`` (a component function or an element) full screen.
 
     ``theme`` is "auto", "light" or "dark"; ``tint`` is the accent color.
@@ -1643,8 +1643,13 @@ def run(app: Callable[[], Child] | Child, *, title: str | None = None, theme: st
     program (touch and hold it to restart). ``close_button=False`` leaves it
     out: the app ends itself with ``ui.close()``, and a two-finger swipe
     down still closes it. Running again replaces the previous app.
+
+    On an iPad or an open iPhone Duo the app runs next to the code when a
+    half of the workspace is set to show apps; ``full_screen=True`` asks for
+    the whole screen anyway (a game, say). Pages are always full screen.
     """
-    _app.start(app, {"title": title, "theme": theme, "tint": tint, "close_button": bool(close_button)})
+    _app.start(app, {"title": title, "theme": theme, "tint": tint, "close_button": bool(close_button),
+                     "full_screen": bool(full_screen)})
 
 
 def close() -> None:

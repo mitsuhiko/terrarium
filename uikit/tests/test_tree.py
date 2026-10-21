@@ -400,6 +400,8 @@ def test_run_again_replaces_the_app(h):
 def test_close_button_config_and_close(h):
     dom = h.run(lambda: ui.Text("x"))
     assert dom.config["close_button"] is True
+    assert dom.config["full_screen"] is False
+    assert h.run(lambda: ui.Text("x"), full_screen=True).config["full_screen"] is True
     dom = h.run(lambda: ui.Button("Quit", on_click=ui.close), close_button=False)
     assert dom.config["close_button"] is False
     n = len(dom.ops)

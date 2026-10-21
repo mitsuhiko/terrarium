@@ -1766,6 +1766,7 @@ export async function selftest() {
     if (!(await app.wide())) return { skipped: "iPhone" };
     const halves = () => appCall<any>("halves");
     const sidebar = (await halves()).sidebar;
+    await fs.mkdir("Tests").catch(() => {});
     try {
       await appCall("setHalves", "editor", "agent", true);
       await appCall("openAgent", "Tests");
@@ -1786,11 +1787,26 @@ export async function selftest() {
       await nativeEvent(plus.i, "click");
       await untilNode((n) => n.t === "Text" && n.p.font === "largeTitle" && n.p.text === "1");
 
+      // Full screen and back (the half's header, the close button's menu).
+      await appCall("setAppFullScreen", true);
+      h = await halves();
+      if (h.appInHalf || !h.overlay || !h.fullScreen) throw new Error(`full screen: ${JSON.stringify(h)}`);
+      await appCall("setAppFullScreen", false);
+      if (!(await halves()).appInHalf) throw new Error("not back in the half");
+
       await appCall("swapAppHalf"); // the app to the main half, the docs back in the other
       h = await halves();
       if (h.main !== "app" || h.panel !== "docs" || !h.appInHalf) throw new Error(`swap: ${JSON.stringify(h)}`);
       await appCall("setHalves", "app", "console", false); // the other half hidden: the app stays in the main half
       if (!(await halves()).appInHalf) throw new Error("hiding the other half moved the app");
+      await call("test.ui", { action: "close" });
+      await until(() => !session.getSnapshot().uiOpen);
+
+      // An app that asks for the whole screen gets it, also with a half set to apps.
+      await appCall("setHalves", "editor", "app", true);
+      await fs.writeText("Tests/FullScreen.py", 'import ui\n\nui.run(lambda: ui.Screen("Big", ui.Text("big")), full_screen=True)\n');
+      await runFile("Tests/FullScreen.py");
+      await until(async () => { const s = await halves(); return s.overlay && s.fullScreen && !s.appInHalf; });
       await call("test.ui", { action: "close" });
       await until(() => !session.getSnapshot().uiOpen);
 

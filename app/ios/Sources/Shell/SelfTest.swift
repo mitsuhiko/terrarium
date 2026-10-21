@@ -179,11 +179,13 @@ enum SelfTest {
             model.setPanelFirst(args.count > 3 && args[3] as? Bool == true)
         case "setSidebar":
             model.sidebarVisible = args.first as? Bool ?? true
+        case "setAppFullScreen":
+            model.setAppFullScreen(args.first as? Bool ?? true)
         case "swapAppHalf":
             model.swapAppHalf()
         case "halves":
             return ["main": model.mainRole.rawValue, "panel": model.panelRole.rawValue, "panelShown": model.panelShown,
-                    "appInHalf": model.appInHalf, "overlay": model.ui.visible && !model.appInHalf,
+                    "appInHalf": model.appInHalf, "overlay": model.ui.visible && !model.appInHalf, "fullScreen": model.appFullScreen,
                     "agentInPanel": model.agentInPanel, "docsInPanel": model.docsInPanel, "first": model.panelFirst,
                     "sidebar": model.sidebarVisible, "panelSlot": model.panelSlot.map { [$0.rect.minX, $0.rect.width] } ?? NSNull(),
                     "mainSlot": model.mainSlot.map { [$0.rect.minX, $0.rect.width] } ?? NSNull()]

@@ -183,6 +183,8 @@ final class AppModel {
     @ObservationIgnored var lastPanelRole: PanelRole = .console
     /// The other half goes before the main one (left, or above).
     var panelFirst = false
+    /// The user switched this run's ui app to full screen (true) or into its half (false).
+    var appSizeOverride: Bool?
     /// The docs in the other half (the sheet has its own).
     var panelDocs: DocsBrowser?
     /// Where the halves' agent, docs or app go, in the window (HalfOverlays).
@@ -544,6 +546,7 @@ final class AppModel {
         let showUI = (session.uiOpen || restartingRun != nil) && debug == nil
         if showUI != ui.visible {
             if showUI { ui.show() } else { ui.hide() }
+            appSizeOverride = nil // each app starts as it asks (D59)
         }
         // A new run or a pending input() brings the console up.
         if session.runCounter != lastRunCounter {

@@ -12,7 +12,7 @@ import SwiftUI
 //   ["unmount", id]                                      remove (and forget the subtree)
 //   ["set", id, {prop: value}]                           update props
 //   ["call", id, method, args]                           focus(), blur(), ...
-//   ["config", {theme, tint, title, close_button}]  ["dialog", n, spec]
+//   ["config", {theme, tint, title, close_button, full_screen}]  ["dialog", n, spec]
 //   ["toast", text, seconds]  ["frame", canvasId]  ["reset"]
 //   ["close"]                                            ui.close(): end the app
 // Events go back as send("<id>:<event>", JSON args). A new store asks for a
@@ -68,6 +68,9 @@ final class UIStore {
     /// The app's first screen has the close button (`ui.run(close_button=)`);
     /// without it a two-finger swipe down closes the app.
     var closeButton = true
+    /// `ui.run(full_screen=True)`: over everything, also where a half of the
+    /// wide workspace would show the app (D59).
+    var fullScreen = false
     var dialogs: [UIDialog] = []
     var toasts: [UIToast] = []
     /// Sheets that are open, in the order they were created (nested ones last).
@@ -143,6 +146,7 @@ final class UIStore {
             theme = config["theme"]?.string
             tint = config["tint"].flatMap { $0.isNull ? nil : $0.string }
             closeButton = config["close_button"].map { $0.isNull || $0.truthy } ?? true
+            fullScreen = config["full_screen"]?.truthy ?? false
             return false
         case "close":
             closed = true
@@ -211,6 +215,7 @@ final class UIStore {
         dialogs = []
         openSheets = []
         closeButton = true
+        fullScreen = false
         closed = false
     }
 

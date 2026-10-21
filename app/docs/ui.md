@@ -149,7 +149,7 @@ ui.Section(ui.For(todos, lambda t: ui.Row(t.title, checked=ui.bind(t, "done"))))
 
 ## The app
 
-### ui.run(app, *, title=None, theme='auto', tint=None, close_button=True)
+### ui.run(app, *, title=None, theme='auto', tint=None, close_button=True, full_screen=False)
 
 Show `app` (a component function or an element) full screen. `theme` is
 `"auto"`, `"light"` or `"dark"`; `tint` is the accent color. Running again
@@ -159,6 +159,11 @@ The app's first screen gets a close button (×) on the leading side: a tap
 ends the program, touch and hold offers Restart. `close_button=False`
 leaves it out, for an app that ends itself with `ui.close()`; a two-finger
 swipe down still closes it.
+
+On an iPad or an open iPhone Duo, the app runs next to your code when a
+half of the workspace is set to show the app. `full_screen=True` asks for
+the whole screen anyway, for a game, say. Touch and hold the close button
+to switch between the two.
 
 ### ui.close()
 

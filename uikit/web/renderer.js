@@ -11,10 +11,11 @@
 //   ["unmount", id]                                      remove (and forget the subtree)
 //   ["set", id, {prop: value}]                           update props
 //   ["call", id, method, args]                           focus(), blur(), ...
-//   ["config", {theme, tint, title, close_button}]  ["dialog", n, spec]
+//   ["config", {theme, tint, title, close_button, full_screen}]  ["dialog", n, spec]
 //   ["toast", text, seconds]  ["frame", canvasId]  ["reset"]
 //   ["close"]                                            ui.close(): the app ends
-// close_button is for the app's native renderer (a page has nothing to close);
+// close_button and full_screen are for the app's native renderer (a page has
+// nothing to close and is always full screen);
 // here "close" calls onClose, which clears the view unless the page replaces it.
 // Events go back as sendEvent("<id>:<event>", JSON args). A new renderer asks
 // for a full snapshot ("0:resync"), so it can attach to a running app.

@@ -2106,6 +2106,12 @@ of the fold, with the files out of the way). The picks are remembered.
   theirs would take it from the workspace.
 - An iPad's sidebar in portrait slides over the workspace; while it does,
   the halves' overlays are hidden.
+- A ui app can still have the whole screen: `ui.run(full_screen=True)`
+  asks for it (a game, say; the op protocol's `config` carries
+  `full_screen`, which pages ignore: they are always full screen), and the
+  user switches with the half's expand button or the close button's menu
+  (touch and hold: Full Screen / Show Next to the Code). The switch lasts
+  for the run.
 
 Evidence: the self-test's `halves` step (agent and docs in the half, an app
 in the half and swapped to the main one, the half first) passes in the iPhone

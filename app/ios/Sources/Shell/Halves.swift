@@ -43,8 +43,26 @@ enum PanelRole: String, CaseIterable, Identifiable {
 extension AppModel {
     /// The other half is on screen.
     var panelShown: Bool { wide && consoleDocked }
+    /// A half shows the running ui app (unless it is full screen).
+    var halfShowsApp: Bool { wide && (mainRole == .app || (consoleDocked && panelRole == .app)) }
+    /// The running ui app over everything: what the program asked for
+    /// (`ui.run(full_screen=True)`), unless the user switched.
+    var appFullScreen: Bool { appSizeOverride ?? ui.store.fullScreen }
     /// The running ui app is drawn in a half instead of over everything.
-    var appInHalf: Bool { wide && (mainRole == .app || (consoleDocked && panelRole == .app)) }
+    var appInHalf: Bool { halfShowsApp && !appFullScreen }
+
+    /// Full screen, or back in its half (the half's header, the close button's menu).
+    func setAppFullScreen(_ on: Bool) {
+        withAnimation(.smooth(duration: 0.3)) { appSizeOverride = on }
+    }
+
+    /// For the close button's menu: the other way to show the app, if there is one.
+    var appSizeToggle: UISizeToggle? {
+        guard halfShowsApp else { return nil }
+        return appFullScreen
+            ? UISizeToggle(title: "Show Next to the Code", symbol: "arrow.down.right.and.arrow.up.left") { [weak self] in self?.setAppFullScreen(false) }
+            : UISizeToggle(title: "Full Screen", symbol: "arrow.up.left.and.arrow.down.right") { [weak self] in self?.setAppFullScreen(true) }
+    }
     var agentInPanel: Bool { panelShown && panelRole == .agent }
     var docsInPanel: Bool { panelShown && panelRole == .docs }
 
@@ -227,6 +245,12 @@ private struct PanelHeader: View {
             }
             Spacer(minLength: 0)
             if model.panelRole == .console, s.status == "running", debug == nil { PauseButton() }
+            if (model.panelRole == .app || model.mainRole == .app) && model.ui.visible {
+                Button { model.setAppFullScreen(true) } label: {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                }
+                .accessibilityLabel("Show the app full screen")
+            }
             if model.panelRole == .app || model.mainRole == .app {
                 Button { withAnimation { model.swapAppHalf() } } label: {
                     Image(systemName: "rectangle.2.swap")
@@ -252,8 +276,16 @@ struct AppHalf: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        if model.ui.visible {
-            UIAppRoot(store: model.ui.store, inHalf: true)
+        if model.ui.visible && model.appFullScreen {
+            ContentUnavailableView {
+                Label("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right")
+            } description: {
+                Text("The app is over everything. Touch and hold its close button to show it here again.")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemBackground))
+        } else if model.ui.visible {
+            UIAppRoot(store: model.ui.store, inHalf: true, sizeToggle: model.appSizeToggle)
                 .overlay { if model.ui.restarting { ProgressView().controlSize(.large) } }
         } else {
             ContentUnavailableView {

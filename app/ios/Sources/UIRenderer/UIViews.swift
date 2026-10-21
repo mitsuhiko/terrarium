@@ -22,6 +22,8 @@ extension EnvironmentValues {
     @Entry var uiAppRoot: Bool = false
     /// The app runs in a half of the wide workspace (D59): its bar buttons stay in its own bar.
     @Entry var uiInHalf: Bool = false
+    /// Full screen, or back next to the code (the close button's menu, D59).
+    @Entry var uiSizeToggle: UISizeToggle?
     /// font_size set on a container: body text inside uses it.
     @Entry var uiBodySize: Double? = nil
 }
@@ -657,4 +659,11 @@ struct LinkNode: View {
             Text(text)
         }
     }
+}
+
+/// Switches a ui app between full screen and a half of the wide workspace (D59).
+struct UISizeToggle {
+    let title: String
+    let symbol: String
+    let action: () -> Void
 }
