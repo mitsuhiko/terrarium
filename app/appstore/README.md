@@ -123,6 +123,10 @@ released automatically after approval.
 - **2.5.2 / 4.7 (Q9)**: packages download from PyPI and run in WebKit. The
   review notes explain this. Pythonista, Pyto, Carnets and a-Shell ship
   similar features.
+- **2.5.2, `itms-services`** (rejected 0.1 on 2026-10-21, D57): App Review
+  flags the string anywhere in the bundle, even in Python's `urllib.parse`
+  and the docs. `fetch-pyodide.sh` and `build-docs.py` remove it;
+  `archive.sh` fails if it is back (new Pyodide cores or docs archives).
 - **Subscription sign-ins (Q21)**, accepted as a risk: Claude Pro/Max, ChatGPT and Copilot
   sign-ins from a third-party app may be against those providers' terms,
   and review may ask about them.

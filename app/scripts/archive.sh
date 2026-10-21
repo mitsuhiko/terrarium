@@ -65,6 +65,16 @@ if find "$APP" -name "*.map" | grep -q .; then
   echo "error: source maps in the bundle" >&2
   exit 1
 fi
+# App Review rejected 0.1 for the itms-services URL scheme in the bundle
+# (guideline 2.5.2, D57): not in any file, nor inside the stdlib zips.
+ITMS=$(grep -rla itms-services "$APP" || true)
+for z in $(find "$APP" -name "*.zip"); do
+  unzip -p "$z" | grep -ac itms-services >/dev/null && ITMS="$ITMS $z"
+done
+if [ -n "$ITMS" ]; then
+  echo "error: itms-services in the bundle: $ITMS" >&2
+  exit 1
+fi
 echo "archive: $ARCHIVE ($(du -sh "$APP" | cut -f1) app, version $(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist") ($BUILD_NUMBER))"
 
 OPTIONS=build/ExportOptions.plist

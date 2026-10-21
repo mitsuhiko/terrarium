@@ -145,6 +145,24 @@ def prune(root: Path, python: str) -> None:
             p.unlink()
 
 
+# App Review rejects apps that contain the itms-services URL scheme (guideline
+# 2.5.2, D57); urllib.parse's page names it in its list of schemes and in a
+# note about exactly this. Both go, and nothing in the output may name it.
+ITMS = "itms-services"
+
+
+def app_store_compliance(root: Path) -> None:
+    page = root / "library" / "urllib.parse.html"
+    if page.exists():
+        html = page.read_text(encoding="utf-8")
+        html = re.sub(r'<code class="[^"]*"><span class="pre">itms-services</span></code>,\s*', "", html)
+        html = re.sub(r'<div class="impl-detail compound">\s*<p>(?:(?!</div>).)*?itms-services.*?</div>\s*', "", html, flags=re.S)
+        page.write_text(html, encoding="utf-8")
+    for p in root.rglob("*"):
+        if p.is_file() and ITMS.encode() in p.read_bytes():
+            sys.exit(f"error: {p.relative_to(root)} names {ITMS}; App Review rejects that (D57), extend app_store_compliance")
+
+
 # -- HTML for the viewer -----------------------------------------------------------
 
 
@@ -540,6 +558,7 @@ def build(runtime: dict, update_pins: bool, force: bool) -> None:
         z.extractall(work / "raw")
     (root,) = [p for p in (work / "raw").iterdir() if p.is_dir()]
     prune(root, python)
+    app_store_compliance(root)
     release = next(
         (m.group(1) for m in [re.search(r"Python ([\d.a-z]+) documentation", (root / "index.html").read_text())] if m), python
     )
@@ -572,6 +591,8 @@ def build(runtime: dict, update_pins: bool, force: bool) -> None:
     symbols = db.execute("SELECT count(*) FROM symbols").fetchone()[0]
     db.execute("VACUUM")
     db.close()
+    if ITMS.encode() in (work / "docs.sqlite").read_bytes():
+        sys.exit(f"error: docs.sqlite names {ITMS} (D57)")
 
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)

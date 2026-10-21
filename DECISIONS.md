@@ -1977,6 +1977,33 @@ before or after the page's focus shows the keyboard with the key bar. The
 self-test's `editor_keyboard_from_native` step checks it (iPhone; iPad with
 a hardware keyboard).
 
+## D57: No itms-services in the bundle
+
+2026-10-21 - Accepted
+
+App Review rejected 0.1 (build 20261019.1852, reviewed 2026-10-21 on an iPad
+Air 11-inch (M3)) under guideline 2.5.2: "the app uses the itms-services URL
+scheme to install an app". The app never opens such a URL. The string is in
+CPython's `urllib/parse.py` (`uses_netloc`), which Apple's scan flags; it is
+the reason for CPython's `--with-app-store-compliance` (always on for
+CPython's iOS builds), but Pyodide's Emscripten builds keep it. The bundle
+had it in both cores' `python_stdlib.zip` and, as plain text, in the docs'
+`library/urllib.parse.html` and `docs.sqlite` (the list of schemes and the
+note about this very problem).
+
+- `scripts/fetch-pyodide.sh` removes `'itms-services'` from `uses_netloc` in
+  each core's `python_stdlib.zip` (what CPython's compliance patch does), on
+  fetch and for cores already in `vendor/`.
+- `scripts/build-docs.py` drops the scheme from urllib.parse's list and the
+  implementation-detail note, and fails if any page or `docs.sqlite` still
+  names it.
+- `scripts/archive.sh` fails if the string is in any file of the archived
+  app or inside its zips.
+
+The only change for programs: `urljoin` and friends no longer treat
+`itms-services:` URLs as having a netloc, as on CPython for iOS. Self-test
+passes (simulator, iPhone, 87 steps, 2026-10-21).
+
 ## Proposed (not yet decided)
 
 (none)
