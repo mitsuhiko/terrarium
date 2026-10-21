@@ -177,6 +177,8 @@ enum SelfTest {
             model.setPanelRole(PanelRole(rawValue: str(1) ?? "") ?? .console)
             if args.count > 2, let docked = args[2] as? Bool { model.consoleDocked = docked }
             model.setPanelFirst(args.count > 3 && args[3] as? Bool == true)
+        case "setDocked":
+            model.consoleDocked = args.first as? Bool ?? true
         case "setSidebar":
             model.sidebarVisible = args.first as? Bool ?? true
         case "setAppFullScreen":

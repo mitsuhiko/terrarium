@@ -76,6 +76,19 @@ extension AppModel {
         saveHalves()
     }
 
+    /// The agent or the docs just came into view in the other half (unfolding
+    /// an iPhone Duo, showing the half, picking them): their sheet goes, so
+    /// there is only ever one of each, and the half's is the one.
+    func panelRolesShown() {
+        if agentInPanel, activeSheet == .agent { activeSheet = nil }
+        if docsInPanel, docs.isShown {
+            if let page = docs.browser?.ref, let version = docs.browser?.version {
+                panelDocs?.open(DocsTarget(version: version, ref: page))
+            }
+            docs.close()
+        }
+    }
+
     /// Moves the app between the halves; the other half gets back what it showed before.
     func swapAppHalf() {
         if mainRole == .app {

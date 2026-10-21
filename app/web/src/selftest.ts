@@ -1773,6 +1773,19 @@ export async function selftest() {
       await until(async () => (await halves()).agentInPanel);
       if ((await appCall<any>("agentState")).sheet) throw new Error("the agent opened a sheet too");
 
+      // Only ever one agent: a sheet from the narrow layout (a folded iPhone
+      // Duo) or with the half hidden goes when the half shows the agent.
+      await appCall("setHalves", "editor", "agent", false);
+      await appCall("openAgent", "Tests");
+      await until(async () => (await appCall<any>("agentState")).sheet);
+      await appCall("setDocked", true);
+      await until(async () => !(await appCall<any>("agentState")).sheet && (await halves()).agentInPanel);
+      await appCall("setWide", false); // folded: the agent button opens the sheet again
+      await appCall("openAgent", "Tests");
+      await until(async () => (await appCall<any>("agentState")).sheet);
+      await appCall("setWide", true); // and unfolding closes it
+      await until(async () => !(await appCall<any>("agentState")).sheet && (await halves()).agentInPanel);
+
       await appCall("setHalves", "editor", "docs", true);
       await appCall("showDocs", "3.14", "library/json.html#json.loads");
       await until(async () => { const d = await appCall<any>("docsState"); return d.inPanel && d.ref === "library/json.html#json.loads"; }, 8000);

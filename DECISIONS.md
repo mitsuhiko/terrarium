@@ -2106,6 +2106,10 @@ of the fold, with the files out of the way). The picks are remembered.
   theirs would take it from the workspace.
 - An iPad's sidebar in portrait slides over the workspace; while it does,
   the halves' overlays are hidden.
+- Only ever one agent and one docs viewer: when the half comes to show
+  them (unfolding a Duo whose folded screen had the agent's sheet up,
+  showing the half, picking them) their sheet closes (the docs' page moves
+  over). Folding opens nothing; the agent button brings the sheet.
 - A ui app can still have the whole screen: `ui.run(full_screen=True)`
   asks for it (a game, say; the op protocol's `config` carries
   `full_screen`, which pages ignore: they are always full screen), and the

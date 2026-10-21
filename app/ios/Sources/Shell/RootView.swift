@@ -76,6 +76,9 @@ struct RootView: View {
             if let action = LaunchAction(url: url) { LaunchRouter.send(action) }
         }
         .onChange(of: sizeClass, initial: true) { _, size in model.setWide(size == .regular) }
+        // One agent and one docs viewer at a time: the half's when it shows them (D59).
+        .onChange(of: model.agentInPanel) { _, shown in if shown { model.panelRolesShown() } }
+        .onChange(of: model.docsInPanel) { _, shown in if shown { model.panelRolesShown() } }
         .onHinge { model.hinge = $0 }
         .onChange(of: model.panes) { _, _ in model.agentIDEChanged() }
         .onChange(of: model.file, initial: true) { _, _ in Task { await model.refreshFilePython() } }
