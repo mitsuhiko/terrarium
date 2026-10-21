@@ -4,16 +4,18 @@
 #
 #   scripts/simulator.sh iphone ["iPhone 18 Pro"]
 #   scripts/simulator.sh ipad ["iPad Pro 13-inch (M5)"]
+#   scripts/simulator.sh duo ["iPhone Duo"]
 #
 # Picks the named device, else a booted one of that kind, else the first
 # available one (newest iOS first).
 set -euo pipefail
-KIND=${1:?usage: simulator.sh iphone|ipad [name]}
+KIND=${1:?usage: simulator.sh iphone|ipad|duo [name]}
 NAME=${2:-}
 case "$KIND" in
   iphone) PREFIX="iPhone" ;;
   ipad) PREFIX="iPad" ;;
-  *) echo "unknown kind $KIND (iphone or ipad)" >&2; exit 2 ;;
+  duo) PREFIX="iPhone Duo" ;;
+  *) echo "unknown kind $KIND (iphone, ipad or duo)" >&2; exit 2 ;;
 esac
 
 UDID=$(xcrun simctl list devices available -j | NAME="$NAME" PREFIX="$PREFIX" python3 -c '

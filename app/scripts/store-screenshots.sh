@@ -5,6 +5,9 @@
 #
 #   scripts/store-screenshots.sh              iPhone 6.9" and iPad 13"
 #   scripts/store-screenshots.sh iphone       one of them
+#   scripts/store-screenshots.sh duo          the iPhone Duo's inner screen (D58, D59):
+#                                             open it in DeviceHub first (nothing
+#                                             headless opens it), landscape
 #   scripts/store-screenshots.sh iphone 3     only the scenes whose name starts with 3
 #   IPHONE="iPhone 18 Pro Max" IPAD="iPad Pro 13-inch (M5)" APPEARANCE=dark ...
 #
@@ -25,13 +28,14 @@ KINDS=()
 ONLY=""
 for arg in "$@"; do
   case "$arg" in
-    iphone|ipad) KINDS+=("$arg") ;;
+    iphone|ipad|duo) KINDS+=("$arg") ;;
     *) ONLY=$arg ;;
   esac
 done
 [ ${#KINDS[@]} -gt 0 ] || KINDS=(iphone ipad)
 IPHONE=${IPHONE:-iPhone 18 Pro Max}
 IPAD=${IPAD:-iPad Pro 13-inch (M5)}
+DUO=${DUO:-iPhone Duo}
 APPEARANCE=${APPEARANCE:-light}
 BUNDLE_ID=eu.ronacher.Terrarium
 
@@ -59,20 +63,32 @@ IPAD_SCENES=(
   "3-notebook|open=Examples/Notebook.ipynb&folder=Examples&cells&top=## Plots&pane=editor|35"
   "4-editor|open=Examples/Todo App.py&folder=Examples&pane=editor&$COMPLETION|16"
   "5-debugger|open=Examples/Cells.py&folder=Examples&bp=16&run|16"
-  "6-todo|open=Examples/Todo App.py&run|14"
+  "6-todo|open=Examples/Todo App.py&panel=app&sidebar=0&run|14"
   "7-docs|docs=3.14/library/json.html|8"
+)
+# The open iPhone Duo: the halves on either side of the fold (D59).
+DUO_SCENES=(
+  "1-app|open=Examples/Todo App.py&panel=app&sidebar=0&run|14"
+  "2-agent|open=Examples/Plot.py&panel=agent&sidebar=0&agent=demo|40"
+  "3-plot|open=Examples/Plot.py&panel=console&sidebar=0&run|25"
+  "4-docs|open=Examples/Hello.py&panel=docs&side=first&sidebar=0&docs=3.14/library/json.html|10"
+  "5-split|open=Examples/Turtle.py&split=Examples/Plot.py&sidebar=0&pane=editor|12"
+  "6-files|open=Examples/Todo App.py&folder=Examples&panel=console|10"
 )
 
 running() { xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -q "UIKitApplication:$BUNDLE_ID\["; }
 
 for kind in "${KINDS[@]}"; do
   case "$kind" in
-    iphone) NAME=$IPHONE; SCENES=("${IPHONE_SCENES[@]}") ;;
-    ipad) NAME=$IPAD; SCENES=("${IPAD_SCENES[@]}") ;;
+    iphone) NAME=$IPHONE; SCENES=("${IPHONE_SCENES[@]}"); SCREEN=() ;;
+    ipad) NAME=$IPAD; SCENES=("${IPAD_SCENES[@]}"); SCREEN=() ;;
+    duo) NAME=$DUO; SCENES=("${DUO_SCENES[@]}"); SCREEN=(--display=3) ;;   # the inner screen
   esac
   UDID=$(./scripts/simulator.sh "$kind" "$NAME")
   echo "$kind: $NAME ($UDID)"
   LOCALE=$(xcrun simctl spawn "$UDID" defaults read -g AppleLocale 2>/dev/null || true)
+  # A reboot would fold the Duo again (it boots closed): its locale stays.
+  [ "$kind" != duo ] || LOCALE=en_US
   if [ "$LOCALE" != en_US ]; then
     xcrun simctl spawn "$UDID" defaults write -g AppleLocale en_US
     xcrun simctl shutdown "$UDID"
@@ -92,11 +108,13 @@ for kind in "${KINDS[@]}"; do
     # terminate returns before the app is gone; a launch then may not start a new one.
     xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
     for _ in $(seq 1 50); do running || break; sleep 0.2; done
-    xcrun simctl spawn "$UDID" defaults delete "$BUNDLE_ID" 2>/dev/null || true
+    # The app's defaults are in its container (the bundle ID alone is not found there).
+    PREFS="$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)/Library/Preferences/$BUNDLE_ID"
+    xcrun simctl spawn "$UDID" defaults delete "$PREFS" 2>/dev/null || true
     xcrun simctl launch "$UDID" "$BUNDLE_ID" --reset --fragment "$fragment" > /dev/null
     sleep "$wait"
     rm -f "$OUT/$shot.png"
-    xcrun simctl io "$UDID" screenshot "$OUT/$shot.png" > /dev/null 2>&1
+    xcrun simctl io "$UDID" screenshot ${SCREEN[@]+"${SCREEN[@]}"} "$OUT/$shot.png" > /dev/null 2>&1
     for _ in $(seq 1 50); do [ -s "$OUT/$shot.png" ] && break; sleep 0.2; done   # written a moment later
     echo "  $OUT/$shot.png ($(sips -g pixelWidth -g pixelHeight "$OUT/$shot.png" | awk '/pixel/ {print $2}' | paste -sd x -))"
   done

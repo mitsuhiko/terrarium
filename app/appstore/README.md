@@ -42,8 +42,19 @@ to do by hand in App Store Connect, and the open risks for review.
   needs; it scales them down for smaller devices. Upload them in file order (the first three show in search):
   - iPhone (9): plot, agent, editor with a ty diagnostic, notebook, ui app,
     debugger, turtle, docs, files.
-  - iPad (7): split view, agent, notebook, completions, debugger, ui app,
-    docs.
+  - iPad (7): split view, agent, notebook, completions, debugger, the
+    todo app next to its code (D59), docs.
+  - iPhone Duo, inner screen (6, 2853x2007, `store-screenshots.sh duo`):
+    the todo app, the agent, a plot, the docs (left) each beside the code
+    across the fold, split view at the fold, files with editor and console.
+    Open the Duo in DeviceHub first: nothing headless opens it, and the
+    script leaves its locale alone (a reboot closes it), so the clock may be
+    24-hour. Not checked: whether App Store Connect has a slot for the
+    Duo's sizes (the outer screen is 1398x2034).
+  - Each scene starts without the app's defaults: they are deleted by
+    their path in the app's container (before 2026-10-22 the script asked
+    for the bundle ID's domain, which the simulator doesn't find, so
+    settings carried over from scene to scene).
   - The scenes use the launch hooks (`AppModel.launchHooks`). The agent's
     is a scripted model (`web/src/agent/demo.ts`) whose tool calls really
     edit, check and run `Examples/Plot.py`.
