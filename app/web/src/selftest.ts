@@ -67,6 +67,8 @@ const app = {
   closeTab: (path: string) => appCall("closeTab", path),
   showPane: (pane: string) => appCall("showPane", pane),
   wide: () => appCall<boolean>("wide"),
+  setWide: (on: boolean) => appCall("setWide", on),
+  editorShown: () => appCall<boolean>("editorShown"),
   tapTraceback: (text: string) => appCall<number>("tapTraceback", text),
   tapTraceFrame: (name: string) => appCall<string | null>("tapTraceFrame", name),
   focusField: (field: "console" | "input") => appCall("focusField", field),
@@ -142,6 +144,7 @@ export async function selftest() {
   // Breakpoints live in the web view's storage, which --reset does not clear.
   breakpoints.clearAll();
   await app.setSplit(false); // a split view restored from the last session
+  await appCall("setHalves", "editor", "console", true); // and what its halves showed (D59)
 
   // What this WebKit gives the engine page: Python needs isolation and shared memory (D9).
   await step("environment", async () => {
@@ -1732,6 +1735,75 @@ export async function selftest() {
     await app.openLocation("Tests/nav/main.py");
     await app.setSplit(false);
     await until(async () => (await app.panes()).length === 1);
+  });
+
+  // Folding an iPhone Duo (or rotating, or iPad multitasking) goes from the
+  // split view to the stack: the file on screen stays on screen (D58).
+  await step("fold_handoff", async () => {
+    const wasWide = await app.wide();
+    try {
+      await app.setWide(true);
+      await app.openFile("Tests/nav/main.py");
+      await app.setSplit(true);
+      await until(async () => (await app.panes()).length === 2);
+      await app.openFile("Tests/nav/helper.py"); // the right pane
+      await until(async () => (await app.panes())[1]?.active === "Tests/nav/helper.py");
+      await app.setWide(false); // folded
+      await until(async () => (await app.currentFile()) === "Tests/nav/helper.py" && (await app.editorShown()));
+      await until(async () => (await app.panes())[0]?.active === "Tests/nav/helper.py");
+      await app.setWide(true); // open again: the split view is back
+      await until(async () => (await app.panes()).length === 2);
+    } finally {
+      await app.setSplit(false);
+      await app.setWide(wasWide);
+    }
+  });
+
+  // The wide workspace's other half shows what the user picks (D59): the agent
+  // and the docs open there instead of in sheets, a ui app runs there (or in
+  // the main half) instead of over everything.
+  await step("halves", async () => {
+    if (!(await app.wide())) return { skipped: "iPhone" };
+    const halves = () => appCall<any>("halves");
+    const sidebar = (await halves()).sidebar;
+    try {
+      await appCall("setHalves", "editor", "agent", true);
+      await appCall("openAgent", "Tests");
+      await until(async () => (await halves()).agentInPanel);
+      if ((await appCall<any>("agentState")).sheet) throw new Error("the agent opened a sheet too");
+
+      await appCall("setHalves", "editor", "docs", true);
+      await appCall("showDocs", "3.14", "library/json.html#json.loads");
+      await until(async () => { const d = await appCall<any>("docsState"); return d.inPanel && d.ref === "library/json.html#json.loads"; }, 8000);
+
+      await appCall("setHalves", "editor", "app", true);
+      await runFile("Examples/Counter App.py");
+      await until(() => session.getSnapshot().uiOpen);
+      await until(async () => (await nativeTree()).visible);
+      let h = await halves();
+      if (!h.appInHalf || h.overlay) throw new Error(`app not in the half: ${JSON.stringify(h)}`);
+      const plus = await untilNode((n) => n.t === "Button" && n.p.label === "+1");
+      await nativeEvent(plus.i, "click");
+      await untilNode((n) => n.t === "Text" && n.p.font === "largeTitle" && n.p.text === "1");
+
+      await appCall("swapAppHalf"); // the app to the main half, the docs back in the other
+      h = await halves();
+      if (h.main !== "app" || h.panel !== "docs" || !h.appInHalf) throw new Error(`swap: ${JSON.stringify(h)}`);
+      await appCall("setHalves", "app", "console", false); // the other half hidden: the app stays in the main half
+      if (!(await halves()).appInHalf) throw new Error("hiding the other half moved the app");
+      await call("test.ui", { action: "close" });
+      await until(() => !session.getSnapshot().uiOpen);
+
+      // The other half first: left of the main half (or above); the files make room.
+      await appCall("setHalves", "app", "docs", true, true);
+      await until(async () => {
+        const h = await halves();
+        return h.first && !h.sidebar && h.panelSlot && h.mainSlot && h.panelSlot[0] <= h.mainSlot[0];
+      });
+    } finally {
+      await appCall("setHalves", "editor", "console", true);
+      await appCall("setSidebar", sidebar);
+    }
   });
 
   // -- HTTP through the host's proxy (D25) -------------------------------------------

@@ -5,6 +5,8 @@ import SwiftUI
 // sign-in sheet.
 
 struct AgentView: View {
+    /// In the workspace's other half (D59): no Done button.
+    var embedded = false
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
@@ -58,13 +60,17 @@ struct AgentView: View {
             .navigationTitle(state.current?.displayTitle ?? "Agent")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                if !embedded {
+                    ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                }
                 ToolbarItem(placement: .principal) { titleButton(state) }
+                    .horizontalOnly(embedded)
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button { model.agentNewConversation() } label: { Image(systemName: "square.and.pencil") }
                         .accessibilityLabel("New conversation")
                     menu(state)
                 }
+                .horizontalOnly(embedded)
             }
             .navigationDestination(isPresented: Binding(get: { model.agentAccountsShown }, set: { model.agentAccountsShown = $0 })) {
                 AccountsView()

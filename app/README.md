@@ -281,6 +281,17 @@ apps are native views (D30).
   gets the console back and the running program is marked crashed.
 - **Layouts**: on iPhone, Files → Code/Console; on iPad, a sidebar with the
   editor and console side by side (stacked in portrait).
+- **The other half** (D59): where the console docks on iPad (and an open
+  iPhone Duo) a picker shows the console, the agent, the running ui app or
+  the docs instead. The app can also take the main half (the swap button),
+  and the half can go before the main one (left, or above).
+- **iPhone Duo** (D58): closed, the outer screen gets the iPhone layout;
+  open, the inner one gets the iPad layout. Folding keeps the file on
+  screen (also when rotating a Pro Max or resizing on iPad). On the inner
+  screen the fold divides: the other half takes one side of it, and split
+  view's two panes meet at it (until the divider is dragged; a double tap
+  puts it back). The bar buttons go into the system's vertical bar, and
+  without a title row the editor starts at the top.
 
 ## Layout
 
@@ -370,7 +381,15 @@ The pages can be inspected with Safari's Web Inspector (Develop → Simulator):
 "Engine" and one "Editor" per pane.
 ```
 
-## Status (2026-10-18)
+## Status (2026-10-21)
+
+`./run.sh --selftest` passes all 89 checks in the iPhone Duo simulator
+(iOS 27.1), closed and open (opened in DeviceHub), including `fold_handoff`
+(D58) and `halves` (D59). Before the halves, it passed all 88 in the iPhone
+18 Pro simulator (iOS 27.0); in the iPad mini (A17 Pro) simulator 86 passed
+(`markdown_preview` and `editor_keyboard_from_native` fail there without
+D58's changes too). `RESIZE=951x669 SIM=<udid> ./run.sh` runs in a window of
+that size (`devicectl device appResize`).
 
 Since D31 the app is native SwiftUI. `./run.sh --selftest` passes all 86
 checks in the iPhone 18 Pro simulator (2026-10-18), including the

@@ -157,7 +157,8 @@ Built last (D8), on top of everything above.
 
 ## Platforms
 
-- [core] iPhone and iPad (iOS 27+)
+- [core] iPhone and iPad (iOS 27+), and the foldable iPhone Duo (iOS 27.1, D58)
+- [core] The wide workspace's other half: console, agent, app or docs (D59)
 - [later] macOS (SwiftUI)
 - [maybe] Android (would need its own native UI)
 - Dropped: the IDE in desktop browsers (D31). Published apps still run in any browser.

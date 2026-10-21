@@ -17,7 +17,7 @@ struct EditorScreen: View {
             let bottom = geo.safeAreaInsets.bottom > window + 1 ? 0 : window
             let lowered = min(ConsolePanel.lowered, bottom)
             VStack(spacing: 0) {
-                if model.panes[0].tabs.count > 1 { TabStrip(pane: 0) }
+                if model.panes[0].tabs.count > 1 || model.verticalBar { TabStrip(pane: 0) }
                 ZStack(alignment: .bottom) {
                     EditorPaneView(pane: 0)
                         .padding(.bottom, model.editorFocused ? 0 : ConsolePanel.peek - lowered)
@@ -37,20 +37,36 @@ struct EditorScreen: View {
     }
 }
 
-/// iPad: one or two panes and the docked console (right in landscape, below otherwise).
+/// iPad: one or two panes and the other half: the console, the agent, the app or
+/// the docs (D59), right in landscape, below otherwise, or left / above when the
+/// user moves it there. On an open iPhone Duo it takes its side of the fold
+/// (D58); with two panes side by side the fold divides the panes instead.
 struct WorkspaceView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         GeometryReader { geo in
-            let landscape = geo.size.width > geo.size.height * 1.2 && !model.split
+            let _ = model.hinge // the fold's margins come and go with the hinge
+            let first = model.panelFirst
+            let fold = geo.crease.flatMap { crease -> (sideBySide: Bool, gap: CGFloat, panel: CGFloat)? in
+                if model.split && crease.sideBySide { return nil }
+                return crease.sides(in: geo.size, minimum: 280).map { (crease.sideBySide, $0.gap, first ? $0.before : $0.after) }
+            }
+            let landscape = fold?.sideBySide ?? (geo.size.width > geo.size.height * 1.2 && !model.split)
             let layout = landscape ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+            let panel = PanelHalf(sideBySide: landscape)
+                .frame(width: landscape ? fold?.panel ?? max(320, geo.size.width * 0.38) : nil,
+                       height: landscape ? nil : fold?.panel ?? geo.size.height * 0.36)
+            let gutter = FoldGutter(thickness: fold?.gap ?? 1, sideBySide: landscape)
             layout {
-                editors(width: geo.size.width)
-                if model.consoleDocked {
-                    Divider()
-                    ConsoleView(showHeader: true)
-                        .frame(width: landscape ? max(320, geo.size.width * 0.38) : nil, height: landscape ? nil : geo.size.height * 0.36)
+                if model.consoleDocked && first {
+                    panel
+                    gutter
+                }
+                MainHalf { editors(width: geo.size.width) }
+                if model.consoleDocked && !first {
+                    gutter
+                    panel
                 }
             }
         }
@@ -62,9 +78,13 @@ struct WorkspaceView: View {
     private func editors(width: CGFloat) -> some View {
         if model.split {
             GeometryReader { geo in
+                // At the fold unless the user moved the divider.
+                let fold = geo.crease.flatMap { $0.sideBySide ? $0.sides(in: geo.size, minimum: geo.size.width * 0.25) : nil }
+                let first = model.splitRatio.map { geo.size.width * $0 } ?? fold?.before ?? geo.size.width / 2
                 HStack(spacing: 0) {
-                    PaneColumn(pane: 0).frame(width: geo.size.width * model.splitRatio)
-                    SplitDivider(width: geo.size.width)
+                    PaneColumn(pane: 0).frame(width: first)
+                    SplitDivider(width: geo.size.width, ratio: first / max(1, geo.size.width),
+                                 thickness: model.splitRatio == nil ? fold?.gap ?? 1 : 1)
                     PaneColumn(pane: 1)
                 }
             }
@@ -76,20 +96,21 @@ struct WorkspaceView: View {
 
 private struct SplitDivider: View {
     let width: CGFloat
+    /// Where it is now (the user's ratio, the fold or the middle).
+    let ratio: CGFloat
+    let thickness: CGFloat
     @Environment(AppModel.self) private var model
     @State private var start: CGFloat?
 
     var body: some View {
-        Rectangle()
-            .fill(Color(.separator))
-            .frame(width: 1)
-            .overlay(Color.clear.frame(width: 16).contentShape(Rectangle()))
+        FoldGutter(thickness: thickness, sideBySide: true)
+            .overlay(Color.clear.frame(width: max(16, thickness)).contentShape(Rectangle()))
             .gesture(DragGesture(coordinateSpace: .global).onChanged { g in
-                let base = start ?? model.splitRatio
+                let base = start ?? ratio
                 if start == nil { start = base }
                 model.splitRatio = min(0.75, max(0.25, base + g.translation.width / max(1, width)))
             }.onEnded { _ in start = nil })
-            .onTapGesture(count: 2) { model.splitRatio = 0.5 }
+            .onTapGesture(count: 2) { model.splitRatio = nil }
             .accessibilityLabel("Resize split view")
     }
 }
@@ -213,6 +234,10 @@ struct TabStrip: View {
             if running { Circle().fill(.green).frame(width: 6, height: 6) }
             if isExternal(path) { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary) }
             Text(tabLabel(path)).font(.subheadline).lineLimit(1)
+            if active && model.verticalBar {
+                // The title's place (D58): the active tab opens "Go to".
+                Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+            }
             Button {
                 Task { await model.closeTab(path, pane: pane) }
             } label: {
@@ -226,7 +251,10 @@ struct TabStrip: View {
         .frame(height: 30)
         .background(active ? Color(.systemBackground) : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
-        .onTapGesture { Task { await model.selectTab(path, pane: pane) } }
+        .onTapGesture {
+            // The active tab, tapped again: go to a symbol or line, like the title.
+            if active { model.activeSheet = .jump("") } else { Task { await model.selectTab(path, pane: pane) } }
+        }
         .contextMenu {
             Button { Task { await model.closeTab(path, pane: pane) } } label: { Label("Close Tab", systemImage: "xmark") }
             Button { Task { await model.closeOtherTabs(path, pane: pane) } } label: { Label("Close Other Tabs", systemImage: "xmark.square") }
@@ -256,14 +284,22 @@ private struct EditorChrome: ViewModifier {
         let debug = model.session.debug
         content
             .toolbar {
-                ToolbarItem(placement: .principal) { title(file) }
+                // With a vertical bar (iPhone Duo, D58) the buttons are on the
+                // side and the active tab is the title: no row of its own.
+                if !model.verticalBar {
+                    ToolbarItem(placement: .principal) { title(file) }
+                }
                 if model.wide {
                     ToolbarItemGroup(placement: .topBarTrailing) {
+                        if model.verticalBar {
+                            Button { withAnimation { model.sidebarVisible.toggle() } } label: { Image(systemName: "sidebar.left") }
+                                .accessibilityLabel(model.sidebarVisible ? "Hide Files" : "Show Files")
+                        }
                         if let debug {
                             DebugBar(debug: debug)
                         }
-                        Button { withAnimation { model.consoleDocked.toggle() } } label: { Image(systemName: "terminal") }
-                            .accessibilityLabel("Toggle console")
+                        Button { withAnimation { model.consoleDocked.toggle() } } label: { Image(systemName: "sidebar.right") }
+                            .accessibilityLabel(model.consoleDocked ? "Hide \(model.panelRole.title)" : "Show \(model.panelRole.title)")
                         AgentButton()
                         menu(file, external: external)
                         RunButton()
@@ -271,12 +307,10 @@ private struct EditorChrome: ViewModifier {
                 } else {
                     // One item with the buttons close together: a group spaces
                     // them wider than the title can afford on iPhone.
-                    ToolbarItem(placement: .topBarTrailing) {
-                        TightButtons {
-                            AgentButton()
-                            menu(file, external: external)
-                            RunButton()
-                        }
+                    TrailingButtons(vertical: model.verticalBar) {
+                        AgentButton()
+                        menu(file, external: external)
+                        RunButton()
                     }
                 }
             }
@@ -299,7 +333,8 @@ private struct EditorChrome: ViewModifier {
     /// Room for the title on iPhone: between the back button and the group of
     /// buttons on the right (about 228 pt together).
     private var titleWidth: CGFloat {
-        model.wide ? min(420, model.windowWidth * 0.4) : max(90, model.windowWidth - 228)
+        // With a vertical bar the buttons are on the side (D58).
+        model.wide ? min(420, model.windowWidth * 0.4) : max(90, model.windowWidth - (model.verticalBar ? 120 : 228))
     }
 
     /// The file name, cut in the middle when it doesn't fit. Toolbar buttons

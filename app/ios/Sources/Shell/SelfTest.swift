@@ -156,12 +156,37 @@ enum SelfTest {
             await model.closeTab(str(0) ?? "")
         case "showPane":
             switch str(0) {
-            case "console": if model.wide { model.consoleDocked = true } else if model.consoleDetent == .peek { model.consoleDetent = .half }
+            case "console":
+                if model.wide {
+                    model.consoleDocked = true
+                    model.setPanelRole(.console)
+                } else if model.consoleDetent == .peek { model.consoleDetent = .half }
             case "files": if !model.wide { model.route = [] }
             default: break
             }
         case "wide":
             return model.wide
+        case "setWide":
+            // What a size class change does (folding an iPhone Duo, D58), without one.
+            model.setWide(args.first as? Bool ?? false)
+        case "editorShown":
+            return model.editorShown
+        case "setHalves":
+            // What the halves show (D59): main, panel, and whether the panel is up.
+            model.mainRole = MainRole(rawValue: str(0) ?? "") ?? .editor
+            model.setPanelRole(PanelRole(rawValue: str(1) ?? "") ?? .console)
+            if args.count > 2, let docked = args[2] as? Bool { model.consoleDocked = docked }
+            model.setPanelFirst(args.count > 3 && args[3] as? Bool == true)
+        case "setSidebar":
+            model.sidebarVisible = args.first as? Bool ?? true
+        case "swapAppHalf":
+            model.swapAppHalf()
+        case "halves":
+            return ["main": model.mainRole.rawValue, "panel": model.panelRole.rawValue, "panelShown": model.panelShown,
+                    "appInHalf": model.appInHalf, "overlay": model.ui.visible && !model.appInHalf,
+                    "agentInPanel": model.agentInPanel, "docsInPanel": model.docsInPanel, "first": model.panelFirst,
+                    "sidebar": model.sidebarVisible, "panelSlot": model.panelSlot.map { [$0.rect.minX, $0.rect.width] } ?? NSNull(),
+                    "mainSlot": model.mainSlot.map { [$0.rect.minX, $0.rect.width] } ?? NSNull()]
         case "tapTraceFrame":
             // A frame of the last traceback as data (D45), by function name: what its place button does.
             let s = model.session

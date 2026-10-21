@@ -2004,6 +2004,115 @@ The only change for programs: `urljoin` and friends no longer treat
 `itms-services:` URLs as having a netloc, as on CPython for iOS. Self-test
 passes (simulator, iPhone, 87 steps, 2026-10-21).
 
+## D58: The iPhone Duo: two layouts, and the fold divides the inner screen
+
+2026-10-21 - Accepted
+
+The iPhone Duo (iPhone19,4, iOS 27.1) is a book-style foldable with the
+phone idiom. Its simulator profile (Xcode 27.1, `iPhone Duo.simdevicetype`)
+has two built-in screens: the outer one 1398x2034 @3x (466x678 pt), the
+inner one 2007x2853 @3x (669x951 pt) and landscape by default (951x669 pt).
+There is no Info.plist opt-in. What the 27.1 SDK adds for it:
+- a `division` reserved region where the screen folds
+  (`GeometryProxy.reservedRegions(kind:options:)`, UIKit's
+  `UIView.reservedRegions(kind:)`), with margins that interactive content
+  should avoid and an `isActive` flag, and an `occlusion` kind;
+- the hinge: `onHingeChange` / `UIHingeInteraction` (closed, partially open,
+  fully open, and the angle);
+- a vertical bar: in some layouts the system puts navigation and toolbar
+  items in a bar on the leading or trailing edge
+  (`UITraitCollection.verticalBarEdge`, `preferredVerticalBarBehavior`,
+  `toolbarVerticalCompressionBehavior`), which adds a safe area inset;
+- `UIArrangementViewController` with split and overlay arrangements.
+
+What the app does (the deployment target stays 27.0; all of it is behind
+`#available(iOS 27.1, *)` in `Shell/Fold.swift`):
+- The layouts follow the size class as before: the outer screen gets the
+  iPhone layout, the inner one the iPad layout.
+- **The file on screen stays on screen** when the window goes from wide to
+  narrow (`AppModel.setWide`): the editor is pushed, and a file in the
+  right pane of a split view moves to the first pane, which is the one the
+  narrow layout shows. Before, folding (or rotating a Pro Max to portrait,
+  or iPad multitasking) landed on the file list.
+- **The fold divides.** If a division region crosses the workspace edge to
+  edge and leaves at least 280 pt on each side, the docked console takes
+  the half past it (side by side for a vertical fold, below for a
+  horizontal one). In split view a vertical fold divides the two panes
+  instead, until the divider is dragged (`splitRatio` is now optional; a
+  double tap puts it back on the fold or in the middle). Flat, the fold is a
+  hairline divider; bent (an active region), the gutter covers its margins.
+- The hinge's state is kept on the model, so the layout looks again at the
+  fold when the hinge moves, even if the view's size doesn't change.
+- iPhone orientations now include upside-down portrait, as on iPad (Face ID
+  iPhones ignore it).
+
+Not done: the vertical bar is left to the system (no tab bar, so the
+automatic compression fits), nothing avoids `occlusion` regions beyond the
+safe area, and Python programs can't read the hinge (a `motion`-style
+module could).
+
+Evidence: builds against the iOS 27.1 SDK. The self-test's `fold_handoff`
+step (wide to narrow with a file in the right pane) passes in the iPhone
+18 Pro simulator (iOS 27.0); split view passes in the iPad mini simulator.
+
+Note (2026-10-22, the iPhone Duo simulator, iOS 27.1): the simulator boots
+closed (the outer screen). Nothing headless opens it: the hinge slider is
+DeviceHub's (Xcode 27's device window), and `simctl`/`devicectl` have no
+hinge command (SpringBoard's display tool needs an entitlement).
+`devicectl device appResize` moves the app to a resizable display of any
+size (no fold there): 951x669 and 669x951 both get the wide layout, so the
+inner screen in tabletop (portrait) is wide too. `RESIZE=951x669` in
+`run.sh` does that for a run. Opened in DeviceHub, the division region is
+where the fold is (the console's divider lands on it), in the view's
+coordinates. All 89 self-test checks pass closed and open.
+
+The vertical bar is in use on both screens: on the trailing edge in
+portrait, on the leading edge in landscape, with the status bar and the
+navigation bar's buttons in it. Our buttons were one custom view (packed
+for the iPhone's title), which stays in the horizontal bar, so:
+- `TrailingButtons` packs them only without a vertical bar; with one
+  (`VerticalBarProbe`, the `verticalBarEdge` trait) they are separate items
+  with `axisBehavior(.verticalPreferred)`.
+- With a vertical bar there is no title row: the active tab is the title
+  (a tap opens Go to, as the title did; the tab strip shows from one tab
+  on), the sidebar toggle is ours and in the vertical bar, and the top bar
+  goes away.
+- Wide, the file sidebar has no agent button: the editor's is the one.
+
+## D59: The wide workspace's other half shows what the user picks
+
+2026-10-22 - Accepted
+
+The docked console's place in the wide layout (right in landscape, below
+otherwise, past the fold on an open iPhone Duo, D58) is now "the other
+half". A segmented control in its header picks the console, the agent,
+the running ui app or the docs; nothing switches by itself (a run still
+brings the half up, whatever it shows). The main half shows the editors or
+the app; a swap button moves the app between the halves, and another moves
+the other half before the main one (left of it, or above; on the Duo left
+of the fold, with the files out of the way). The picks are remembered.
+
+- The agent opens in the half when it shows the agent (no sheet), the docs
+  likewise (`help()`, Show Info, the agent's links), and a ui app runs in
+  its half instead of over everything. Turtle and plots stay in the console.
+- Agent, docs and ui apps have navigation stacks of their own. Inside the
+  workspace's stack SwiftUI leaves out their bars and moves their buttons
+  into the workspace's bar, from a hosting controller of their own too. So
+  the halves keep a slot and report its frame, and `RootView` draws them
+  there at the window's top level (`HalfOverlays`), laid out (not offset)
+  and clipped: else their backgrounds reach into the vertical bar and
+  cover the workspace's buttons. Their bar buttons are
+  `axisBehavior(.horizontalOnly)`: the window has one vertical bar, and
+  theirs would take it from the workspace.
+- An iPad's sidebar in portrait slides over the workspace; while it does,
+  the halves' overlays are hidden.
+
+Evidence: the self-test's `halves` step (agent and docs in the half, an app
+in the half and swapped to the main one, the half first) passes in the iPhone
+Duo simulator, open (iOS 27.1) and in a 951x669 window, and is skipped on the
+outer screen. Screenshots: iPad mini (portrait, app below), the open Duo
+(agent, docs, app right of the fold; console and app left of it).
+
 ## Proposed (not yet decided)
 
 (none)

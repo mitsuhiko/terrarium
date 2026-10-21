@@ -15,6 +15,8 @@ extension AppModel {
     // MARK: the viewer
 
     func showDocs(_ target: DocsTarget) {
+        // In the other half when it shows the docs (D59), else a sheet.
+        if docsInPanel, let panelDocs { return panelDocs.open(target) }
         docs.show(target, schemeHandler: host.schemeHandler, from: host.presenter)
     }
 
@@ -35,7 +37,8 @@ extension AppModel {
     }
 
     var docsState: [String: Any] {
-        ["shown": docs.isShown, "version": docs.browser?.version ?? NSNull(), "ref": docs.browser?.ref ?? NSNull(), "title": docs.browser?.title ?? NSNull()]
+        let browser = docsInPanel ? panelDocs : docs.browser
+        return ["shown": docs.isShown || docsInPanel, "inPanel": docsInPanel, "version": browser?.version ?? NSNull(), "ref": browser?.ref ?? NSNull(), "title": browser?.title ?? NSNull()]
     }
 
     func closeDocs() {

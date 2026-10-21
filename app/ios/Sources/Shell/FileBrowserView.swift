@@ -110,8 +110,8 @@ struct FileBrowserView: View {
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic))
         .navigationTitle(displayName(dir))
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                TightButtons {
+            // On an iPhone Duo's outer screen they go into the vertical bar (D58).
+            TrailingButtons(vertical: model.verticalBar && !model.wide) {
                     Menu {
                         Section {
                             Button { ask(.newFile) } label: { Label("New File", systemImage: "doc.badge.plus") }
@@ -133,10 +133,10 @@ struct FileBrowserView: View {
                         Image(systemName: "ellipsis")
                     }
                     .accessibilityLabel("More")
-                    AgentButton(project: projectRoot(dir))
+                    // Wide, the editor's bar has the agent (one button, not two, D58).
+                    if !model.wide { AgentButton(project: projectRoot(dir)) }
                     Button { ask(.newFile) } label: { Image(systemName: "square.and.pencil") }
                         .accessibilityLabel("New file")
-                }
             }
         }
         .task(id: "\(dir)#\(model.fileListVersion)") { await load() }

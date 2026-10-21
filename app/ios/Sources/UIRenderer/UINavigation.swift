@@ -3,15 +3,17 @@ import SwiftUI
 // The app's frame: the root, screens (a grouped List with a navigation bar),
 // navigation stacks, tabs, sheets, dialogs and toasts.
 
-/// A running ui app, full screen.
+/// A running ui app, full screen or in a half of the wide workspace (D59).
 struct UIAppRoot: View {
     let store: UIStore
+    var inHalf = false
 
     var body: some View {
         RootContent(root: store.root)
             .modifier(LayerHost(level: 0))
             .environment(store)
             .environment(\.uiAppRoot, true)
+            .environment(\.uiInHalf, inHalf)
             .tint(UIColorParser.color(store.tint))
             .preferredColorScheme(store.theme == "dark" ? .dark : store.theme == "light" ? .light : nil)
             .background {
@@ -124,6 +126,7 @@ struct ScreenChrome: ViewModifier {
     let large: Bool
     let toolbars: [UINode]
     @Environment(\.uiAppRoot) private var appRoot
+    @Environment(\.uiInHalf) private var inHalf
     @Environment(UIStore.self) private var store
 
     func body(content: Content) -> some View {
@@ -135,17 +138,20 @@ struct ScreenChrome: ViewModifier {
             .toolbar {
                 if appRoot && store.closeButton {
                     ToolbarItem(placement: .topBarLeading) { CloseAppButton() }
+                        .horizontalOnly(inHalf)
                     if !leading.isEmpty { ToolbarSpacer(.fixed, placement: .topBarLeading) }
                 }
                 if !leading.isEmpty {
                     ToolbarItemGroup(placement: .topBarLeading) {
                         ForEach(leading) { Children(node: $0).environment(\.uiContext, .toolbar) }
                     }
+                    .horizontalOnly(inHalf)
                 }
                 if !trailing.isEmpty {
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         ForEach(trailing) { Children(node: $0).environment(\.uiContext, .toolbar) }
                     }
+                    .horizontalOnly(inHalf)
                 }
             }
             .environment(\.uiAppRoot, false)

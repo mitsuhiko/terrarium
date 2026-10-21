@@ -6,6 +6,8 @@
 #   ./run.sh --device [...]      on the paired iPhone (must be unlocked)
 #   ./run.sh --reset ...         wipe Documents first (examples get re-seeded)
 #   QUERY="jspi=0&gc=0" ./run.sh ...   runtime switches
+#   RESIZE=951x669 SIM=<udid> ./run.sh ...   in a resizable window of that size
+#                                (devicectl; e.g. an open iPhone Duo's inner screen, D59)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -52,6 +54,13 @@ if [ "$TARGET" = simulator ]; then
   DOCS="$(xcrun simctl get_app_container "${SIM:-booted}" "$BUNDLE_ID" data)/Documents"
   rm -f "$DOCS/.probe-result.json"
   xcrun simctl launch "${SIM:-booted}" "$BUNDLE_ID" ${ARGS[@]+"${ARGS[@]}"} > /dev/null
+  if [ -n "${RESIZE:-}" ]; then
+    # Moves the app (in the foreground now) to the simulator's resizable display.
+    sleep 3
+    xcrun devicectl device appResize start --device "$SIM" --preferred-size "$RESIZE" > build/resize.log 2>&1 &
+    RESIZE_PID=$!
+    trap 'kill $RESIZE_PID 2>/dev/null || true' EXIT
+  fi
   [ "$SELFTEST" = 1 ] || exit 0
   for _ in $(seq 1 ${TIMEOUT:-180}); do
     [ -f "$DOCS/.probe-result.json" ] && { cat "$DOCS/.probe-result.json"; exit 0; }

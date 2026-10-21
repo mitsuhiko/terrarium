@@ -3,7 +3,8 @@ import UIKit
 import WebKit
 
 /// The app (D31): files and editor in a navigation stack on iPhone, a split
-/// view with the files in the sidebar on iPad; ui apps on top (D30).
+/// view with the files in the sidebar on iPad and an open iPhone Duo (D58);
+/// ui apps on top (D30).
 struct RootView: View {
     @State private var model = AppModel()
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -24,7 +25,10 @@ struct RootView: View {
                     NarrowLayout()
                 }
             }
-            if model.ui.visible {
+            // The halves' agent, docs and app (D59), over their places in the workspace.
+            HalfOverlays()
+            // Over everything, unless a half of the workspace shows it (D59).
+            if model.ui.visible && !model.appInHalf {
                 UIAppRoot(store: model.ui.store)
                     .overlay { if model.ui.restarting { ProgressView().controlSize(.large) } }
                     .transition(.move(edge: .bottom))
@@ -33,6 +37,7 @@ struct RootView: View {
         }
         .overlay(alignment: .top) { ToastView(text: model.toast) }
         .background { ShortcutButtons() }
+        .background { VerticalBarProbe { model.verticalBar = $0 } }
         .sheet(item: $model.activeSheet) { sheet in
             Group {
                 switch sheet {
@@ -70,13 +75,8 @@ struct RootView: View {
         .onOpenURL { url in
             if let action = LaunchAction(url: url) { LaunchRouter.send(action) }
         }
-        .onChange(of: sizeClass, initial: true) { _, size in
-            let wide = size == .regular
-            model.wide = wide
-            if wide {
-                model.route.removeAll { $0 == .editor }
-            }
-        }
+        .onChange(of: sizeClass, initial: true) { _, size in model.setWide(size == .regular) }
+        .onHinge { model.hinge = $0 }
         .onChange(of: model.panes) { _, _ in model.agentIDEChanged() }
         .onChange(of: model.file, initial: true) { _, _ in Task { await model.refreshFilePython() } }
         .onChange(of: model.focusedPane) { _, _ in model.agentIDEChanged() }
@@ -86,6 +86,7 @@ struct RootView: View {
         .environment(model)
         .onAppear {
             model.applyAppearance()
+            model.loadHalves()
             model.host.presenter = {
                 var vc = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first?.rootViewController
                 while let presented = vc?.presentedViewController { vc = presented }
@@ -135,8 +136,11 @@ private struct WideLayout: View {
                     }
             }
             .navigationSplitViewColumnWidth(min: 260, ideal: 320, max: 400)
+            // With a vertical bar the editor's bar has the toggle (D58).
+            .toolbar(removing: model.verticalBar ? .sidebarToggle : nil)
         } detail: {
             NavigationStack { WorkspaceView() }
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { model.workspaceMinX = $0 }
         }
         .navigationSplitViewStyle(.balanced)
     }

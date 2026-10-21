@@ -111,7 +111,8 @@ final class DocsBrowser: NSObject, WKNavigationDelegate {
 
 struct DocsView: View {
     @Bindable var browser: DocsBrowser
-    var close: () -> Void
+    /// nil in the workspace's other half (D59): no Done button.
+    var close: (() -> Void)?
 
     var body: some View {
         NavigationStack {
@@ -136,6 +137,7 @@ struct DocsView: View {
                         .disabled(!browser.canGoForward)
                         .accessibilityLabel("Forward")
                 }
+                .horizontalOnly(close == nil) // in a half of the workspace (D59)
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button { browser.open(DocsTarget(version: browser.version, ref: nil)) } label: { Label("Start Page", systemImage: "house") }
@@ -149,8 +151,9 @@ struct DocsView: View {
                         Image(systemName: "book")
                     }
                     .accessibilityLabel("Documentation menu")
-                    Button("Done", action: close)
+                    if let close { Button("Done", action: close) }
                 }
+                .horizontalOnly(close == nil)
             }
         }
     }

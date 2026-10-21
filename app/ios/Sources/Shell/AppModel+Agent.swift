@@ -28,7 +28,8 @@ extension AppModel {
         let project = project ?? agentProject
         agentDetent = .large
         agentListShown = false
-        activeSheet = .agent
+        // In the other half when it shows the agent (D59), else a sheet.
+        if !agentInPanel { activeSheet = .agent }
         Task { await agentOpen(project) }
     }
 

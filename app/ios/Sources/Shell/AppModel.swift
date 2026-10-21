@@ -171,7 +171,26 @@ final class AppModel {
     var consoleDetent: ConsoleDetent = .peek
     var consoleDocked = true
     var sidebarVisible = true
-    var splitRatio: CGFloat = 0.5
+    /// The split view's divider, once the user moved it (else at the fold or the middle).
+    var splitRatio: CGFloat?
+    /// A foldable iPhone's hinge (D58); nil without one.
+    var hinge: HingePosture?
+    /// The system shows a vertical bar (iOS 27.1, the iPhone Duo): bar buttons go to the side.
+    var verticalBar = false
+    /// What the wide workspace's halves show (D59, Halves.swift).
+    var mainRole: MainRole = .editor
+    var panelRole: PanelRole = .console
+    @ObservationIgnored var lastPanelRole: PanelRole = .console
+    /// The other half goes before the main one (left, or above).
+    var panelFirst = false
+    /// The docs in the other half (the sheet has its own).
+    var panelDocs: DocsBrowser?
+    /// Where the halves' agent, docs or app go, in the window (HalfOverlays).
+    var mainSlot: HalfFrame?
+    var panelSlot: HalfFrame?
+    /// The workspace's left edge in the window: at 0 with the sidebar shown, the sidebar is over it.
+    var workspaceMinX: CGFloat = 0
+    var sidebarOverlaps: Bool { sidebarVisible && workspaceMinX < 1 }
     var activeSheet: ActiveSheet?
     var popover: EditorPopover?
     var breakpointMenu: BreakpointMenu?
@@ -530,7 +549,7 @@ final class AppModel {
         if session.runCounter != lastRunCounter {
             lastRunCounter = session.runCounter
             if consoleDetent == .peek { consoleDetent = .half }
-            if wide { consoleDocked = true }
+            if wide { consoleDocked = true } // the other half, whatever it shows (D59)
         }
         // A cell's input() alert goes when its cell was stopped.
         if !session.running, notebookPrompt != nil { answerNotebookPrompt(nil, dismiss: true) }
@@ -834,6 +853,22 @@ final class AppModel {
         guard panes.indices.contains(pane) else { return }
         panes[pane] = Pane(tabs: [path], active: path)
         saveTabs()
+    }
+
+    /// The window went between the split view and the stack: rotating, iPad
+    /// multitasking, folding or unfolding an iPhone Duo (D58). The file on
+    /// screen stays on screen.
+    func setWide(_ wide: Bool) {
+        let shown = file, wasWide = self.wide, pane = focused
+        self.wide = wide
+        if wide {
+            route.removeAll { $0 == .editor }
+            return
+        }
+        guard wasWide, let shown else { return }
+        if route.last != .editor { route.append(.editor) }
+        // The narrow layout shows the first pane.
+        if pane != 0 { Task { await openLocation(shown, pane: 0, keepConsole: true) } }
     }
 
     func setSplit(_ on: Bool) async {
@@ -1311,6 +1346,13 @@ final class AppModel {
             await openFile(other)
         }
         if let view = hook["view"] { _ = await editorCall(focused, "setView", [view]) } // notebook, preview or source
+        // What the wide workspace's halves show (D59): main=app, panel=console|agent|app|docs.
+        if let main = hook["main"].flatMap(MainRole.init) { mainRole = main }
+        if let panel = hook["panel"].flatMap(PanelRole.init) {
+            setPanelRole(panel)
+            if wide { consoleDocked = true }
+        }
+        if let side = hook["side"] { setPanelFirst(side == "first") } // side=first: left of the editor, or above
         if hook["run"] != nil {
             try? await Task.sleep(for: .milliseconds(300))
             await run()
@@ -1327,6 +1369,7 @@ final class AppModel {
             _ = await editorCall(focused, "scrollToText", [text])
         }
         if let dir = hook["folder"] { route = [.folder(dir)] }
+        if hook["sidebar"] == "0" { sidebarVisible = false }
         switch hook["pane"] {
         case "console": if wide { consoleDocked = true } else { consoleDetent = .half }
         case "files": if !wide { route = [] }

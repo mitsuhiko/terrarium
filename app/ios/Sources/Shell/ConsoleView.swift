@@ -24,7 +24,7 @@ struct ConsolePanel: View {
         VStack(spacing: 0) {
             header(collapsed: collapsed)
             // Open, the >>> bar's background goes down to the screen's edge.
-            if !collapsed { ConsoleView(showHeader: false, bottomInset: bottomInset) }
+            if !collapsed { ConsoleView(bottomInset: bottomInset) }
         }
         .frame(height: height + (collapsed ? 0 : bottomInset), alignment: .top)
         .frame(maxWidth: .infinity)
@@ -133,7 +133,6 @@ struct PauseButton: View {
 
 /// The transcript and the >>> prompt.
 struct ConsoleView: View {
-    let showHeader: Bool
     /// Room below the >>> bar (the bottom safe area), in its background.
     var bottomInset: CGFloat = 0
     @Environment(AppModel.self) private var model
@@ -145,7 +144,6 @@ struct ConsoleView: View {
         let groups = Self.group(s.lines)
         let lastRunID = groups.last?.runId
         VStack(spacing: 0) {
-            if showHeader { dockHeader }
             GeometryReader { geo in
             ScrollViewReader { proxy in
                 ScrollView {
@@ -210,20 +208,6 @@ struct ConsoleView: View {
     private var contentKey: Int {
         let s = model.session
         return s.lines.count &* 31 &+ (s.lines.last?.text.count ?? 0) &+ (s.awaitingInput ? 7 : 0)
-    }
-
-    private var dockHeader: some View {
-        let s = model.session
-        let debug = s.debug
-        return HStack(spacing: 10) {
-            StatusDot()
-            Text(debug != nil ? (debug!.postMortem ? "Inspecting Error" : "Paused") : "Console").font(.subheadline.weight(.semibold))
-            Spacer()
-            if s.status == "running" && debug == nil { PauseButton() }
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 44)
-        .overlay(alignment: .bottom) { Divider() }
     }
 
     private var replBar: some View {

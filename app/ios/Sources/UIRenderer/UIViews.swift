@@ -20,6 +20,8 @@ extension EnvironmentValues {
     @Entry var uiFillWidth: Bool = false
     /// The screen is the first one of the app: it gets the close button.
     @Entry var uiAppRoot: Bool = false
+    /// The app runs in a half of the wide workspace (D59): its bar buttons stay in its own bar.
+    @Entry var uiInHalf: Bool = false
     /// font_size set on a container: body text inside uses it.
     @Entry var uiBodySize: Double? = nil
 }
