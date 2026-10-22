@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import WebKit
+import os
 
 /// The app (D31): files and editor in a navigation stack on iPhone, a split
 /// view with the files in the sidebar on iPad and an open iPhone Duo (D58);
@@ -152,25 +153,83 @@ private struct WideLayout: View {
 }
 
 /// Puts a page's web view into SwiftUI (the same instance moves between screens).
+/// For a moment there can be two places for one web view (a layout switch, a
+/// transition); it goes to the newest one that is in a window. Before, the
+/// place that was going away could take it back on an update and leave the
+/// window with it: no editor until something moved it again.
 struct WebViewHost: UIViewRepresentable {
     let webView: WKWebView
 
-    func makeUIView(context: Context) -> UIView {
-        let container = UIView()
-        container.backgroundColor = .clear
-        attach(to: container)
-        return container
+    func makeUIView(context: Context) -> WebViewSlot {
+        let slot = WebViewSlot()
+        slot.show(webView)
+        return slot
     }
 
-    func updateUIView(_ container: UIView, context: Context) {
-        if webView.superview !== container { attach(to: container) }
+    func updateUIView(_ slot: WebViewSlot, context: Context) {
+        slot.show(webView)
     }
 
-    private func attach(to container: UIView) {
+    static func dismantleUIView(_ slot: WebViewSlot, coordinator: ()) {
+        slot.show(nil)
+    }
+}
+
+/// A place for a web view; see WebViewHost.
+final class WebViewSlot: UIView {
+    private weak var webView: WKWebView?
+    /// When it came to show its web view: the newest place wins.
+    private var since = 0
+    private static var counter = 0
+    private static let log = Logger(subsystem: "eu.ronacher.Terrarium", category: "WebViewSlot")
+    /// The places of each web view.
+    private static var slots: [ObjectIdentifier: [Weak]] = [:]
+    private struct Weak { weak var slot: WebViewSlot? }
+
+    init() {
+        super.init(frame: .zero)
+        backgroundColor = .clear
+    }
+
+    required init?(coder: NSCoder) { fatalError("not used") }
+
+    func show(_ next: WKWebView?) {
+        if next === webView {
+            if let next, next.superview !== self, next.window != nil, window != nil {
+                Self.log.notice("stale place updated while another shows its web view (before: took it back)")
+            }
+            return Self.settle(next)
+        }
+        let previous = webView
+        if let previous { Self.slots[ObjectIdentifier(previous)]?.removeAll { $0.slot == nil || $0.slot === self } }
+        webView = next
+        if let next {
+            Self.counter += 1
+            since = Self.counter
+            Self.slots[ObjectIdentifier(next), default: []].append(Weak(slot: self))
+        }
+        Self.settle(previous)
+        // With no other place it would stay under the new one (the pages are transparent).
+        if let previous, previous.superview === self { previous.removeFromSuperview() }
+        Self.settle(next)
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        Self.settle(webView)
+    }
+
+    /// Puts the web view in its newest place that is in a window, if it has one.
+    private static func settle(_ webView: WKWebView?) {
+        guard let webView else { return }
+        let key = ObjectIdentifier(webView)
+        slots[key]?.removeAll { $0.slot == nil }
+        let live = (slots[key] ?? []).compactMap(\.slot).filter { $0.window != nil && $0.webView === webView }
+        guard let target = live.max(by: { $0.since < $1.since }), webView.superview !== target else { return }
         webView.removeFromSuperview()
-        webView.frame = container.bounds
+        webView.frame = target.bounds
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        container.addSubview(webView)
+        target.addSubview(webView)
     }
 }
 
