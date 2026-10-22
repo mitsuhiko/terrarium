@@ -29,13 +29,27 @@ final class Scenarios: XCTestCase {
         return b.label
     }
 
-    func segment(_ role: String) -> String? {
+    /// The other half's icon for `role` (D61): shows it there, or hides the half if it shows it.
+    func icon(_ role: String) -> String? {
         refresh()
-        guard let seg = snaps.filter({ $0.type == .button && $0.label == role && $0.frame.width < 60 })
-            .first(where: { s in snaps.contains { $0.type == .segmentedControl && $0.frame.contains(CGPoint(x: s.frame.midX, y: s.frame.midY)) } })
-        else { return nil }
-        app.tap(seg)
-        return role
+        guard let icon = snaps.halfIcons(in: bounds).first(where: { $0.label == role }) else { return nil }
+        app.tap(icon)
+        return "\(role)\(icon.value == "shown" ? " (hide)" : "")"
+    }
+
+    /// The half shown on `role` (a tap only if it isn't).
+    func show(_ role: String) {
+        refresh()
+        if let icon = snaps.halfIcons(in: bounds).first(where: { $0.label == role }), icon.value != "shown" { app.tap(icon) }
+    }
+
+    /// An item of the half's icons' long-press menu (Layout).
+    func layout(_ items: [String]) -> String? {
+        refresh()
+        guard let icon = snaps.halfIcons(in: bounds).first else { return nil }
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: icon.frame.midX, dy: icon.frame.midY)).press(forDuration: 1)
+        Thread.sleep(forTimeInterval: 0.6)
+        return tap(items) ?? { _ = tap(["Cancel"]); app.tap(at: CGPoint(x: bounds.midX, y: bounds.maxY - 20)); return nil }()
     }
 
     var editorOK: Bool {
@@ -48,14 +62,16 @@ final class Scenarios: XCTestCase {
 
     let halves = ["Console", "Agent", "App", "Docs"]
 
-    /// The half shown with the console, after the editor, no split, files shown.
+    /// The half shown with the console, after the editor, no split, the code in the main half.
     func reset() {
         if split() == "Close Split View" { Thread.sleep(forTimeInterval: 0.5) }
-        _ = tap(halves.map { "Show \($0)" })
-        _ = tap(["Show the code in the main half", "Show Code"])
-        _ = segment("Console")
-        _ = tap(["Move to the right", "Move to the bottom"])
-        _ = tap(["Show Files"])
+        _ = tap(["Show Code"])
+        show("Console")
+        refresh()
+        if snaps.buttons(["Move to the Right", "Move to the Bottom"], in: bounds).isEmpty {
+            _ = layout(["Move to the Right", "Move to the Bottom"])
+        }
+        _ = tap(["Close the sidebar"])
         Thread.sleep(forTimeInterval: 0.5)
     }
 
@@ -77,25 +93,24 @@ final class Scenarios: XCTestCase {
         app.activate()
         if env["FAST"] != nil { disableQuiescence() }
         let n = Int(env["TIMES"] ?? "8") ?? 8
-        let toggles = halves.flatMap { ["Hide \($0)", "Show \($0)"] }
-        let moves = ["Move to the left", "Move to the right", "Move to the top", "Move to the bottom"]
-        let swaps = ["Show the app in the main half", "Show the code in the main half", "Show Code"]
+        let moves = ["Move to the Left", "Move to the Right", "Move to the Top", "Move to the Bottom"]
+        let swaps = ["Show the App in the Main Half", "Show the Code in the Main Half"]
 
         scenario("swapApp", n) { i in
-            if i == 0 { _ = segment("App") }
-            return tap(swaps)
+            if i == 0 { show("App") }
+            return layout(swaps) ?? tap(["Show Code"])
         }
         scenario("split", n) { _ in split() }
         scenario("splitSwap", n) { i in
             if i % 2 == 0 { return split() }
-            _ = segment("App")
-            return tap(swaps)
+            show("App")
+            return layout(swaps) ?? tap(["Show Code"])
         }
-        scenario("files", n) { _ in tap(["Hide Files", "Show Files"]) }
-        scenario("half", n) { _ in tap(toggles) }
-        scenario("move", n) { _ in tap(moves) }
-        scenario("moveSplit", n) { i in i % 2 == 0 ? split() : tap(moves) }
-        scenario("roles", n * 2) { i in segment(halves[i % 4]) }
+        scenario("files", n) { _ in tap(["Hide Files", "Show Files", "Close the sidebar"]) }
+        scenario("half", n) { i in icon(halves[i % 4]) ?? icon(halves[0]) }
+        scenario("hideHalf", n) { _ in icon("Console") }
+        scenario("move", n) { _ in layout(moves) }
+        scenario("moveSplit", n) { i in i % 2 == 0 ? split() : layout(moves) }
         scenario("tabs", n) { i in
             refresh()
             let tabs = snaps.filter { $0.type == .staticText && $0.frame.minY < 80 && $0.label.contains(".") }.visible(in: bounds)
@@ -104,8 +119,12 @@ final class Scenarios: XCTestCase {
             app.tap(t)
             return t.label
         }
-        scenario("filesSplit", n) { i in i % 2 == 0 ? tap(["Hide Files", "Show Files"]) : split() }
-        scenario("halfSplit", n) { i in i % 2 == 0 ? tap(toggles) : split() }
+        scenario("filesSplit", n) { i in i % 2 == 0 ? tap(["Hide Files", "Show Files", "Close the sidebar"]) : split() }
+        scenario("halfSplit", n) { i in i % 2 == 0 ? icon("Console") : split() }
+        scenario("navigator", n) { i in
+            _ = tap(["Show Files"])
+            return tap([["Files", "Outline", "Find", "Problems"][i % 4]])
+        }
         scenario("background", n / 2) { i in
             if i % 2 == 0 { _ = split() }
             XCUIDevice.shared.press(.home)

@@ -14,6 +14,7 @@ struct Snap {
     let label: String
     let identifier: String
     let frame: CGRect
+    var value = ""
 }
 
 extension XCUIApplication {
@@ -22,7 +23,7 @@ extension XCUIApplication {
         guard let root = try? snapshot() else { return [] }
         var out: [Snap] = []
         func walk(_ s: XCUIElementSnapshot) {
-            out.append(Snap(type: s.elementType, label: s.label, identifier: s.identifier, frame: s.frame))
+            out.append(Snap(type: s.elementType, label: s.label, identifier: s.identifier, frame: s.frame, value: s.value as? String ?? ""))
             s.children.forEach(walk)
         }
         walk(root)
@@ -45,6 +46,12 @@ extension Array where Element == Snap {
 
     func buttons(_ labels: [String], in bounds: CGRect) -> [Snap] {
         filter { $0.type == .button && labels.contains($0.label) }.visible(in: bounds)
+    }
+
+    /// The other half's icons in the top row (D61): Console, Agent, App, Docs.
+    func halfIcons(in bounds: CGRect) -> [Snap] {
+        filter { $0.type == .button && ["Console", "Agent", "App", "Docs"].contains($0.label) && $0.frame.width < 44 && $0.frame.height < 40 && $0.frame.minY < 120 }
+            .visible(in: bounds)
     }
 
     /// Editor tabs are on screen (a tab's close button in the tab strip).

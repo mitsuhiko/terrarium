@@ -8,6 +8,7 @@ the app's project has no test target.
 ./run.sh monkey [SEED] [STEPS]   # random taps, seeded; FAST=1 taps during animations, ROTATE=1 rotates (iPad)
 ./run.sh scenarios [TIMES]       # the wide layout's transitions, repeated (ONLY=split,move,...)
 ./run.sh dump                    # the hierarchy as XCTest sees it
+./run.sh script "rotate:landscapeLeft;tap:Show Files;wait:1;shot:files"   # a state, for screenshots (NAME=<out dir>)
 SIM=<udid> ./run.sh ...          # default: the booted simulator
 ```
 
@@ -19,6 +20,11 @@ view not in its place on screen) are collected from its log. Output is in
 `build/out-<run>/`: `log.txt` (every action, timestamped), `anomalies.txt`,
 `app.log` and screenshots (both screens on an iPhone Duo; XCUIScreen's are
 black there, so `run.sh` takes them with `simctl`).
+
+The runs find buttons by their accessibility labels (D61's top row: the
+half's icons "Console", "Agent", "App", "Docs" with the value "shown";
+"Show Files"/"Hide Files"; the Layout menu's "Move to the Left", …). Keep
+them in step with the app.
 
 Notes:
 - An iPhone Duo simulator boots closed and nothing headless opens it, and

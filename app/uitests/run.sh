@@ -4,6 +4,7 @@
 #   ./run.sh monkey [SEED] [STEPS]   random taps with checks (FAST=1: during animations, ROTATE=1: rotate too)
 #   ./run.sh scenarios [TIMES]       the wide layout's transitions (ONLY=split,move ...)
 #   ./run.sh dump                    the hierarchy as XCTest sees it
+#   ./run.sh script "tap:Hide Files;rotate:landscapeLeft;wait:1;shot:name"   (NAME=<out dir>)
 #   SIM=<udid> ./run.sh ...          a simulator (default: the booted one)
 #
 # Prints the anomalies and what the app logged under Diagnostics (hangs, web
@@ -17,6 +18,7 @@ case "$KIND" in
   monkey) TEST=Monkey; export TEST_RUNNER_SEED=${2:-1} TEST_RUNNER_STEPS=${3:-200}; NAME=monkey-$TEST_RUNNER_SEED ;;
   scenarios) TEST=Scenarios; export TEST_RUNNER_TIMES=${2:-8}; NAME=scenarios ;;
   dump) TEST=Dump; NAME=dump ;;
+  script) TEST=Script; export TEST_RUNNER_SCRIPT=${2:?steps}; NAME=${NAME:-script} ;;
   *) echo "unknown run $KIND" >&2; exit 2 ;;
 esac
 for v in FAST ROTATE ONLY; do [ -n "${!v:-}" ] && export TEST_RUNNER_$v="${!v}"; done

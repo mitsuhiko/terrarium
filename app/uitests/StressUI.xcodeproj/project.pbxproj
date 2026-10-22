@@ -8,14 +8,16 @@
 		E0000000000000000000A001 /* Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0000000000000000000B001; };
 		E0000000000000000000A002 /* Monkey.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0000000000000000000B002; };
 		E0000000000000000000A003 /* Scenarios.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0000000000000000000B003; };
+		E0000000000000000000A004 /* Script.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0000000000000000000B004; };
 		E0000000000000000000B001 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
 		E0000000000000000000B002 /* Monkey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Monkey.swift; sourceTree = "<group>"; };
 		E0000000000000000000B003 /* Scenarios.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenarios.swift; sourceTree = "<group>"; };
+		E0000000000000000000B004 /* Script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Script.swift; sourceTree = "<group>"; };
 		E0000000000000000000B010 /* StressUI.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StressUI.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E0000000000000000000C001 = {isa = PBXGroup; children = (E0000000000000000000C002, E0000000000000000000C003); sourceTree = "<group>"; };
-		E0000000000000000000C002 /* Tests */ = {isa = PBXGroup; children = (E0000000000000000000B001, E0000000000000000000B002, E0000000000000000000B003); path = Tests; sourceTree = "<group>"; };
+		E0000000000000000000C002 /* Tests */ = {isa = PBXGroup; children = (E0000000000000000000B001, E0000000000000000000B002, E0000000000000000000B003, E0000000000000000000B004); path = Tests; sourceTree = "<group>"; };
 		E0000000000000000000C003 /* Products */ = {isa = PBXGroup; children = (E0000000000000000000B010); name = Products; sourceTree = "<group>"; };
-		E0000000000000000000D001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E0000000000000000000A001, E0000000000000000000A002, E0000000000000000000A003); runOnlyForDeploymentPostprocessing = 0; };
+		E0000000000000000000D001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E0000000000000000000A001, E0000000000000000000A002, E0000000000000000000A003, E0000000000000000000A004); runOnlyForDeploymentPostprocessing = 0; };
 		E0000000000000000000D002 /* StressUI */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E0000000000000000000F002;

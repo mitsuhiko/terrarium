@@ -43,19 +43,31 @@ final class Monkey: XCTestCase {
     typealias Action = (name: String, weight: Int, run: () -> String?)
 
     lazy var actions: [Action] = [
-        ("panelRole", 8, { [unowned self] in
-            let role = rng.pick(["Console", "Agent", "App", "Docs"])
-            guard let seg = snaps.filter({ $0.type == .button && $0.label == role && $0.frame.width > 36 && $0.frame.width < 60 && $0.identifier != "" })
-                .visible(in: bounds).first(where: { s in snaps.contains { $0.type == .segmentedControl && $0.frame.contains(CGPoint(x: s.frame.midX, y: s.frame.midY)) } })
-            else { return nil }
-            app.tap(seg); return role
+        ("half", 12, { [unowned self] in
+            // An icon of the other half (D61): shows it on that, or hides it.
+            let icons = snaps.halfIcons(in: bounds)
+            guard !icons.isEmpty else { return nil }
+            let icon = rng.pick(icons)
+            app.tap(icon)
+            return "\(icon.label)\(icon.value.isEmpty ? "" : " (\(icon.value))")"
         }),
-        ("toggleHalf", 7, { [unowned self] in
-            tapFirst(["Console", "Agent", "App", "Docs"].flatMap { ["Hide \($0)", "Show \($0)"] })
+        ("toggleFiles", 5, { [unowned self] in tapFirst(["Hide Files", "Show Files", "Close the sidebar"]) }),
+        ("navigator", 4, { [unowned self] in tapFirst([rng.pick(["Files", "Outline", "Find", "Problems"])]) }),
+        ("layout", 4, { [unowned self] in
+            // The half's icons' long press: move it, swap the app.
+            guard let icon = snaps.halfIcons(in: bounds).first else { return nil }
+            app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: icon.frame.midX, dy: icon.frame.midY)).press(forDuration: 1)
+            Thread.sleep(forTimeInterval: 0.6)
+            _ = refresh()
+            let items = ["Move to the Left", "Move to the Right", "Move to the Top", "Move to the Bottom",
+                         "Show the App in the Main Half", "Show the Code in the Main Half", "Show the App Full Screen", "Reset the Divider"]
+            let present = snaps.buttons(items, in: bounds)
+            guard !present.isEmpty else { dismissAll(); return "layout menu without items" }
+            let item = rng.pick(present)
+            app.tap(item)
+            return item.label
         }),
-        ("toggleFiles", 5, { [unowned self] in tapFirst(["Hide Files", "Show Files", "Hide Sidebar", "Show Sidebar"]) }),
-        ("moveHalf", 5, { [unowned self] in tapFirst(["Move to the left", "Move to the right", "Move to the top", "Move to the bottom"]) }),
-        ("swapApp", 3, { [unowned self] in tapFirst(["Show the app in the main half", "Show the code in the main half", "Show Code"]) }),
+        ("swapApp", 2, { [unowned self] in tapFirst(["Show Code"]) }),
         ("split", 4, { [unowned self] in
             guard let b = snaps.filter({ $0.type == .button && ($0.identifier == "rectangle.split.2x1" || ($0.identifier == "xmark" && $0.label == "Close Split View")) })
                 .visible(in: bounds).first else { return nil }
@@ -86,18 +98,22 @@ final class Monkey: XCTestCase {
             app.tap(b); return "run"
         }),
         ("stop", 2, { [unowned self] in tapFirst(["Stop", "Pause"]) }),
-        ("appSize", 3, { [unowned self] in tapFirst(["Show the app full screen", "Show Next to the Code", "Full Screen"]) }),
+        ("appSize", 3, { [unowned self] in tapFirst(["Show Next to the Code", "Full Screen"]) }),
         ("closeApp", 3, { [unowned self] in tapFirst(["Close"]) }),
-        ("agent", 3, { [unowned self] in
-            guard let b = snaps.filter({ $0.type == .button && $0.identifier == "sparkles" && $0.label == "Agent" && $0.frame.width < 40 }).visible(in: bounds).last else { return nil }
+        ("agent", 2, { [unowned self] in
+            // iPhone's bar button (wide, the half's icon does it).
+            guard let b = snaps.filter({ $0.type == .button && $0.label == "Agent" && $0.frame.minY > 100 && $0.frame.width < 40 }).visible(in: bounds).last else { return nil }
             app.tap(b); return "agent"
         }),
-        ("dragDivider", 2, { [unowned self] in
-            guard let d = snaps.filter({ $0.label == "Resize split view" }).visible(in: bounds).first else { return nil }
+        ("dragDivider", 3, { [unowned self] in
+            let handles = snaps.filter({ $0.label == "Resize split view" || $0.label == "Resize the halves" }).visible(in: bounds)
+            guard !handles.isEmpty else { return nil }
+            let d = rng.pick(handles)
             let start = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: d.frame.midX, dy: d.frame.midY))
             let dx = CGFloat(Int(rng.next() % 400)) - 200
-            start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: dx, dy: 0)))
-            return "drag \(Int(dx))"
+            let vertical = d.frame.width > d.frame.height
+            start.press(forDuration: 0.05, thenDragTo: start.withOffset(vertical ? CGVector(dx: 0, dy: dx / 2) : CGVector(dx: dx, dy: 0)))
+            return "drag \(d.label) \(Int(dx))"
         }),
         ("console", 2, { [unowned self] in
             guard let f = snaps.filter({ $0.type == .textField }).visible(in: bounds).first else { return nil }
@@ -114,7 +130,8 @@ final class Monkey: XCTestCase {
             app.tap(more)
             Thread.sleep(forTimeInterval: 0.6)
             _ = refresh()
-            let item = rng.pick(["Go to…", "Python Docs", "Split View", "Close Split View", "Settings…", "Show Info", "Find", "Format Code"])
+            let item = rng.pick(["Go to…", "Python Docs", "Split View", "Close Split View", "Settings…", "Show Info", "Find", "Format Code",
+                                 "Move to the Left", "Move to the Right", "Move to the Top", "Move to the Bottom"])
             if let e = buttons(item).first { app.tap(e); return item }
             dismissAll()
             return "menu without \(item)"
@@ -152,6 +169,10 @@ final class Monkey: XCTestCase {
         for _ in 0..<4 {
             _ = refresh()
             if let b = buttons("Done", "Cancel", "OK").first { app.tap(b); did.append(b.label); Thread.sleep(forTimeInterval: 0.4); continue }
+            // The keyboard covers menus and sheets: its own hide key (iPad), if any.
+            if let hide = snaps.first(where: { ($0.type == .key || $0.type == .button) && ["Hide keyboard", "Dismiss keyboard", "dismiss"].contains($0.label) }) {
+                app.tap(hide); did.append("keyboard"); Thread.sleep(forTimeInterval: 0.5); continue
+            }
             if let region = snaps.first(where: { $0.identifier == "PopoverDismissRegion" }) {
                 app.tap(region); did.append("popover"); Thread.sleep(forTimeInterval: 0.4); continue
             }
@@ -189,13 +210,20 @@ final class Monkey: XCTestCase {
             return
         }
         app.tap(more)
-        var ok = false
+        var opened = false, settings = false
         for _ in 0..<10 {
             Thread.sleep(forTimeInterval: 0.3)
             _ = refresh()
-            if let s = buttons("Settings…").first { app.tap(s); ok = true; break }
+            if let s = buttons("Settings…").first { app.tap(s); opened = true; settings = true; break }
+            if !buttons("Go to…").isEmpty { opened = true }
         }
-        guard ok else { report.anomaly("⋯ did not open its menu"); dismissAll(); return }
+        guard opened else { report.anomaly("⋯ did not open its menu"); dismissAll(); return }
+        // A short window's menu scrolls: Settings… may be out of sight.
+        guard settings else {
+            app.tap(at: CGPoint(x: bounds.width * 0.25, y: bounds.height * 0.5))
+            report.note("check ok (menu)")
+            return
+        }
         for _ in 0..<15 {
             Thread.sleep(forTimeInterval: 0.3)
             _ = refresh()
