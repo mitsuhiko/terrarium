@@ -81,6 +81,12 @@ apps are native views (D30).
   screen). `terrarium://run?path=<path>` links do the same.
 - **Title bar** (iPhone): the file name without ".py", cut in the middle
   when long; Run sits in one group with the agent and ⋯ buttons.
+- **Top row** (iPad, an open iPhone Duo, a Pro Max in landscape; D61): no
+  navigation bar, one row with the files toggle, the tabs, split view, the
+  other half's icons, ⋯ and Run (Stop, Continue; Pause and the debugger's
+  buttons while a program runs). The active tab is the title: tap it for the
+  outline; a problem count on it opens the problems. On an open Duo ⋯, Run
+  and the files toggle stay in the system's vertical bar.
 - **Tabs and split view**:
   - Every pane has tabs; opening a file adds a tab after the current one, up
     to 10 per pane (the least recently used one closes).
@@ -94,9 +100,13 @@ apps are native views (D30).
   the program's folder (sibling modules) and into the standard library and the
   `ui` module, which open as read-only tabs.
 - **Getting around**:
-  - Tap the file name in the nav bar for an outline of its classes and
-    functions with a filter. Typing a number offers "Go to Line N".
+  - Tap the file name in the nav bar (the active tab, wide) for an outline
+    of its classes and functions with a filter. Typing a number offers "Go
+    to Line N".
   - Find in Folder searches the text files of the current folder.
+  - Wide, the sidebar is a navigator (D61): Files, Outline (follows the
+    edits and marks the symbol with the cursor), Find and Problems. On iPhone
+    these are sheets.
   - Show Info shows ty's signature and docstring for a name. It's in the
     selection menu and the ⋯ menu, or ⌥-click.
 - **Settings** (⌘, or the ⋯ menus): appearance (system, light, dark),
@@ -280,11 +290,18 @@ apps are native views (D30).
   how much there is. If iOS ends the engine's process anyway, the new page
   gets the console back and the running program is marked crashed.
 - **Layouts**: on iPhone, Files → Code/Console; on iPad, a sidebar with the
-  editor and console side by side (stacked in portrait).
-- **The other half** (D59): where the console docks on iPad (and an open
-  iPhone Duo) a picker shows the console, the agent, the running ui app or
-  the docs instead. The app can also take the main half (the swap button),
-  and the half can go before the main one (left, or above).
+  editor and console side by side (stacked in portrait). When the files, an
+  editor of about 60 columns and the other half don't fit side by side (a
+  Pro Max in landscape, an iPad mini, portrait), the sidebar slides over the
+  code instead of squeezing it (D61).
+- **The other half** (D59, D61): where the console docks on iPad (and an
+  open iPhone Duo) it shows the console, the agent, the running ui app or
+  the docs. Its icons are in the top row: a tap shows the half on that, a
+  tap on the shown one hides it; the agent's pulses while it works. The
+  agent (⌘⇧A) and the docs open there, never as sheets. Touch and hold the
+  icons (or ⋯ → Layout) to move the half before the main one or swap the
+  app into the main half. The divider between the halves can be dragged
+  (remembered; double tap to reset).
 - **iPhone Duo** (D58): closed, the outer screen gets the iPhone layout;
   open, the inner one gets the iPad layout. Folding keeps the file on
   screen (also when rotating a Pro Max or resizing on iPad). On the inner

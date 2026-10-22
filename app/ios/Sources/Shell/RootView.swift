@@ -28,6 +28,7 @@ struct RootView: View {
             }
             // The halves' agent, docs and app (D59), over their places in the workspace.
             HalfOverlays()
+            SlideOverSidebar()
             // Over everything, unless a half of the workspace shows it (D59).
             if model.ui.visible && !model.appInHalf {
                 UIAppRoot(store: model.ui.store, sizeToggle: model.appSizeToggle, halfButton: model.appHalfButton)
@@ -124,31 +125,50 @@ private struct WideLayout: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        @Bindable var model = model
-        NavigationSplitView(columnVisibility: Binding(
-            get: { model.sidebarVisible ? .all : .detailOnly },
-            set: { model.sidebarVisible = $0 != .detailOnly }
-        )) {
-            NavigationStack(path: $model.route) {
-                FileBrowserView(dir: "")
-                    .navigationDestination(for: Route.self) { route in
-                        switch route {
-                        case .folder(let dir): FileBrowserView(dir: dir)
-                        case .trash: TrashView()
-                        case .editor: EmptyView()
-                        }
-                    }
+        // Our own columns, not a NavigationSplitView (D61): on iPhone in
+        // landscape its hidden sidebar kept its room, and its own toggle came
+        // and went. Short or narrow windows: the sidebar slides over instead
+        // (SlideOverSidebar).
+        let column = !model.sidebarSlidesOver && model.sidebarVisible
+        HStack(spacing: 0) {
+            if column {
+                NavigatorView()
+                    .frame(width: 320)
+                    .transition(.move(edge: .leading))
+                Divider().ignoresSafeArea()
             }
-            .navigationSplitViewColumnWidth(min: 260, ideal: 320, max: 400)
-            // The editor's bar has the toggle, in the vertical bar when there is
-            // one (D58). Always removed: switched on with the vertical bar, the
-            // system's toggle came back on the Duo and stayed.
-            .toolbar(removing: .sidebarToggle)
-        } detail: {
             NavigationStack { WorkspaceView() }
                 .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { model.workspaceMinX = $0 }
         }
-        .navigationSplitViewStyle(.balanced)
+        .animation(.smooth(duration: 0.25), value: column)
+        // Into a short window (rotating, the other half beside the code): the
+        // sidebar doesn't come up over the code by itself.
+        .onChange(of: model.sidebarSlidesOver) { _, over in if over { model.sidebarVisible = false } }
+    }
+}
+
+/// The sidebar over everything, from the left, when it doesn't get a column
+/// (D61). A tap beside it closes it.
+private struct SlideOverSidebar: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.wide && model.sidebarSlidesOver && model.sidebarVisible {
+            ZStack(alignment: .leading) {
+                Color.black.opacity(0.18)
+                    .ignoresSafeArea()
+                    .onTapGesture { withAnimation { model.sidebarVisible = false } }
+                    .accessibilityLabel("Close the sidebar")
+                    .accessibilityAddTraits(.isButton)
+                NavigatorView()
+                    .frame(width: min(340, model.windowWidth * 0.8))
+                    .background(Color(.systemGroupedBackground).ignoresSafeArea())
+                    .clipShape(.rect(bottomTrailingRadius: 16, topTrailingRadius: 16))
+                    .shadow(color: .black.opacity(0.2), radius: 16)
+                    .transition(.move(edge: .leading))
+            }
+            .zIndex(2)
+        }
     }
 }
 
@@ -281,9 +301,9 @@ private struct ShortcutButtons: View {
             Button("Run") { Task { await model.run() } }.keyboardShortcut("r", modifiers: .command)
             Button("Stop") { model.stop() }.keyboardShortcut(".", modifiers: .command)
             Button("Show Preview or Source") { model.toggleMarkdownView() }.keyboardShortcut("v", modifiers: [.command, .shift])
-            Button("Go to Line") { model.activeSheet = .jump(":") }.keyboardShortcut("l", modifiers: .command)
-            Button("Go to Symbol") { model.activeSheet = .jump("") }.keyboardShortcut("o", modifiers: [.command, .shift])
-            Button("Find in Folder") { model.activeSheet = .find }.keyboardShortcut("f", modifiers: [.command, .shift])
+            Button("Go to Line") { model.goTo(":") }.keyboardShortcut("l", modifiers: .command)
+            Button("Go to Symbol") { model.goTo("") }.keyboardShortcut("o", modifiers: [.command, .shift])
+            Button("Find in Folder") { model.findInFolder() }.keyboardShortcut("f", modifiers: [.command, .shift])
             Button("Settings") { model.activeSheet = .settings }.keyboardShortcut(",", modifiers: .command)
             Button("Agent") { model.openAgent() }.keyboardShortcut("a", modifiers: [.command, .shift])
             Button("Python Docs") { model.showDocs() }.keyboardShortcut("0", modifiers: [.command, .shift])

@@ -54,10 +54,13 @@ struct WorkspaceView: View {
             }
             let landscape = fold?.sideBySide ?? (geo.size.width > geo.size.height * 1.2 && !model.split)
             let layout = landscape ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+            let total = landscape ? geo.size.width : geo.size.height
+            // The user's divider (D61) wins over the fold and the default share.
+            let dragged = model.panelRatio.map { min(max(total * $0, 200), total - 280) }
+            let size = dragged ?? fold?.panel ?? (landscape ? max(320, geo.size.width * 0.38) : geo.size.height * 0.36)
             let panel = PanelHalf(sideBySide: landscape)
-                .frame(width: landscape ? fold?.panel ?? max(320, geo.size.width * 0.38) : nil,
-                       height: landscape ? nil : fold?.panel ?? geo.size.height * 0.36)
-            let gutter = FoldGutter(thickness: fold?.gap ?? 1, sideBySide: landscape)
+                .frame(width: landscape ? size : nil, height: landscape ? nil : size)
+            let gutter = HalfDivider(sideBySide: landscape, thickness: dragged == nil ? fold?.gap ?? 1 : 1, total: total, size: size)
             layout {
                 if model.consoleDocked && first {
                     panel
@@ -69,6 +72,7 @@ struct WorkspaceView: View {
                     panel
                 }
             }
+            .onChange(of: landscape, initial: true) { _, side in model.panelSideBySide = side }
         }
         .modifier(EditorChrome())
         .navigationBarTitleDisplayMode(.inline)
@@ -142,11 +146,18 @@ struct EditorPaneView: View {
         let empty = !model.panes.indices.contains(pane) || model.panes[pane].active == nil
         ZStack {
             WebViewHost(webView: model.editors[pane].webView)
+                // Wide, the text scrolls under the home indicator (D61); the page
+                // keeps its end above it. (On iPhone the console panel is there.)
+                .ignoresSafeArea(.container, edges: model.wide ? .bottom : [])
+                .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { inset in
+                    Task { _ = await model.editorCall(pane, "setInsets", [model.wide ? inset : 0]) }
+                }
             if empty { EmptyEditor() }
         }
         // The page is transparent: while it resizes (the keyboard comes up) the
-        // part it hasn't drawn yet shows this.
-        .background(model.editorBackground)
+        // part it hasn't drawn yet shows this. Wide, it also fills the side
+        // insets in landscape (the text stays clear of them).
+        .background(model.editorBackground.ignoresSafeArea(.container, edges: model.wide ? [.horizontal, .bottom] : []))
         .popover(item: Binding(
             get: { model.popover?.pane == pane ? model.popover : nil },
             set: { model.popover = $0 }
@@ -197,7 +208,14 @@ struct TabStrip: View {
 
     var body: some View {
         let p = model.panes.indices.contains(pane) ? model.panes[pane] : Pane()
+        // The wide layouts' top row (D61): it starts with the files toggle and
+        // ends at the workspace's corner with its actions.
+        let row = model.wide && !model.verticalBar
         HStack(spacing: 0) {
+            if row && pane == model.firstPane {
+                // Clear of an iPad window's controls at the top left (windowed apps).
+                SidebarToggle().padding(.leading, 6).containerCornerOffset(.leading, sizeToFit: true)
+            }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 4) {
@@ -222,8 +240,11 @@ struct TabStrip: View {
                 .opacity(model.split && pane == 0 ? 0 : 1)
                 .accessibilityLabel(model.split ? "Close Split View" : "Split View")
             }
+            if model.wide && pane == model.lastPane && !model.actionsAbovePanel && model.mainRole == .editor {
+                WorkspaceActions().padding(.horizontal, 8)
+            }
         }
-        .frame(height: 40)
+        .frame(height: row ? TopRowMetrics.height : 40)
         .background(Color(.secondarySystemBackground))
         .overlay(alignment: .bottom) { Divider() }
     }
@@ -234,8 +255,23 @@ struct TabStrip: View {
             if running { Circle().fill(.green).frame(width: 6, height: 6) }
             if isExternal(path) { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary) }
             Text(tabLabel(path)).font(.subheadline).lineLimit(1)
-            if active && model.verticalBar {
-                // The title's place (D58): the active tab opens "Go to".
+            if active && model.wide, model.problems[min(pane, 1)].total > 0 {
+                // What the title's subtitle said (D61): the count opens the problems.
+                let counts = model.problems[min(pane, 1)]
+                Button {
+                    model.focusedPane = pane
+                    model.showProblems()
+                } label: {
+                    Label("\(counts.total)", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption2.weight(.semibold))
+                        .labelStyle(.titleAndIcon)
+                        .foregroundStyle(counts.errors > 0 ? .red : .orange)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(counts.total == 1 ? "1 problem" : "\(counts.total) problems")
+            }
+            if active && (model.verticalBar || model.wide) {
+                // The title's place (D58, D61): the active tab opens "Go to".
                 Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             }
             Button {
@@ -253,7 +289,10 @@ struct TabStrip: View {
         .contentShape(Rectangle())
         .onTapGesture {
             // The active tab, tapped again: go to a symbol or line, like the title.
-            if active { model.activeSheet = .jump("") } else { Task { await model.selectTab(path, pane: pane) } }
+            if active {
+                model.focusedPane = pane
+                model.goTo("")
+            } else { Task { await model.selectTab(path, pane: pane) } }
         }
         .contextMenu {
             Button { Task { await model.closeTab(path, pane: pane) } } label: { Label("Close Tab", systemImage: "xmark") }
@@ -271,69 +310,39 @@ struct TabStrip: View {
     }
 }
 
-/// The navigation bar: file name (opens "Go to"), status, the ⋯ menu, Run.
+/// The navigation bar where there is one (D61): on iPhone the file name
+/// (opens "Go to"), its status, the agent, ⋯ and Run; on an open iPhone Duo
+/// the system's vertical bar with the files toggle, the debugger, ⋯ and Run
+/// (D58). The other wide layouts have none: the top row has it all.
 private struct EditorChrome: ViewModifier {
     @Environment(AppModel.self) private var model
-    @State private var renaming = false
-    @State private var newName = ""
-    @State private var deleting = false
 
     func body(content: Content) -> some View {
         let file = model.file
-        let external = file.map(isExternal) ?? false
-        let debug = model.session.debug
+        let s = model.session
         content
+            .toolbar(model.wide && !model.verticalBar ? .hidden : .automatic, for: .navigationBar)
             .toolbar {
-                // With a vertical bar (iPhone Duo, D58) the buttons are on the
-                // side and the active tab is the title: no row of its own.
-                if !model.verticalBar {
-                    ToolbarItem(placement: .principal) { title(file) }
-                }
-                if model.wide && !model.verticalBar {
-                    ToolbarItem(placement: .topBarLeading) { sidebarToggle }
-                }
-                if model.wide {
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        if model.verticalBar { sidebarToggle }
-                        if let debug {
-                            DebugBar(debug: debug)
-                        }
-                        Button { withAnimation { model.consoleDocked.toggle() } } label: { Image(systemName: "sidebar.right") }
-                            .accessibilityLabel(model.consoleDocked ? "Hide \(model.panelRole.title)" : "Show \(model.panelRole.title)")
-                        AgentButton()
-                        menu(file, external: external)
-                        RunButton()
-                    }
-                } else {
+                if !model.wide {
+                    // With a vertical bar (closed iPhone Duo) the active tab is the title (D58).
+                    if !model.verticalBar { ToolbarItem(placement: .principal) { title(file) } }
                     // One item with the buttons close together: a group spaces
                     // them wider than the title can afford on iPhone.
                     TrailingButtons(vertical: model.verticalBar) {
                         AgentButton()
-                        menu(file, external: external)
+                        MoreMenu()
+                        RunButton()
+                    }
+                } else if model.verticalBar {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        SidebarToggle()
+                        if let debug = s.debug { DebugBar(debug: debug) }
+                        if s.status == "running", s.debug == nil { PauseButton() }
+                        MoreMenu()
                         RunButton()
                     }
                 }
             }
-            .alert("Rename “\(file.map(basename) ?? "")”", isPresented: $renaming) {
-                TextField("Name", text: $newName).textInputAutocapitalization(.never).autocorrectionDisabled()
-                Button("Cancel", role: .cancel) {}
-                Button("Rename") {
-                    if let file, !newName.isEmpty, newName != basename(file), !newName.contains("/") {
-                        Task { _ = await model.rename(file, to: newName) }
-                    }
-                }
-            }
-            .confirmationDialog("Delete “\(file.map(basename) ?? "")”?", isPresented: $deleting, titleVisibility: .visible) {
-                Button("Delete", role: .destructive) { if let file { Task { await model.delete(file) } } }
-            } message: {
-                Text(file?.hasPrefix("@") == true ? "It goes to the folder's trash if it has one, otherwise it is gone." : "It goes to the Trash in the file browser.")
-            }
-    }
-
-    /// Shows and hides the files. The system's toggle is removed (RootView).
-    private var sidebarToggle: some View {
-        Button { withAnimation { model.sidebarVisible.toggle() } } label: { Image(systemName: "sidebar.left") }
-            .accessibilityLabel(model.sidebarVisible ? "Hide Files" : "Show Files")
     }
 
     /// Room for the title on iPhone: between the back button and the group of
@@ -361,7 +370,7 @@ private struct EditorChrome: ViewModifier {
     private func title(_ file: String?) -> some View {
         VStack(spacing: 0) {
             if let file {
-                Button { model.activeSheet = .jump("") } label: {
+                Button { model.goTo("") } label: {
                     HStack(spacing: 3) {
                         fileName(titleLabel(file))
                         Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
@@ -391,7 +400,7 @@ private struct EditorChrome: ViewModifier {
         } else if let file, isExternal(file) {
             Text("Read only").font(.caption).foregroundStyle(.secondary)
         } else if counts.total > 0 {
-            Button { model.activeSheet = .problems } label: {
+            Button { model.showProblems() } label: {
                 Label(counts.total == 1 ? "1 problem" : "\(counts.total) problems", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
             }
@@ -403,152 +412,6 @@ private struct EditorChrome: ViewModifier {
         }
     }
 
-    /// Which Python the file runs on; picking one pins its folder (`.python-version`, D37).
-    private func pythonMenu(_ file: String) -> some View {
-        let current = model.filePython
-        let title = current.map { "Python \($0.version)" } ?? "Python \(model.defaultPython)"
-        return Menu {
-            Picker("Python for “\(displayName(dirname(file)))”", selection: Binding(
-                get: { model.folderPin ?? "" },
-                set: { value in Task { await model.setFolderPython(value.isEmpty ? nil : value) } }
-            )) {
-                Text("Default (Python \(model.defaultPython))").tag("")
-                ForEach(Runtimes.all, id: \.python) { Text($0.label).tag($0.python) }
-            }
-            .pickerStyle(.inline)
-        } label: {
-            Label(title, systemImage: "chevron.left.forwardslash.chevron.right")
-            if let current, current.reason != "default" {
-                Text("from \(current.reason)")
-            }
-        }
-    }
-
-    /// Cells and the kernel (D44).
-    @ViewBuilder
-    private func notebookSection(_ notebook: NotebookPane, _ file: String) -> some View {
-        let ipynb = file.hasSuffix(".ipynb")
-        Section {
-            if notebook.view != "source" {
-                Button { model.notebookCommand("runCell") } label: { Label("Run Cell", systemImage: "play") }
-                Button { model.notebookCommand("runAll") } label: { Label("Run All Cells", systemImage: "forward") }
-                Menu {
-                    Button { model.notebookCommand("runAbove") } label: { Label("Run Cells Above", systemImage: "arrow.up.to.line") }
-                    Button { model.notebookCommand("runBelow") } label: { Label("Run Cell and Below", systemImage: "arrow.down.to.line") }
-                    Divider()
-                    Button { model.notebookCommand("insertCode") } label: { Label("Insert Code Cell", systemImage: "plus.rectangle") }
-                    Button { model.notebookCommand("insertMarkdown") } label: { Label("Insert Markdown Cell", systemImage: "text.badge.plus") }
-                    if ipynb {
-                        Button { model.notebookCommand("moveUp") } label: { Label("Move Cell Up", systemImage: "arrow.up") }
-                        Button { model.notebookCommand("moveDown") } label: { Label("Move Cell Down", systemImage: "arrow.down") }
-                        Button(role: .destructive) { model.notebookCommand("deleteCell") } label: { Label("Delete Cell", systemImage: "trash") }
-                    }
-                    Divider()
-                    Button { model.notebookCommand("clearOutputs") } label: { Label("Clear All Outputs", systemImage: "xmark.circle") }
-                } label: {
-                    Label("Cells", systemImage: "square.split.1x2")
-                }
-            }
-            Button { model.restartKernel() } label: { Label("Restart Kernel", systemImage: "arrow.clockwise") }
-                .disabled(model.session.kernel?.path != file)
-            if ipynb {
-                Button { model.notebookCommand("toggleView") } label: {
-                    notebook.view == "source"
-                        ? Label("Show as Notebook", systemImage: "book.pages")
-                        : Label("Show JSON Source", systemImage: "curlybraces")
-                }
-            }
-        }
-    }
-
-    private func menu(_ file: String?, external: Bool) -> some View {
-        let bps = file.map { model.breakpoints[$0]?.count ?? 0 } ?? 0
-        let markdown = file.map(isMarkdown) ?? false
-        return Menu {
-            Section {
-                Button { model.activeSheet = .jump("") } label: { Label("Go to…", systemImage: "list.bullet") }
-                Button { Task { _ = await model.goToDefinition() } } label: { Label("Jump to Definition", systemImage: "arrow.forward.to.line") }
-                    .disabled(external || markdown)
-                Button { Task { _ = await model.showInfo() } } label: { Label("Show Info", systemImage: "info.circle") }
-                    .disabled(external || markdown)
-                Button { model.showDocs() } label: { Label("Python Docs", systemImage: "book") }
-            }
-            Section {
-                Button { model.find() } label: { Label("Find", systemImage: "magnifyingglass") }
-                Button { model.activeSheet = .find } label: {
-                    Label("Find in \(file.map { displayName(dirname($0)) } ?? "Files")…", systemImage: "doc.text.magnifyingglass")
-                }
-                Button { Task { await model.format() } } label: { Label("Format Code", systemImage: "wand.and.stars") }
-                    .disabled(external || markdown || model.notebook?.view == "source")
-                Button { model.activeSheet = .problems } label: { Label("Show Problems", systemImage: "exclamationmark.triangle") }
-                    .disabled(model.problems[min(model.focused, 1)].total == 0)
-            }
-            if let notebook = model.notebook, let file {
-                notebookSection(notebook, file)
-            }
-            if let view = model.markdownView {
-                Section {
-                    Button { model.toggleMarkdownView() } label: {
-                        view == "preview"
-                            ? Label("Edit Markdown", systemImage: "pencil")
-                            : Label("Show Preview", systemImage: "eye")
-                    }
-                }
-            }
-            if bps > 0, let file {
-                Section {
-                    Button { model.clearBreakpoints(file) } label: {
-                        Label(bps == 1 ? "Remove Breakpoint" : "Remove \(bps) Breakpoints", systemImage: "arrowshape.right")
-                    }
-                }
-            }
-            if let file, !external, !markdown {
-                Section {
-                    pythonMenu(file)
-                }
-            }
-            Section {
-                if model.wide {
-                    Button { Task { await model.setSplit(!model.split) } } label: {
-                        Label(model.split ? "Close Split View" : "Split View", systemImage: "rectangle.split.2x1")
-                    }
-                }
-                Button { model.activeSheet = .settings } label: { Label("Settings…", systemImage: "gearshape") }
-            }
-            if let file {
-                if external {
-                    Button { Task { await model.closeTab(file) } } label: { Label("Close Tab", systemImage: "xmark") }
-                } else {
-                    Section {
-                        Button {
-                            newName = basename(file)
-                            renaming = true
-                        } label: { Label("Rename…", systemImage: "pencil") }
-                        Button {
-                            Task {
-                                if let copy = await model.duplicate(file) {
-                                    await model.openFile(copy)
-                                    model.showToast("Duplicated as “\(basename(copy))”")
-                                }
-                            }
-                        } label: { Label("Duplicate", systemImage: "plus.square.on.square") }
-                        Button { model.activeSheet = .move(file) } label: { Label("Move…", systemImage: "folder") }
-                        Button { model.share(file) } label: { Label("Share…", systemImage: "square.and.arrow.up") }
-                        if file.hasSuffix(".py") {
-                            Button { model.activeSheet = .homeScreen(file) } label: { Label("Add to Home Screen…", systemImage: "apps.iphone.badge.plus") }
-                        }
-                    }
-                    Section {
-                        Button(role: .destructive) { deleting = true } label: { Label("Delete", systemImage: "trash") }
-                    }
-                }
-            }
-        } label: {
-            Image(systemName: "ellipsis")
-        }
-        .accessibilityLabel("More")
-        .disabled(file == nil)
-    }
 }
 
 /// Gives its one subview its ideal width, but no more than `limit`, whatever

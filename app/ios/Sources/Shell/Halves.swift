@@ -135,9 +135,16 @@ extension AppModel {
         UserDefaults.standard.set(panelFirst, forKey: "halves.first")
     }
 
+    /// The divider between the halves where the user left it (nil: the fold, or the default share).
+    func setPanelRatio(_ ratio: CGFloat?) {
+        panelRatio = ratio
+        if let ratio { UserDefaults.standard.set(Double(ratio), forKey: "halves.ratio") } else { UserDefaults.standard.removeObject(forKey: "halves.ratio") }
+    }
+
     func loadHalves() {
         let d = UserDefaults.standard
         panelFirst = d.bool(forKey: "halves.first")
+        panelRatio = (d.object(forKey: "halves.ratio") as? Double).map { CGFloat($0) }
         mainRole = d.string(forKey: "halves.main").flatMap(MainRole.init) ?? .editor
         let panel = d.string(forKey: "halves.panel").flatMap(PanelRole.init) ?? .console
         setPanelRole(panel == .app && mainRole == .app ? .console : panel)
@@ -151,10 +158,58 @@ struct MainHalf<Editors: View>: View {
 
     var body: some View {
         if model.mainRole == .app {
-            HalfSlot(slot: .main)
+            VStack(spacing: 0) {
+                // The top row (D61) has no tabs here, but the files toggle and the actions stay.
+                if model.wide && !model.verticalBar || !model.actionsAbovePanel {
+                    HStack(spacing: 0) {
+                        if model.wide && !model.verticalBar { SidebarToggle().padding(.leading, 6).containerCornerOffset(.leading, sizeToFit: true) }
+                        Spacer(minLength: 0)
+                        if !model.actionsAbovePanel { WorkspaceActions().padding(.horizontal, 8) }
+                    }
+                    .frame(height: model.verticalBar ? 40 : TopRowMetrics.height)
+                    .background(Color(.secondarySystemBackground))
+                    .overlay(alignment: .bottom) { Divider() }
+                }
+                HalfSlot(slot: .main)
+            }
         } else {
             editors
         }
+    }
+}
+
+/// Between the halves: the fold's gutter or a hairline, and a handle to drag
+/// (D61); a double tap puts it back (on the fold, or the default share).
+struct HalfDivider: View {
+    let sideBySide: Bool
+    let thickness: CGFloat
+    /// The workspace's length along the split axis, and the half's now.
+    let total: CGFloat
+    let size: CGFloat
+    @Environment(AppModel.self) private var model
+    @State private var start: CGFloat?
+
+    var body: some View {
+        FoldGutter(thickness: thickness, sideBySide: sideBySide)
+            .overlay {
+                Color.clear
+                    .frame(width: sideBySide ? max(16, thickness) : nil, height: sideBySide ? nil : max(16, thickness))
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(coordinateSpace: .global).onChanged { g in
+                        let base = start ?? size
+                        if start == nil { start = base }
+                        // The half after the main one grows when the divider goes left (or up).
+                        let delta = sideBySide ? g.translation.width : g.translation.height
+                        let next = model.panelFirst ? base + delta : base - delta
+                        model.panelRatio = min(max(next, 200), total - 280) / max(1, total)
+                    }.onEnded { _ in
+                        start = nil
+                        model.setPanelRatio(model.panelRatio)
+                    })
+                    .onTapGesture(count: 2) { withAnimation { model.setPanelRatio(nil) } }
+                    .accessibilityLabel("Resize the halves")
+            }
+            .zIndex(1)
     }
 }
 
@@ -166,7 +221,8 @@ struct PanelHalf: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PanelHeader(sideBySide: sideBySide)
+            // Only where the workspace's corner is (D61): the other half on the right.
+            if model.actionsAbovePanel { PanelHeader() }
             if model.panelRole == .console {
                 ConsoleView()
             } else {
@@ -184,6 +240,8 @@ private struct HalfSlot: View {
     let slot: HalfSlotID
     @Environment(AppModel.self) private var model
     @State private var id = UUID()
+    /// When it came: while two exist for a moment (the half moved), the newer one's frame counts.
+    @State private var since = HalfFrame.next()
 
     var body: some View {
         Color(.systemBackground)
@@ -191,11 +249,14 @@ private struct HalfSlot: View {
             .onDisappear { set(nil) }
     }
 
-    /// A slot that went away clears only its own frame: a new one may have set it already.
+    /// A slot that went away clears only its own frame, and an older slot's
+    /// late update doesn't take the place back from a newer one (else the
+    /// newer one's frame is lost when the older one goes).
     private func set(_ frame: CGRect?) {
         let current = slot == .main ? model.mainSlot : model.panelSlot
         if frame == nil && current?.owner != id { return }
-        let value = frame.map { HalfFrame(owner: id, rect: $0) }
+        if frame != nil, let current, current.owner != id, current.since > since { return }
+        let value = frame.map { HalfFrame(owner: id, rect: $0, since: since) }
         switch slot {
         case .main: model.mainSlot = value
         case .panel: model.panelSlot = value
@@ -206,6 +267,13 @@ private struct HalfSlot: View {
 struct HalfFrame: Equatable {
     let owner: UUID
     let rect: CGRect
+    var since = 0
+
+    @MainActor private static var counter = 0
+    @MainActor static func next() -> Int {
+        counter += 1
+        return counter
+    }
 }
 
 /// The halves' agent, docs and ui app, at the window's top level over their slots.
@@ -216,7 +284,9 @@ struct HalfOverlays: View {
         GeometryReader { root in
             let origin = root.frame(in: .global).origin
             // An iPad's sidebar in portrait slides over the workspace: it covers them too.
-            let shown = model.wide && !model.sidebarOverlaps
+            // So does the sidebar sliding over a short window (D61); their own
+            // hosting controllers would draw over it.
+            let shown = model.wide && !model.sidebarOverlaps && !(model.sidebarSlidesOver && model.sidebarVisible)
             ZStack(alignment: .topLeading) {
                 if shown, model.mainRole == .app, let rect = model.mainSlot?.rect {
                     AppHalf().place(rect, origin)
@@ -257,52 +327,17 @@ private extension View {
     }
 }
 
-/// The picker, and for the console its run state.
+/// Above the other half when it is on the right: the workspace's corner,
+/// with its actions (D61), as high as the tab row beside it.
 private struct PanelHeader: View {
-    let sideBySide: Bool
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let s = model.session
-        let debug = s.debug
-        HStack(spacing: 10) {
-            Picker("Show", selection: Binding(get: { model.panelRole }, set: { model.setPanelRole($0) })) {
-                ForEach(PanelRole.allCases) { role in
-                    Image(systemName: role.symbol).accessibilityLabel(role.title).tag(role)
-                }
-            }
-            .pickerStyle(.segmented)
-            .fixedSize()
-            if model.panelRole == .console {
-                StatusDot()
-                if let debug {
-                    Text(debug.postMortem ? "Inspecting Error" : "Paused").font(.subheadline.weight(.semibold)).lineLimit(1)
-                }
-            }
+        HStack(spacing: 0) {
             Spacer(minLength: 0)
-            if model.panelRole == .console, s.status == "running", debug == nil { PauseButton() }
-            if (model.panelRole == .app || model.mainRole == .app) && model.ui.visible {
-                Button { model.setAppFullScreen(true) } label: {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right")
-                }
-                .accessibilityLabel("Show the app full screen")
-            }
-            if model.panelRole == .app || model.mainRole == .app {
-                Button { withAnimation { model.swapAppHalf() } } label: {
-                    Image(systemName: "rectangle.2.swap")
-                }
-                .accessibilityLabel(model.mainRole == .app ? "Show the code in the main half" : "Show the app in the main half")
-            }
-            Button { withAnimation { model.setPanelFirst(!model.panelFirst) } } label: {
-                Image(systemName: sideBySide
-                      ? (model.panelFirst ? "rectangle.righthalf.inset.filled" : "rectangle.lefthalf.inset.filled")
-                      : (model.panelFirst ? "rectangle.bottomhalf.inset.filled" : "rectangle.tophalf.inset.filled"))
-            }
-            .accessibilityLabel(sideBySide ? (model.panelFirst ? "Move to the right" : "Move to the left")
-                                           : (model.panelFirst ? "Move to the bottom" : "Move to the top"))
+            WorkspaceActions().padding(.horizontal, 8)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 40) // the tab strip's height: the two line up
+        .frame(height: model.verticalBar ? 40 : TopRowMetrics.height)
         .overlay(alignment: .bottom) { Divider() }
     }
 }

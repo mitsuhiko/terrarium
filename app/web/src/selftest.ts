@@ -1783,13 +1783,14 @@ export async function selftest() {
       await until(async () => (await halves()).agentInPanel);
       if ((await appCall<any>("agentState")).sheet) throw new Error("the agent opened a sheet too");
 
-      // Only ever one agent: a sheet from the narrow layout (a folded iPhone
-      // Duo) or with the half hidden goes when the half shows the agent.
-      await appCall("setHalves", "editor", "agent", false);
+      // Wide, the agent opens in the half, also when the half was hidden or
+      // on something else (D61): never a sheet.
+      await appCall("setHalves", "editor", "console", false);
       await appCall("openAgent", "Tests");
-      await until(async () => (await appCall<any>("agentState")).sheet);
-      await appCall("setDocked", true);
-      await until(async () => !(await appCall<any>("agentState")).sheet && (await halves()).agentInPanel);
+      await until(async () => (await halves()).agentInPanel);
+      if ((await appCall<any>("agentState")).sheet) throw new Error("the agent opened a sheet with the half hidden");
+      // Only ever one agent: a sheet from the narrow layout (a folded iPhone
+      // Duo) goes when the half shows the agent.
       await appCall("setWide", false); // folded: the agent button opens the sheet again
       await appCall("openAgent", "Tests");
       await until(async () => (await appCall<any>("agentState")).sheet);
@@ -2472,7 +2473,7 @@ export async function selftest() {
     await fs.writeText(`${dir}/messy.py`, "import os\nx=1\n");
     await app.openFile(`${dir}/greet.py`);
     await appCall("openAgent", dir);
-    await until(async () => (await appCall("agentState")).sheet);
+    await until(async () => (await appCall("agentState")).shown);
     const tool = (name: string, args: Parameters<typeof fauxToolCall>[1], id: string) =>
       fauxAssistantMessage([fauxToolCall(name, args, { id })], { stopReason: "toolUse" });
     const lastUser = (messages: any[]) => {

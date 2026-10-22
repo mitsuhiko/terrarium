@@ -192,7 +192,21 @@ final class AppModel {
     var panelSlot: HalfFrame?
     /// The workspace's left edge in the window: at 0 with the sidebar shown, the sidebar is over it.
     var workspaceMinX: CGFloat = 0
-    var sidebarOverlaps: Bool { sidebarVisible && workspaceMinX < 1 }
+    var sidebarOverlaps: Bool { sidebarVisible && !sidebarSlidesOver && workspaceMinX < 1 }
+    /// What the sidebar shows (D61): the files, the outline, find in folder, the problems.
+    var navigator: NavigatorPane = .files
+    /// The outline's filter when it was opened for something (":" for Go to Line).
+    var outlineQuery = ""
+    /// Bumped to put the cursor in the outline's filter.
+    var outlineFocus = 0
+    /// The focused editor's cursor line, for the outline (the editor reports it).
+    var cursorLine = 1
+    /// Bumped when the focused editor's text changed (the outline follows).
+    var editRevision = 0
+    /// The other half is next to the main one (else above or below it), as laid out.
+    var panelSideBySide = true
+    /// The other half's share of the workspace, once the user dragged the divider (D61).
+    var panelRatio: CGFloat?
     var activeSheet: ActiveSheet?
     var popover: EditorPopover?
     var breakpointMenu: BreakpointMenu?
@@ -639,8 +653,11 @@ final class AppModel {
                 Task { _ = await editorCall(other, "applyRemote", [path, changes, notebook]) }
             }
         case "text":
+            if pane == focused { editRevision += 1 }
             guard let path = value["path"] as? String, let text = value["text"] as? String, !isExternal(path) else { return }
             write(path, text)
+        case "cursor":
+            if pane == focused { cursorLine = value["line"] as? Int ?? 1 }
         case "focus":
             let focused = value["focused"] as? Bool ?? false
             editorFocused = focused
@@ -665,7 +682,7 @@ final class AppModel {
         case "info":
             Task { _ = await showInfo() }
         case "showProblems":
-            activeSheet = .problems
+            showProblems()
         case "notebook", "runCells", "stop", "restartKernel", "openURL", "openLocation", "notebookError":
             notebookEditorEvent(pane, type, value)
         case "openLink":

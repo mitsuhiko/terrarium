@@ -4,6 +4,8 @@ import SwiftUI
 
 /// Search the text files of the current folder (and its subfolders).
 struct FindView: View {
+    /// In the sidebar (D61) instead of a sheet.
+    var embedded = false
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -27,48 +29,69 @@ struct FindView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                if files == nil {
-                    ProgressView().frame(maxWidth: .infinity)
-                }
-                ForEach(groups, id: \.0) { path, hits in
-                    Section {
-                        ForEach(hits) { hit in
-                            Button {
-                                dismiss()
-                                Task { await model.openLocation(hit.path, line: hit.line, column: hit.column, keepConsole: true) }
-                            } label: {
-                                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                    Text("\(hit.line)").font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(minWidth: 28, alignment: .trailing)
-                                    Text(preview(hit)).font(.footnote.monospaced()).lineLimit(2)
-                                }
-                            }
-                            .tint(.primary)
-                        }
-                    } header: {
-                        Text(String(path.dropFirst(dir.isEmpty ? 0 : dir.count + 1)))
-                    }
-                }
-            }
-            .navigationTitle("Find in \(displayName(dir))")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
-            .searchFocused($focused)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+        if embedded {
+            VStack(spacing: 0) {
+                HStack(spacing: 8) {
+                    TextField("Find in \(displayName(dir))", text: $query)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .focused($focused)
                     Toggle(isOn: $caseSensitive) { Text("Aa") }.toggleStyle(.button).accessibilityLabel("Match case")
                 }
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                results.listStyle(.plain)
             }
-            .safeAreaInset(edge: .bottom) {
-                if !query.isEmpty, files != nil {
-                    Text(summary).font(.footnote).foregroundStyle(.secondary).padding(8).frame(maxWidth: .infinity).background(.bar)
+            .task(id: dir) { files = nil; await load() }
+        } else {
+            NavigationStack {
+                results
+                    .navigationTitle("Find in \(displayName(dir))")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
+                    .searchFocused($focused)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Toggle(isOn: $caseSensitive) { Text("Aa") }.toggleStyle(.button).accessibilityLabel("Match case")
+                        }
+                        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                    }
+            }
+            .task { await load() }
+            .onAppear { focused = true }
+        }
+    }
+
+    private var results: some View {
+        List {
+            if files == nil {
+                ProgressView().frame(maxWidth: .infinity)
+            }
+            ForEach(groups, id: \.0) { path, hits in
+                Section {
+                    ForEach(hits) { hit in
+                        Button {
+                            if embedded { model.navigatorPicked() } else { dismiss() }
+                            Task { await model.openLocation(hit.path, line: hit.line, column: hit.column, keepConsole: true) }
+                        } label: {
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                Text("\(hit.line)").font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(minWidth: 28, alignment: .trailing)
+                                Text(preview(hit)).font(.footnote.monospaced()).lineLimit(2)
+                            }
+                        }
+                        .tint(.primary)
+                    }
+                } header: {
+                    Text(String(path.dropFirst(dir.isEmpty ? 0 : dir.count + 1)))
                 }
             }
         }
-        .task { await load() }
-        .onAppear { focused = true }
+        .safeAreaInset(edge: .bottom) {
+            if !query.isEmpty, files != nil {
+                Text(summary).font(.footnote).foregroundStyle(.secondary).padding(8).frame(maxWidth: .infinity).background(.bar)
+            }
+        }
     }
 
     private func load() async {
@@ -157,21 +180,7 @@ struct JumpView: View {
                     Button {
                         jump(item.line)
                     } label: {
-                        HStack(spacing: 8) {
-                            if let kind = item.kind {
-                                // A Markdown heading's kind is its level, "h1" to "h6" (D46).
-                                let heading = kind.hasPrefix("h")
-                                Text(heading ? kind.uppercased() : kind == "class" ? "C" : kind == "method" ? "M" : "ƒ")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(.white)
-                                    .frame(width: heading ? 24 : 20, height: 20)
-                                    .background(heading ? Color.orange : kind == "class" ? Color.purple : kind == "method" ? Color.teal : Color.blue, in: RoundedRectangle(cornerRadius: 5))
-                                    .padding(.leading, CGFloat(item.depth) * 16)
-                            }
-                            Text(item.label).font(.body.monospaced())
-                            Spacer()
-                            Text("\(item.line)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                        }
+                        OutlineRow(label: item.label, line: item.line, kind: item.kind, depth: item.depth)
                     }
                     .tint(.primary)
                 }
@@ -218,61 +227,82 @@ struct JumpView: View {
 
 /// All problems in the open file; tap one to go there.
 struct ProblemsView: View {
+    /// In the sidebar (D61) instead of a sheet.
+    var embedded = false
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var items: [[String: Any]] = []
 
     var body: some View {
-        NavigationStack {
-            List {
-                if items.isEmpty { Text("No problems found.").foregroundStyle(.secondary) }
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                    let index = item["index"] as? Int ?? 0
-                    let error = item["severity"] as? String == "error"
-                    VStack(alignment: .leading, spacing: 6) {
-                        Button {
-                            dismiss()
-                            Task { _ = await model.editorCall(model.focused, "selectProblem", [index]) }
-                        } label: {
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: error ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
-                                    .foregroundStyle(error ? .red : .orange)
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(item["message"] as? String ?? "")
-                                    Text("Line \(item["line"] as? Int ?? 0) · \(item["source"] as? String ?? "")").font(.caption).foregroundStyle(.secondary)
-                                }
+        if embedded {
+            list.listStyle(.plain)
+                // The problems follow the file, its edits and the checks (D61).
+                .task(id: "\(model.file ?? "")|\(model.focused)|\(model.problems[min(model.focused, 1)].total)|\(model.editRevision)") {
+                    try? await Task.sleep(for: .milliseconds(250))
+                    await load()
+                }
+        } else {
+            NavigationStack {
+                list
+                    .navigationTitle("Problems")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            }
+            .presentationDetents([.medium, .large])
+            .task { await load() }
+        }
+    }
+
+    private func picked() {
+        if embedded { model.navigatorPicked() } else { dismiss() }
+    }
+
+    private var list: some View {
+        List {
+            if items.isEmpty { Text(model.file == nil ? "No file open." : "No problems found.").foregroundStyle(.secondary) }
+            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                let index = item["index"] as? Int ?? 0
+                let error = item["severity"] as? String == "error"
+                VStack(alignment: .leading, spacing: 6) {
+                    Button {
+                        picked()
+                        Task { _ = await model.editorCall(model.focused, "selectProblem", [index]) }
+                    } label: {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: error ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
+                                .foregroundStyle(error ? .red : .orange)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(item["message"] as? String ?? "")
+                                Text("Line \(item["line"] as? Int ?? 0) · \(item["source"] as? String ?? "")").font(.caption).foregroundStyle(.secondary)
                             }
                         }
-                        .tint(.primary)
-                        let actions = item["actions"] as? [String] ?? []
-                        if !actions.isEmpty {
-                            HStack {
-                                ForEach(Array(actions.enumerated()), id: \.offset) { j, name in
-                                    Button(name) {
-                                        dismiss()
-                                        Task { _ = await model.editorCall(model.focused, "applyFix", [index, j]) }
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.small)
+                    }
+                    .tint(.primary)
+                    let actions = item["actions"] as? [String] ?? []
+                    if !actions.isEmpty {
+                        HStack {
+                            ForEach(Array(actions.enumerated()), id: \.offset) { j, name in
+                                Button(name) {
+                                    picked()
+                                    Task { _ = await model.editorCall(model.focused, "applyFix", [index, j]) }
                                 }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
                             }
-                            .padding(.leading, 30)
                         }
+                        .padding(.leading, 30)
                     }
                 }
             }
-            .navigationTitle("Problems")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
-        .presentationDetents([.medium, .large])
-        .task {
-            let raw = await model.editorCall(model.focused, "problems") as? [[String: Any]] ?? []
-            items = raw.sorted {
-                let a = ($0["severity"] as? String == "error" ? 0 : 1, $0["line"] as? Int ?? 0)
-                let b = ($1["severity"] as? String == "error" ? 0 : 1, $1["line"] as? Int ?? 0)
-                return a < b
-            }
+    }
+
+    private func load() async {
+        let raw = await model.editorCall(model.focused, "problems") as? [[String: Any]] ?? []
+        items = raw.sorted {
+            let a = ($0["severity"] as? String == "error" ? 0 : 1, $0["line"] as? Int ?? 0)
+            let b = ($1["severity"] as? String == "error" ? 0 : 1, $1["line"] as? Int ?? 0)
+            return a < b
         }
     }
 }

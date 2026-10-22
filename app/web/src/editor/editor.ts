@@ -251,6 +251,8 @@ export class PaneEditor {
   private updateFrame = 0;
   private problemBar: HTMLElement;
   private lastSummary = "";
+  /** The cursor's line as the host last heard it (the outline marks its symbol, D61). */
+  private cursorLineSent = 0;
   /** Notebooks shown as their JSON, Markdown files as a preview or their source. */
   private views = new Map<string, View>();
   private editorEl: HTMLElement;
@@ -424,6 +426,13 @@ export class PaneEditor {
           // Outputs and cleared outputs are part of a .ipynb (the pane that ran the cells saves them).
           const fromKernel = u.transactions.some((tr) => tr.effects.some((e) => e.is(kernelEventsEffect)));
           if (!fromKernel || this.runOwners.has(this.path)) this.saveLater(u.state);
+        }
+        if (u.selectionSet || u.docChanged) {
+          const line = u.state.doc.lineAt(u.state.selection.main.head).number;
+          if (line !== this.cursorLineSent) {
+            this.cursorLineSent = line;
+            void editorEvent("cursor", { line });
+          }
         }
         if (u.focusChanged) {
           focusLog(`focusChanged ${u.view.hasFocus}`, u.view);

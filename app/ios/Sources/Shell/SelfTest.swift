@@ -124,11 +124,12 @@ enum SelfTest {
         case "docsLink":
             return model.openDocsLink(URL(string: str(0) ?? "")!)
         case "docsSearch":
-            // The viewer's own search field, as typing in it would.
-            model.docs.browser?.query = str(0) ?? ""
-            model.docs.browser?.search(str(0) ?? "")
+            // The viewer's own search field, as typing in it would (the half's, wide: D61).
+            let browser = model.docsInPanel ? model.panelDocs : model.docs.browser
+            browser?.query = str(0) ?? ""
+            browser?.search(str(0) ?? "")
             try await Task.sleep(for: .milliseconds(600))
-            return model.docs.browser?.results.prefix(5).map { $0.ref } ?? []
+            return browser?.results.prefix(5).map { $0.ref } ?? []
         case "docsTarget":
             return await model.docsTarget(path: str(0) ?? "", text: str(1) ?? "", line: int(2) ?? 1, column: int(3) ?? 1)
                 .map { ["version": $0.version, "ref": $0.ref ?? ""] as [String: Any] } ?? NSNull()
@@ -230,7 +231,7 @@ enum SelfTest {
         case "agentState":
             // The transcript as the native view has it (AgentMirror).
             let s = model.agent.state
-            return ["sheet": model.activeSheet == .agent, "project": s.project ?? NSNull(), "busy": s.busy, "items": s.items.count,
+            return ["sheet": model.activeSheet == .agent, "shown": model.activeSheet == .agent || model.agentInPanel, "project": s.project ?? NSNull(), "busy": s.busy, "items": s.items.count,
                     "tools": s.items.filter { $0.kind == "tool" }.map { "\($0.tool ?? ""):\($0.status ?? "")" },
                     "last": s.items.last?.text ?? "", "model": s.model?.id ?? NSNull(), "error": s.error ?? NSNull(),
                     "conversations": s.conversations?.count ?? 0] as [String: Any]

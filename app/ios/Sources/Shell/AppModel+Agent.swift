@@ -28,8 +28,8 @@ extension AppModel {
         let project = project ?? agentProject
         agentDetent = .large
         agentListShown = false
-        // In the other half when it shows the agent (D59), else a sheet.
-        if !agentInPanel { activeSheet = .agent }
+        // Wide, in the other half, shown on the agent (D61); a sheet on iPhone.
+        if wide { showHalf(.agent) } else { activeSheet = .agent }
         Task { await agentOpen(project) }
     }
 

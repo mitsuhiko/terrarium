@@ -2191,6 +2191,77 @@ editor losing focus after this one took it switched the key bar off. A
 step passes 6 of 6 times (failed about half before), and the editor page
 keeps a short focus timeline that the step prints when it fails.
 
+## D61: Wide layouts have one top row, a navigator sidebar and one way to the other half
+
+2026-10-23 - Accepted
+
+The wide layouts (iPad, an open iPhone Duo, a Pro Max in landscape) had a
+title row and a tab row, two sidebar toggles at times, two agent buttons
+(the bar's and the half's picker), and on a short window three squeezed
+columns. Now:
+
+- **One top row, no navigation bar** (`TopRow.swift`): `[files] [tabs]
+  … [split] | [console agent app docs] [⋯] [Run]`, 44 pt. The active tab is
+  the title (a tap opens the outline, ⌘⇧O); a problem count on it opens the
+  problems; run state is the tab's dot and Run (Stop, Continue), Pause and
+  the debugger's buttons sit before ⋯ while a program runs. The actions
+  stay in the workspace's top-right corner: above the other half when it
+  is on the right, else at the end of the last pane's row (or a row of
+  their own when the main half shows the app).
+- **The other half's icons** replace the half's segmented picker, the
+  `sidebar.right` toggle and the bar's agent button: a tap shows the half on
+  that, a tap on the shown one hides it; the agent's icon pulses while it
+  works, also with the half hidden. The agent (⌘⇧A, the ⋯ menu) and the
+  docs (⌘⇧0, help(), links) always open in the half; their sheets are only
+  for the narrow layout. The half's header is gone (the console gains
+  40 pt) except where it carries the corner; moving the half and swapping
+  the app are in the icons' long-press menu and ⋯ → Layout.
+- **The sidebar is a navigator** (`Navigator.swift`): Files, Outline (the
+  Go to list, following the edits and marking the symbol with the cursor;
+  the filter takes `:line`), Find (in folder) and Problems. A pick closes
+  it when it is over the code. iPhone keeps the sheets.
+- **Never three squeezed columns**: when the files (320 pt), an editor of
+  about 60 columns and the other half next to it don't fit, the sidebar
+  slides over the code (dimmed, a tap beside it closes it) and starts
+  closed. The columns are ours now, not a NavigationSplitView: on an iPhone
+  in landscape its hidden sidebar kept its room (a blank strip), and its
+  own toggle came and went (the double toggle).
+- **The divider between the halves** can be dragged; the share is
+  remembered (`halves.ratio`), a double tap or ⋯ → Layout resets it (on the
+  Duo back to the fold).
+- The editor scrolls under the home indicator (the page pads its end by the
+  inset); its background fills the side insets in landscape.
+
+The open questions, decided:
+1. **The Duo's vertical bar keeps ⋯, Run and the files toggle** (it costs no
+   height and the system puts it there anyway, D58); the tab row and the
+   half's icons are as everywhere else.
+2. **Find and Problems are in the navigator** with Outline: the same lists
+   as the sheets, which stay for iPhone.
+3. **The narrow iPhone layout stays as it is** (title row, agent, ⋯, Run):
+   393 pt can't fit tabs and the actions, and the bar works there.
+4. **iPad windowed mode**: the row's first item and the navigator's picker
+   use `containerCornerOffset(.leading, sizeToFit:)`, which moves them
+   clear of the window's controls (and does nothing otherwise). Not seen in
+   a windowed simulator yet.
+
+Hiding the row while typing: not done; with one row the keyboard leaves
+the editor enough room on the iPads and the Pro Max in the simulator.
+
+Also found and fixed on the way: a moved half's slot frame could be lost
+(the old slot's late update took it back, then cleared it; the self-test's
+`halves` step on the iPad mini), and an editor focused from code didn't
+always report its focus (no key bar, iPad).
+
+Evidence (simulators): the self-test passes on the closed iPhone Duo (89
+checks); on the iPad mini (iOS 27.0) all but `keybar_only_with_software_keyboard`,
+which failed before these changes too, and `help_opens_docs`, which fails now
+and then on both (order-dependent). `app/uitests` scenarios (13 transitions)
+pass on the iPad mini; the monkey ran on the iPad mini and the Pro Max in
+landscape. Screenshots: Pro Max (both orientations), iPad mini, iPad Pro 11,
+the closed Duo. Open: the open Duo (its vertical bar with the new row) is
+not checked, folding can't be scripted.
+
 ## Proposed (not yet decided)
 
 (none)

@@ -15,8 +15,12 @@ extension AppModel {
     // MARK: the viewer
 
     func showDocs(_ target: DocsTarget) {
-        // In the other half when it shows the docs (D59), else a sheet.
-        if docsInPanel, let panelDocs { return panelDocs.open(target) }
+        // Wide, in the other half, shown on the docs (D61); a sheet on iPhone.
+        if wide {
+            if !docsInPanel { showHalf(.docs) }
+            panelDocs?.open(target)
+            return
+        }
         docs.show(target, schemeHandler: host.schemeHandler, from: host.presenter)
     }
 
@@ -42,6 +46,8 @@ extension AppModel {
     }
 
     func closeDocs() {
+        // Wide, the docs are in the other half (D61): it goes.
+        if docsInPanel { withAnimation(.smooth(duration: 0.25)) { consoleDocked = false } }
         docs.close()
     }
 
