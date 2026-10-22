@@ -226,9 +226,13 @@ private extension View {
     /// Laid out there, not drawn there with an offset: its safe area follows
     /// where it really is. Clipped: backgrounds next to a safe area (the
     /// vertical bar's) reach into it, over the workspace's bar buttons.
+    /// Clipping only stops the drawing: the content shape stops the touches
+    /// too (else a SwiftUI background there, like "No App Running"'s, takes
+    /// the vertical bar's taps, Run's among them).
     func place(_ rect: CGRect, _ origin: CGPoint) -> some View {
         frame(width: rect.width, height: rect.height)
             .clipped()
+            .contentShape(Rectangle())
             .padding(.leading, rect.minX - origin.x)
             .padding(.top, rect.minY - origin.y)
     }
