@@ -2144,6 +2144,49 @@ the half); the close button's menu does the same on iPad. Tested on the Duo
 simulator's outer screen forced to the wide layout (a temporary trait
 override), which has a vertical bar.
 
+## D60: Reliability: transitions can't lose views or dialogs, and the app watches itself
+
+2026-10-22 - Accepted
+
+A stress run on the iPhone Duo simulator (`app/uitests/`, XCUITest with
+real touches) and the self-test found three ways the UI "locked up":
+- **The editor went blank** with its tabs showing (open Duo): its web view
+  was in no window. A pane's web view moves between SwiftUI containers;
+  while two existed for a moment, an update of the one going away took it
+  back and left with it. Now it always goes to the newest container in a
+  window (`WebViewSlot`), and an audit once a second puts back a web view
+  that isn't in its place (and logs it).
+- **Dialogs that never went away**: UIKit ignores `present` on a controller
+  that is coming or going and `dismiss` while one is still coming up. A
+  program's dialog answered or stopped right after it appeared stayed up
+  and took every touch; the self-test left an alert and a sheet behind
+  that way. `Modal` waits for transitions and cancels presentations
+  dismissed before they happened; every UIKit presentation uses it.
+- **A blank outer screen** after folding with those stray dialogs up: the
+  app was idle but drew nothing and took no touches; a relaunch was fine.
+  Not reproduced without them (folding can't be scripted).
+
+What stays, to keep it that way:
+- Diagnostics (all builds): a watchdog logs main-thread hangs over 250 ms
+  while the app is active; the web view audit. Category `Diagnostics`.
+- The self-test reports each step's hangs and fails a step that leaves
+  anything presented.
+- `app/uitests/run.sh`: seeded monkey and transition scenarios, with
+  checks after each step (responsive, an editor with the tabs, taps land)
+  and the app's Diagnostics log collected.
+
+Evidence (simulators): the self-test passes on the open Duo (89 checks)
+with no stray modals; the monkey ran 150-400 steps on the open and closed
+Duo and the iPad mini (iOS 27.0) without a lost editor or a hang over
+0.7 s. The blank editor was seen once and never reproduced on purpose
+(the trigger is likely a fold or a rotation, which the simulators can't
+script), so the fix is not proven by a repro.
+
+Open: on the closed Duo, `editor_keyboard_from_native` fails (also before
+these changes): focus from native code doesn't reach CodeMirror, so the
+keyboard comes up with prose traits and, depending on timing, without the
+key bar (D56).
+
 ## Proposed (not yet decided)
 
 (none)

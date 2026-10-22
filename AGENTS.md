@@ -10,6 +10,8 @@ agent. Early research phase.
   (`--selftest`, `--device`). Keep `./run.sh --selftest` passing.
   - `app/ios/Sources/Shell/`: the native IDE (SwiftUI). `app/ios/Sources/UIRenderer/`: ui apps.
   - `app/web/`: two pages, `engine.html` (Python, analysis, the self-test) and `editor.html` (CodeMirror).
+  - `app/uitests/`: UI stress runs with real touches (`run.sh monkey|scenarios`, D60). Run them
+    after UI changes; the app logs hangs and misplaced web views under `Diagnostics`.
 
 - `uikit/`: the `ui` module (D26, Solid-style signals): `python/ui.py`, the
   web renderer for published apps (`web/renderer.js`, `web/ui.css`), examples
