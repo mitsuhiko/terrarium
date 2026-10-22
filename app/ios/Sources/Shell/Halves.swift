@@ -63,6 +63,12 @@ extension AppModel {
             ? UISizeToggle(title: "Show Next to the Code", symbol: "arrow.down.right.and.arrow.up.left") { [weak self] in self?.setAppFullScreen(false) }
             : UISizeToggle(title: "Full Screen", symbol: "arrow.up.left.and.arrow.down.right") { [weak self] in self?.setAppFullScreen(true) }
     }
+    /// On an open iPhone Duo, a full screen app that a half is set to show
+    /// gets a button of its own back into it, not only the close button's menu.
+    var appHalfButton: UISizeToggle? {
+        guard hinge != nil, halfShowsApp, appFullScreen else { return nil }
+        return appSizeToggle
+    }
     var agentInPanel: Bool { panelShown && panelRole == .agent }
     var docsInPanel: Bool { panelShown && panelRole == .docs }
 

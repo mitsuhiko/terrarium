@@ -29,7 +29,7 @@ struct RootView: View {
             HalfOverlays()
             // Over everything, unless a half of the workspace shows it (D59).
             if model.ui.visible && !model.appInHalf {
-                UIAppRoot(store: model.ui.store, sizeToggle: model.appSizeToggle)
+                UIAppRoot(store: model.ui.store, sizeToggle: model.appSizeToggle, halfButton: model.appHalfButton)
                     .overlay { if model.ui.restarting { ProgressView().controlSize(.large) } }
                     .transition(.move(edge: .bottom))
                     .zIndex(1)

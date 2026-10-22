@@ -2123,6 +2123,12 @@ Duo simulator, open (iOS 27.1) and in a 951x669 window, and is skipped on the
 outer screen. Screenshots: iPad mini (portrait, app below), the open Duo
 (agent, docs, app right of the fold; console and app left of it).
 
+Note (2026-10-22): on an open iPhone Duo, a full screen app whose half is
+set to show apps has a button next to its close button that puts it back in
+the half (the menu's Show Next to the Code, one tap away). The halves'
+overlays are clipped for touches too (`contentShape`): "No App Running"'s
+background took the vertical bar's taps, Run's among them.
+
 ## Proposed (not yet decided)
 
 (none)

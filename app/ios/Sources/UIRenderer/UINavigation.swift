@@ -8,6 +8,7 @@ struct UIAppRoot: View {
     let store: UIStore
     var inHalf = false
     var sizeToggle: UISizeToggle?
+    var halfButton: UISizeToggle?
 
     var body: some View {
         RootContent(root: store.root)
@@ -16,6 +17,7 @@ struct UIAppRoot: View {
             .environment(\.uiAppRoot, true)
             .environment(\.uiInHalf, inHalf)
             .environment(\.uiSizeToggle, sizeToggle)
+            .environment(\.uiHalfButton, halfButton)
             .tint(UIColorParser.color(store.tint))
             .preferredColorScheme(store.theme == "dark" ? .dark : store.theme == "light" ? .light : nil)
             .background {
@@ -134,6 +136,7 @@ struct ScreenChrome: ViewModifier {
     let toolbars: [UINode]
     @Environment(\.uiAppRoot) private var appRoot
     @Environment(\.uiInHalf) private var inHalf
+    @Environment(\.uiHalfButton) private var halfButton
     @Environment(UIStore.self) private var store
 
     func body(content: Content) -> some View {
@@ -146,7 +149,16 @@ struct ScreenChrome: ViewModifier {
                 if appRoot && store.closeButton {
                     ToolbarItem(placement: .topBarLeading) { CloseAppButton() }
                         .horizontalOnly(inHalf)
-                    if !leading.isEmpty { ToolbarSpacer(.fixed, placement: .topBarLeading) }
+                }
+                if appRoot, let halfButton {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(halfButton.title, systemImage: halfButton.symbol, action: halfButton.action)
+                            .labelStyle(.iconOnly)
+                    }
+                    .horizontalOnly(inHalf)
+                }
+                if appRoot && (store.closeButton || halfButton != nil) && !leading.isEmpty {
+                    ToolbarSpacer(.fixed, placement: .topBarLeading)
                 }
                 if !leading.isEmpty {
                     ToolbarItemGroup(placement: .topBarLeading) {
