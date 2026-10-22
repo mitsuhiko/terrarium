@@ -106,9 +106,8 @@ final class DeviceBridge {
                 done = true
                 self?.active[id] = nil
                 self?.answerers.removeAll { $0.0 == id }
-                if let controller, controller.presentingViewController != nil, !controller.isBeingDismissed {
-                    controller.dismiss(animated: true)
-                }
+                // Also when it is still coming up, or not up yet (Modal).
+                if let controller { Modal.dismiss(controller) }
                 continuation.resume(returning: Unchecked(value: value))
             }
             let vc = make(finish)
@@ -121,13 +120,7 @@ final class DeviceBridge {
             }
             active[id] = { finish(nil) }
             answerers.insert((id, finish), at: 0)
-            guard let presenter else { return finish(nil) }
-            if let popover = vc.popoverPresentationController, popover.sourceView == nil {
-                popover.sourceView = presenter.view
-                popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 1, height: 1)
-                popover.permittedArrowDirections = []
-            }
-            presenter.present(vc, animated: true)
+            Modal.present(vc, from: { [weak self] in self?.presenter }, failed: { finish(nil) })
         }.value
     }
 
@@ -176,7 +169,7 @@ final class DeviceBridge {
         guard let url = URL(string: string), let scheme = url.scheme?.lowercased() else { return false }
         if scheme == "http" || scheme == "https" {
             let safari = SFSafariViewController(url: url)
-            presenter?.present(safari, animated: true)
+            Modal.present(safari, from: { [weak self] in self?.presenter })
             return true
         }
         if let action = LaunchAction(url: url) {

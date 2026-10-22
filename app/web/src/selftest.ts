@@ -102,6 +102,12 @@ export async function selftest() {
     // Main-thread hangs during the step (Diagnostics): reported, not a failure.
     const hangs = await appCall<number[]>("hangs").catch(() => []);
     if (hangs.length) (r[name] as Record<string, unknown>).hangs = hangs;
+    // Nothing a step showed stays up: a stray sheet or alert takes every touch.
+    const presented = await appCall<string[]>("presented").catch(() => []);
+    if (presented.length) {
+      Object.assign(r[name] as Record<string, unknown>, { ok: false, leftOver: presented });
+      await appCall("dismissPresented").catch(() => {});
+    }
     await log(`${name}: ${JSON.stringify(r[name])}`);
   }
 

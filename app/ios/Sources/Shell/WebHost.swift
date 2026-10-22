@@ -251,8 +251,7 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
                  initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable () -> Void) {
         let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
-        guard let presenter = presenter() else { return completionHandler() }
-        presenter.present(alert, animated: true)
+        Modal.present(alert, from: { [weak self] in self?.presenter() }, failed: { completionHandler() })
     }
 
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
@@ -260,8 +259,7 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
         let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(false) })
         alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(true) })
-        guard let presenter = presenter() else { return completionHandler(false) }
-        presenter.present(alert, animated: true)
+        Modal.present(alert, from: { [weak self] in self?.presenter() }, failed: { completionHandler(false) })
     }
 
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?,
@@ -274,8 +272,7 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
         }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(nil) })
         alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(alert.textFields?.first?.text) })
-        guard let presenter = presenter() else { return completionHandler(nil) }
-        presenter.present(alert, animated: true)
+        Modal.present(alert, from: { [weak self] in self?.presenter() }, failed: { completionHandler(nil) })
     }
 
     // MARK: helpers

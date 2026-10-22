@@ -116,15 +116,16 @@ extension AppModel {
             self?.answerNotebookPrompt(alert?.textFields?.first?.text ?? "")
         })
         notebookPrompt = NotebookPrompt(title: title, alert: alert, reply: reply)
-        guard let presenter = host.presenter() else { return answerNotebookPrompt(nil) }
-        presenter.present(alert, animated: true)
+        Modal.present(alert, from: { [weak self] in self?.host.presenter() }, failed: { [weak self, weak alert] in
+            if let alert, self?.notebookPrompt?.alert === alert { self?.answerNotebookPrompt(nil) }
+        })
     }
 
     /// nil: cancelled (EOFError in the cell).
     func answerNotebookPrompt(_ text: String?, dismiss: Bool = false) {
         guard let prompt = notebookPrompt else { return }
         notebookPrompt = nil
-        if dismiss { prompt.alert.dismiss(animated: true) }
+        if dismiss { Modal.dismiss(prompt.alert) }
         prompt.reply(text ?? NSNull(), nil)
     }
 }

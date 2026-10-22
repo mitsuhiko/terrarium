@@ -234,6 +234,23 @@ enum SelfTest {
                     "tools": s.items.filter { $0.kind == "tool" }.map { "\($0.tool ?? ""):\($0.status ?? "")" },
                     "last": s.items.last?.text ?? "", "model": s.model?.id ?? NSNull(), "error": s.error ?? NSNull(),
                     "conversations": s.conversations?.count ?? 0] as [String: Any]
+        case "presented":
+            // What is presented over the app, settled (no transition running): a step leaves nothing up.
+            for _ in 0..<40 {
+                let root = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first?.rootViewController
+                var chain: [UIViewController] = []
+                var vc = root?.presentedViewController
+                while let c = vc { chain.append(c); vc = c.presentedViewController }
+                if !chain.contains(where: { $0.isBeingPresented || $0.isBeingDismissed || $0.transitionCoordinator != nil }) {
+                    return chain.map { String(describing: Swift.type(of: $0)) }
+                }
+                try await Task.sleep(for: .milliseconds(50))
+            }
+            return ["(still moving)"]
+        case "dismissPresented":
+            model.activeSheet = nil
+            let root = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first?.rootViewController
+            root?.dismiss(animated: false)
         case "hangs":
             // Main-thread hangs since the last call, in ms (Diagnostics).
             return HangWatchdog.shared.take()

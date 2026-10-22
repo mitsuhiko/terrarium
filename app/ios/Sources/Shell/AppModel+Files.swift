@@ -115,20 +115,15 @@ extension AppModel {
             let ql = QLPreviewController()
             ql.dataSource = source
             objc_setAssociatedObject(ql, &PreviewSource.key, source, .OBJC_ASSOCIATION_RETAIN)
-            host.presenter()?.present(ql, animated: true)
+            Modal.present(ql, from: { [weak self] in self?.host.presenter() })
         }
     }
 
     func share(_ path: String) {
         Task {
-            guard let url = try? await readableURL(path), let presenter = host.presenter() else { return }
+            guard let url = try? await readableURL(path) else { return }
             let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-            if let popover = vc.popoverPresentationController {
-                popover.sourceView = presenter.view
-                popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 1, height: 1)
-                popover.permittedArrowDirections = []
-            }
-            presenter.present(vc, animated: true)
+            Modal.present(vc, from: { [weak self] in self?.host.presenter() }) // centered popover on iPad
         }
     }
 

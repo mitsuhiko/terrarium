@@ -192,23 +192,12 @@ final class DocsPresenter {
     private weak var controller: UIViewController?
     private(set) var browser: DocsBrowser?
 
-    var isShown: Bool { controller?.view.window != nil && controller?.isBeingDismissed == false }
+    /// Up, or on its way up (Modal waits for other sheets to finish moving).
+    var isShown: Bool { controller != nil && controller?.isBeingDismissed == false }
 
-    func show(_ target: DocsTarget, schemeHandler: AppSchemeHandler, from presenter: @escaping () -> UIViewController?, attempt: Int = 0) {
+    func show(_ target: DocsTarget, schemeHandler: AppSchemeHandler, from presenter: @escaping () -> UIViewController?) {
         if isShown, let browser {
             browser.open(target)
-            return
-        }
-        // A sheet that is still coming or going (the viewer closed a moment ago) can't present: wait for it.
-        if let busy = presenter(), busy.isBeingDismissed || busy.isBeingPresented, attempt < 20 {
-            Task {
-                try? await Task.sleep(for: .milliseconds(100))
-                show(target, schemeHandler: schemeHandler, from: presenter, attempt: attempt + 1)
-            }
-            return
-        }
-        guard let presenter = presenter() else {
-            WebHost.appendDocument(".probe-log.txt", "[docs] nothing to present from\n")
             return
         }
         let browser = DocsBrowser(schemeHandler: schemeHandler, target: target)
@@ -220,15 +209,14 @@ final class DocsPresenter {
             sheet.prefersGrabberVisible = false
         }
         controller = host
-        presenter.present(host, animated: true) { [weak host] in
-            if host?.view.window == nil {
-                WebHost.appendDocument(".probe-log.txt", "[docs] could not present from \(type(of: presenter)) (presenting: \(String(describing: presenter.presentedViewController)))\n")
-            }
-        }
+        Modal.present(host, from: presenter, failed: { [weak self, weak host] in
+            WebHost.appendDocument(".probe-log.txt", "[docs] could not present\n")
+            if let self, self.controller === host { self.controller = nil; self.browser = nil }
+        })
     }
 
     func close() {
-        controller?.dismiss(animated: true)
+        if let controller { Modal.dismiss(controller) }
         controller = nil
     }
 }
