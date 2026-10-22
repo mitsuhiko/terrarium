@@ -91,6 +91,7 @@ export async function selftest() {
 
   async function step(name: string, fn: () => Promise<Record<string, unknown> | void>) {
     if (only && !new RegExp(only).test(name)) return;
+    await appCall("hangs").catch(() => null); // only this step's
     const t0 = performance.now();
     try {
       r[name] = { ok: true, ...(await fn()), ms: Math.round(performance.now() - t0) };
@@ -98,6 +99,9 @@ export async function selftest() {
       const { status, debug, pausing } = session.getSnapshot();
       r[name] = { ok: false, error: String((e as Error).message ?? e), console: consoleText().slice(-400), session: { status, pausing, debug: debug && { reason: debug.reason, frames: debug.frames } } };
     }
+    // Main-thread hangs during the step (Diagnostics): reported, not a failure.
+    const hangs = await appCall<number[]>("hangs").catch(() => []);
+    if (hangs.length) (r[name] as Record<string, unknown>).hangs = hangs;
     await log(`${name}: ${JSON.stringify(r[name])}`);
   }
 
@@ -2324,7 +2328,7 @@ export async function selftest() {
         return typeof s !== "string" && s.firstResponder ? s : null;
       }, 5000).catch(async () => { throw new Error(`no keyboard: ${JSON.stringify(await call("test.editorKeyboard", {}))}`); });
       // UITextAutocapitalizationType.none = 0, the others' .no = 1.
-      if (state.bar === undefined) throw new Error("no key bar on the content view");
+      if (state.bar === undefined) throw new Error(`no key bar on the content view: ${JSON.stringify(state)}`);
       if (state.traits !== undefined && state.traits !== "autocap=0 autocorrect=1 spell=1 quotes=1 dashes=1") throw new Error(`traits: ${state.traits}`);
       return state;
     } finally {

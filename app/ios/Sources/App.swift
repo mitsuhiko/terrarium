@@ -9,6 +9,7 @@ struct TerrariumApp: App {
     init() {
         // Before launch finishes, so a tap on a notification that launched the app arrives (D40).
         UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+        Diagnostics.start()
     }
 
     var body: some Scene {

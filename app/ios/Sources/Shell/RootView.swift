@@ -219,13 +219,29 @@ final class WebViewSlot: UIView {
         Self.settle(webView)
     }
 
-    /// Puts the web view in its newest place that is in a window, if it has one.
-    private static func settle(_ webView: WKWebView?) {
-        guard let webView else { return }
+    /// Where the web view belongs: its newest place in a window.
+    private static func place(of webView: WKWebView) -> WebViewSlot? {
         let key = ObjectIdentifier(webView)
         slots[key]?.removeAll { $0.slot == nil }
+        if slots[key]?.isEmpty == true { slots[key] = nil }
         let live = (slots[key] ?? []).compactMap(\.slot).filter { $0.window != nil && $0.webView === webView }
-        guard let target = live.max(by: { $0.since < $1.since }), webView.superview !== target else { return }
+        return live.max(by: { $0.since < $1.since })
+    }
+
+    /// Every web view with a place on screen is in it (Diagnostics, once a
+    /// second): one that isn't is logged and put back.
+    static func audit() {
+        for entry in slots.values {
+            guard let slot = entry.lazy.compactMap(\.slot).first, let webView = slot.webView,
+                  let target = place(of: webView), webView.superview !== target else { continue }
+            Diagnostics.log.fault("web view not in its place on screen (in a window: \(webView.window != nil, privacy: .public)); put back")
+            settle(webView)
+        }
+    }
+
+    /// Puts the web view in its newest place that is in a window, if it has one.
+    private static func settle(_ webView: WKWebView?) {
+        guard let webView, let target = place(of: webView), webView.superview !== target else { return }
         webView.removeFromSuperview()
         webView.frame = target.bounds
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]

@@ -234,6 +234,9 @@ enum SelfTest {
                     "tools": s.items.filter { $0.kind == "tool" }.map { "\($0.tool ?? ""):\($0.status ?? "")" },
                     "last": s.items.last?.text ?? "", "model": s.model?.id ?? NSNull(), "error": s.error ?? NSNull(),
                     "conversations": s.conversations?.count ?? 0] as [String: Any]
+        case "hangs":
+            // Main-thread hangs since the last call, in ms (Diagnostics).
+            return HangWatchdog.shared.take()
         case "stashResults":
             // The results so far, for the page that replaces this one (engine_recovery).
             model.selftestStash = str(0)
@@ -319,6 +322,11 @@ enum SelfTest {
         let webView = model.editors[model.focused].webView
         guard let content = webView.scrollView.subviews.first(where: { $0 is UITextInput }) else { return "no content view" }
         var out: [String: Any] = ["firstResponder": content.isFirstResponder]
+        // Why there is no bar, if there isn't: not our subclass, the plain mode, another web view.
+        out["content"] = NSStringFromClass(Swift.type(of: content))
+        out["mode"] = "\(KeyboardAccessory.shared.mode)"
+        out["barWebView"] = KeyboardAccessory.shared.webView === webView
+        out["inWindow"] = webView.window != nil
         if let bar = content.inputAccessoryView {
             out["bar"] = bar.intrinsicContentSize.height > 0 && !bar.subviews.allSatisfy(\.isHidden)
         }
