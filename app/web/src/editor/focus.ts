@@ -14,6 +14,9 @@ export function takeFocus(view: EditorView) {
     focusLog("taken", view);
     view.focus();
     focusLog("focused", view);
+    // CodeMirror may not report this focus as a change (it counted itself
+    // focused already): the host's key bar must know anyway (seen on iPad).
+    if (view.hasFocus) void call("keyboard.mode", { mode: "code" }).catch(() => {});
   });
 }
 
