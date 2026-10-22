@@ -2129,6 +2129,14 @@ the half (the menu's Show Next to the Code, one tap away). The halves'
 overlays are clipped for touches too (`contentShape`): "No App Running"'s
 background took the vertical bar's taps, Run's among them.
 
+Note (2026-10-22): the button is there whenever the window has a vertical
+bar and the app is over everything (not only when the hinge has reported
+and a half is set to show apps), on every screen of the app but not in its
+sheets. If no half shows apps it puts the app in the other half (and shows
+the half); the close button's menu does the same on iPad. Tested on the Duo
+simulator's outer screen forced to the wide layout (a temporary trait
+override), which has a vertical bar.
+
 ## Proposed (not yet decided)
 
 (none)

@@ -24,7 +24,7 @@ extension EnvironmentValues {
     @Entry var uiInHalf: Bool = false
     /// Full screen, or back next to the code (the close button's menu, D59).
     @Entry var uiSizeToggle: UISizeToggle?
-    /// A button next to the close button that puts a full screen app back in its half (the open iPhone Duo).
+    /// A button next to the close button that puts a full screen app next to the code (with a vertical bar: the open iPhone Duo).
     @Entry var uiHalfButton: UISizeToggle?
     /// font_size set on a container: body text inside uses it.
     @Entry var uiBodySize: Double? = nil

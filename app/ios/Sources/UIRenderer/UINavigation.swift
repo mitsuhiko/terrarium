@@ -150,14 +150,15 @@ struct ScreenChrome: ViewModifier {
                     ToolbarItem(placement: .topBarLeading) { CloseAppButton() }
                         .horizontalOnly(inHalf)
                 }
-                if appRoot, let halfButton {
+                // On every screen of the app (pushed ones too), not in its sheets.
+                if let halfButton {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(halfButton.title, systemImage: halfButton.symbol, action: halfButton.action)
                             .labelStyle(.iconOnly)
                     }
                     .horizontalOnly(inHalf)
                 }
-                if appRoot && (store.closeButton || halfButton != nil) && !leading.isEmpty {
+                if ((appRoot && store.closeButton) || halfButton != nil) && !leading.isEmpty {
                     ToolbarSpacer(.fixed, placement: .topBarLeading)
                 }
                 if !leading.isEmpty {
@@ -336,6 +337,7 @@ struct LayerHost: ViewModifier {
             })) { node in
                 SheetView(node: node)
                     .modifier(LayerHost(level: level + 1))
+                    .environment(\.uiHalfButton, nil)
                     .environment(store)
                     .tint(UIColorParser.color(store.tint))
             }

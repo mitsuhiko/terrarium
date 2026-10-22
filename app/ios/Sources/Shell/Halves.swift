@@ -56,17 +56,30 @@ extension AppModel {
         withAnimation(.smooth(duration: 0.3)) { appSizeOverride = on }
     }
 
-    /// For the close button's menu: the other way to show the app, if there is one.
-    var appSizeToggle: UISizeToggle? {
-        guard halfShowsApp else { return nil }
-        return appFullScreen
-            ? UISizeToggle(title: "Show Next to the Code", symbol: "arrow.down.right.and.arrow.up.left") { [weak self] in self?.setAppFullScreen(false) }
-            : UISizeToggle(title: "Full Screen", symbol: "arrow.up.left.and.arrow.down.right") { [weak self] in self?.setAppFullScreen(true) }
+    /// Puts the app next to the code: in the half that is set to show it, or
+    /// if none is, in the other half (shown if it was hidden).
+    func showAppInHalf() {
+        withAnimation(.smooth(duration: 0.3)) {
+            if !halfShowsApp {
+                setPanelRole(.app)
+                consoleDocked = true
+            }
+            appSizeOverride = false
+        }
     }
-    /// On an open iPhone Duo, a full screen app that a half is set to show
-    /// gets a button of its own back into it, not only the close button's menu.
+
+    /// For the close button's menu: the other way to show the app (wide only).
+    var appSizeToggle: UISizeToggle? {
+        guard wide else { return nil }
+        return appInHalf
+            ? UISizeToggle(title: "Full Screen", symbol: "arrow.up.left.and.arrow.down.right") { [weak self] in self?.setAppFullScreen(true) }
+            : UISizeToggle(title: "Show Next to the Code", symbol: "arrow.down.right.and.arrow.up.left") { [weak self] in self?.showAppInHalf() }
+    }
+    /// With a vertical bar (the open iPhone Duo), an app over everything always
+    /// has a button next to the code in the bar, not only in the close button's
+    /// menu: also when no half shows apps, or the other half is hidden.
     var appHalfButton: UISizeToggle? {
-        guard hinge != nil, halfShowsApp, appFullScreen else { return nil }
+        guard wide, verticalBar, !appInHalf else { return nil }
         return appSizeToggle
     }
     var agentInPanel: Bool { panelShown && panelRole == .agent }
