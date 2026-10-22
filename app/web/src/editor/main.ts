@@ -7,6 +7,7 @@ import { settings } from "../settings";
 import { editorEvent, PaneEditor } from "./editor";
 import "./editor.css";
 import { installThemes, THEMES } from "./themes";
+import { focusTimeline } from "./focus";
 
 installThemes();
 
@@ -77,6 +78,13 @@ const api: Api = {
   // self-test
   setText: (text: string) => editor.setText(text),
   diagnostics: () => editor.diagnostics(),
+  focusState: () => ({
+    hasFocus: document.hasFocus(),
+    active: document.activeElement?.className ?? null,
+    visibility: document.visibilityState,
+    previewing: document.documentElement.classList.contains("previewing"),
+    timeline: focusTimeline,
+  }),
   applyFixNamed: (name: string) => editor.applyFixNamed(name),
   setCursor: (line: number, column: number) => editor.setCursor(line, column),
   info: () => editor.info(),

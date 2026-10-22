@@ -92,8 +92,16 @@ final class WebHost: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDele
             files.locations.remove(named: String((value["path"] as? String ?? "").dropFirst()))
             replyHandler(nil, nil)
         case "keyboard.mode":
+            // Each page reports its own focus, and the reports of two pages interleave:
+            // the other pane's editor losing focus after this one took it must not
+            // switch this one's key bar off (seen on the closed iPhone Duo).
+            let mode = KeyboardAccessory.Mode(rawValue: value["mode"] as? String ?? "") ?? .plain
+            if mode == .plain, let current = KeyboardAccessory.shared.webView, current !== webView {
+                replyHandler(nil, nil)
+                return
+            }
             KeyboardAccessory.shared.webView = webView
-            KeyboardAccessory.shared.setMode(KeyboardAccessory.Mode(rawValue: value["mode"] as? String ?? "") ?? .plain)
+            KeyboardAccessory.shared.setMode(mode)
             replyHandler(nil, nil)
         case "keyboard.take":
             // The page is about to focus a field without a tap (D56).

@@ -28,7 +28,7 @@ import {
   breakpointLines, debugExtensions, pausedCompartment, pausedExtension, setBreakpointsEffect, setDebugLineEffect,
 } from "../debug/codemirror";
 import { call } from "../host";
-import { takeFocus } from "./focus";
+import { focusLog, takeFocus } from "./focus";
 import { parseIpynb } from "../notebook/ipynb";
 import type { KernelEvent } from "../notebook/types";
 import { settings } from "../settings";
@@ -426,6 +426,7 @@ export class PaneEditor {
           if (!fromKernel || this.runOwners.has(this.path)) this.saveLater(u.state);
         }
         if (u.focusChanged) {
+          focusLog(`focusChanged ${u.view.hasFocus}`, u.view);
           if (!u.view.hasFocus) this.flush();
           void call("keyboard.mode", { mode: u.view.hasFocus ? "code" : "plain" }).catch(() => {});
           void editorEvent("focus", { focused: u.view.hasFocus });

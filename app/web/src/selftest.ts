@@ -2334,7 +2334,7 @@ export async function selftest() {
         return typeof s !== "string" && s.firstResponder ? s : null;
       }, 5000).catch(async () => { throw new Error(`no keyboard: ${JSON.stringify(await call("test.editorKeyboard", {}))}`); });
       // UITextAutocapitalizationType.none = 0, the others' .no = 1.
-      if (state.bar === undefined) throw new Error(`no key bar on the content view: ${JSON.stringify(state)}`);
+      if (state.bar === undefined) throw new Error(`no key bar on the content view: ${JSON.stringify(state)} page: ${JSON.stringify(await editorCall("focusState"))}`);
       if (state.traits !== undefined && state.traits !== "autocap=0 autocorrect=1 spell=1 quotes=1 dashes=1") throw new Error(`traits: ${state.traits}`);
       return state;
     } finally {

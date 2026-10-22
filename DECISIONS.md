@@ -2182,10 +2182,14 @@ Duo and the iPad mini (iOS 27.0) without a lost editor or a hang over
 (the trigger is likely a fold or a rotation, which the simulators can't
 script), so the fix is not proven by a repro.
 
-Open: on the closed Duo, `editor_keyboard_from_native` fails (also before
-these changes): focus from native code doesn't reach CodeMirror, so the
-keyboard comes up with prose traits and, depending on timing, without the
-key bar (D56).
+Note (2026-10-22): on the closed Duo, `editor_keyboard_from_native` failed
+(also before the changes above): the keyboard came up with prose traits or
+without the key bar. Each editor page reports its own focus
+(`keyboard.mode`), and the two panes' reports interleave: the other pane's
+editor losing focus after this one took it switched the key bar off. A
+"plain" from a page that doesn't have the keyboard is now ignored; the
+step passes 6 of 6 times (failed about half before), and the editor page
+keeps a short focus timeline that the step prints when it fails.
 
 ## Proposed (not yet decided)
 
