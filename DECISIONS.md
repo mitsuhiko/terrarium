@@ -2079,6 +2079,13 @@ for the iPhone's title), which stays in the horizontal bar, so:
   goes away.
 - Wide, the file sidebar has no agent button: the editor's is the one.
 
+Note (2026-10-22): the system's sidebar toggle was removed only while
+there was a vertical bar (`toolbar(removing:)` switched on with it). On
+the open Duo it came back and stayed (seen after a UI stress run with
+rotations), in a top row of its own next to ours in the vertical bar. Now it is always removed and the toggle
+is always ours: in the vertical bar, or at the leading end of the editor's
+bar (iPad; checked in the iPad Pro 11-inch simulator, iOS 27.0).
+
 ## D59: The wide workspace's other half shows what the user picks
 
 2026-10-22 - Accepted

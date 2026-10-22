@@ -289,12 +289,12 @@ private struct EditorChrome: ViewModifier {
                 if !model.verticalBar {
                     ToolbarItem(placement: .principal) { title(file) }
                 }
+                if model.wide && !model.verticalBar {
+                    ToolbarItem(placement: .topBarLeading) { sidebarToggle }
+                }
                 if model.wide {
                     ToolbarItemGroup(placement: .topBarTrailing) {
-                        if model.verticalBar {
-                            Button { withAnimation { model.sidebarVisible.toggle() } } label: { Image(systemName: "sidebar.left") }
-                                .accessibilityLabel(model.sidebarVisible ? "Hide Files" : "Show Files")
-                        }
+                        if model.verticalBar { sidebarToggle }
                         if let debug {
                             DebugBar(debug: debug)
                         }
@@ -328,6 +328,12 @@ private struct EditorChrome: ViewModifier {
             } message: {
                 Text(file?.hasPrefix("@") == true ? "It goes to the folder's trash if it has one, otherwise it is gone." : "It goes to the Trash in the file browser.")
             }
+    }
+
+    /// Shows and hides the files. The system's toggle is removed (RootView).
+    private var sidebarToggle: some View {
+        Button { withAnimation { model.sidebarVisible.toggle() } } label: { Image(systemName: "sidebar.left") }
+            .accessibilityLabel(model.sidebarVisible ? "Hide Files" : "Show Files")
     }
 
     /// Room for the title on iPhone: between the back button and the group of

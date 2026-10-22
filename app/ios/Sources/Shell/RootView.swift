@@ -139,8 +139,10 @@ private struct WideLayout: View {
                     }
             }
             .navigationSplitViewColumnWidth(min: 260, ideal: 320, max: 400)
-            // With a vertical bar the editor's bar has the toggle (D58).
-            .toolbar(removing: model.verticalBar ? .sidebarToggle : nil)
+            // The editor's bar has the toggle, in the vertical bar when there is
+            // one (D58). Always removed: switched on with the vertical bar, the
+            // system's toggle came back on the Duo and stayed.
+            .toolbar(removing: .sidebarToggle)
         } detail: {
             NavigationStack { WorkspaceView() }
                 .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { model.workspaceMinX = $0 }
