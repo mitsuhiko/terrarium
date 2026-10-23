@@ -18,12 +18,17 @@ final class Script: XCTestCase {
                 var found: Snap?
                 for _ in 0..<20 {
                     let snaps = app.snaps()
-                    let bounds = snaps.first?.frame ?? app.frame
+                    let bounds = snaps.first { $0.type == .window }?.frame ?? snaps.first?.frame ?? app.frame
                     found = snaps.filter { op == "tap" ? $0.label == arg : $0.identifier == arg }.visible(in: bounds).first
                     if found != nil { break }
                     Thread.sleep(forTimeInterval: 0.25)
                 }
-                if let found { app.tap(found); report.note("tapped \(arg)") } else { report.anomaly("no \(arg) to tap") }
+                if let found {
+                    // By the element where XCTest can (its coordinates are off on an open Duo's inner screen).
+                    let el = app.descendants(matching: .any).matching(NSPredicate(format: op == "tap" ? "label == %@" : "identifier == %@", arg)).firstMatch
+                    if el.exists, el.isHittable { el.tap() } else { app.tap(found) }
+                    report.note("tapped \(arg)")
+                } else { report.anomaly("no \(arg) to tap") }
             case "rotate":
                 let o: [String: UIDeviceOrientation] = ["portrait": .portrait, "landscapeLeft": .landscapeLeft, "landscapeRight": .landscapeRight]
                 XCUIDevice.shared.orientation = o[arg] ?? .portrait

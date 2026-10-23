@@ -30,6 +30,8 @@ Notes:
 - An iPhone Duo simulator boots closed and nothing headless opens it, and
   XCUIDevice's rotations don't turn its inner screen: run the wide layout on
   an open Duo (DeviceHub) or an iPad, the narrow one on a closed Duo.
+- On an open Duo's inner screen, taps at coordinates miss (XCTest's are
+  off there): `script` taps the element itself when XCTest can.
 - Don't share a simulator with another run: the taps mix.
 - A monkey step can leave an example edited (a tap on the key bar);
   `../run.sh --reset` wipes Documents.
