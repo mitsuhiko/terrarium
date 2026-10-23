@@ -2104,7 +2104,10 @@ window's left or right edge moves its content in by 12 pt
 a row (the console on the left) keeps its old top. Checked in the iPhone
 Duo simulator with the console on either side; the rotated layout (the
 vertical bar on the leading edge, the actions in the right-hand corner)
-is not checked: XCTest's rotation doesn't turn that simulator.
+is not checked: XCTest's rotation doesn't turn that simulator. The closed
+Duo's editor does the same (its tab row is the first thing at the top):
+checked on the outer screen in landscape, whose top corners are the small
+ones on the hinge side.
 
 ## D59: The wide workspace's other half shows what the user picks
 

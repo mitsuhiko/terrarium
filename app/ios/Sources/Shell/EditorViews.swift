@@ -16,6 +16,9 @@ struct EditorScreen: View {
             let window = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first?.safeAreaInsets.bottom ?? 0
             let bottom = geo.safeAreaInsets.bottom > window + 1 ? 0 : window
             let lowered = min(ConsolePanel.lowered, bottom)
+            // A closed iPhone Duo: the bar buttons are in the vertical bar, so
+            // the tabs go up into the top inset like the open one's (D58).
+            let lift = model.verticalBar ? topLift(inset: geo.safeAreaInsets.top) : 0
             VStack(spacing: 0) {
                 if model.panes[0].tabs.count > 1 || model.verticalBar { TabStrip(pane: 0) }
                 ZStack(alignment: .bottom) {
@@ -28,6 +31,9 @@ struct EditorScreen: View {
                 }
                 .ignoresSafeArea(.container, edges: .bottom)
             }
+            .padding(.top, lift > 0 ? geo.safeAreaInsets.top - lift : 0)
+            .ignoresSafeArea(.container, edges: lift > 0 ? .top : [])
+            .environment(\.topLift, lift)
             .background(model.editorBackground.ignoresSafeArea())
         }
         .background(model.editorBackground.ignoresSafeArea())
