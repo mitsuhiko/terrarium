@@ -2314,6 +2314,42 @@ Pro 11-inch simulator (iOS 27.0). The self-test (`--reset`) passes 87 of
 changes; both pass alone. Not seen: the open Duo in portrait (XCUIDevice
 doesn't turn the inner screen).
 
+## D62: Narrow layouts show Go to, Find and Problems instead of a title
+
+2026-10-23 - Accepted
+
+On a portrait iPhone the bar had the file name (a tap opened Go to) with a
+status line under it, and the agent, ⋯ and Run. Outline, search and
+problems were only in ⋯, so nothing on the screen said they exist; the
+problem count under the title was drawn as a bare icon, away from the
+name. The closed iPhone Duo had only the agent, ⋯ and Run (no title at
+all), the open Duo the lookups, Settings and the sidebar (D58, D61).
+
+Now every narrow layout (iPhone in portrait, the closed Duo) has the same
+buttons: **Go to, Find and Problems**, the wide sidebar's panes (D61) as
+sheets, with its symbols, then the agent, ⋯ and Run. On iPhone the three
+sit in a group after Back, on the closed Duo in the vertical bar. Find is
+the file's (CodeMirror's panel, or the preview's find bar); a long press
+offers Find in Folder. Problems is red or orange while there are any and
+disabled otherwise.
+
+There is no title: the **active tab is the title** as on the closed Duo
+(D58) and the wide layouts: it has the chevron, a tap opens Go to, and the
+problem count sits on it. The tab strip shows whenever a file is open, not
+only from two tabs. The status line goes: run state is the tab's dot and
+Run, the debugger's state the console bar and the editor's marked line,
+read-only the tab's lock. Jump to Definition, Show Info and Settings stay
+in ⋯ and the selection menu: a phone's bar has room for about seven
+buttons at 390 pt.
+
+Evidence (simulator, iOS 27.0 iPhone 18 Pro Max and iOS 27.1 iPhone Duo,
+closed): the buttons in both bars; Go to, Find and Problems open the
+outline sheet, the find panel and the problems sheet on the Pro Max
+(`uitests/run.sh script`); the self-test passes 89 of 89 (Pro Max). Monkey
+runs (seeds 7 and 8, 150 steps): clean on the Pro Max; on the closed Duo
+"⋯ did not open its menu" now and then, as often without this change. Not seen: the long press, the narrowest
+iPhones, a notebook's running cell (it lost its line under the title).
+
 ## Proposed (not yet decided)
 
 (none)

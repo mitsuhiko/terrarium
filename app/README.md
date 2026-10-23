@@ -79,8 +79,11 @@ apps are native views (D30).
   Python Program" action in the Shortcuts app and add it to the Home
   Screen; tapping it opens the app and runs the program (a ui app full
   screen). `terrarium://run?path=<path>` links do the same.
-- **Title bar** (iPhone): the file name without ".py", cut in the middle
-  when long; Run sits in one group with the agent and ⋯ buttons.
+- **Bar** (iPhone, a closed iPhone Duo; D62): no title. Go to, Find (a
+  long press: Find in Folder) and Problems (red or orange when there are
+  any) on the left, the agent, ⋯ and Run on the right; on the closed Duo
+  all of them are in the vertical bar. The active tab is the title: tap it
+  for the outline; a problem count on it opens the problems.
 - **Top row** (iPad, an open iPhone Duo, a Pro Max in landscape; D61): no
   navigation bar, one row with the files toggle, the tabs, split view, the
   other half's icons, ⋯ and Run (Stop, Continue; Pause and the debugger's
@@ -93,20 +96,20 @@ apps are native views (D30).
   - Long-press a tab for Close, Close Others and Open in Split View.
   - On iPad, split view shows two panes with a draggable divider. Each pane
     has its own tabs, and the same file in both panes stays in sync.
-  - Tabs come back after a relaunch. On iPhone the tab strip appears once
-    two files are open.
+  - Tabs come back after a relaunch. On iPhone the tab strip shows whenever
+    a file is open (its active tab is the title, D62).
 - **Go to definition** (ty): "Jump to Definition" in the text selection menu
   (next to Copy/Paste), in the ⋯ menu, on F12 or with ⌘-click. It works across
   the program's folder (sibling modules) and into the standard library and the
   `ui` module, which open as read-only tabs.
 - **Getting around**:
-  - Tap the file name in the nav bar (the active tab, wide) for an outline
+  - Tap the active tab (or Go to on iPhone) for an outline
     of its classes and functions with a filter. Typing a number offers "Go
     to Line N".
   - Find in Folder searches the text files of the current folder.
   - Wide, the sidebar is a navigator (D61): Files, Outline (follows the
     edits and marks the symbol with the cursor), Find and Problems. On iPhone
-    these are sheets.
+    these are sheets, behind the bar's three buttons (D62).
   - Show Info shows ty's signature and docstring for a name. It's in the
     selection menu and the ⋯ menu, or ⌥-click.
 - **Settings** (⌘, or the ⋯ menus): appearance (system, light, dark),

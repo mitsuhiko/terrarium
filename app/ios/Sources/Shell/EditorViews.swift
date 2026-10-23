@@ -20,7 +20,7 @@ struct EditorScreen: View {
             // the tabs go up into the top inset like the open one's (D58).
             let lift = model.verticalBar ? topLift(inset: geo.safeAreaInsets.top) : 0
             VStack(spacing: 0) {
-                if model.panes[0].tabs.count > 1 || model.verticalBar { TabStrip(pane: 0) }
+                if !model.panes[0].tabs.isEmpty || model.verticalBar { TabStrip(pane: 0) }
                 ZStack(alignment: .bottom) {
                     EditorPaneView(pane: 0)
                         .padding(.bottom, model.editorFocused ? 0 : ConsolePanel.peek - lowered)
@@ -269,8 +269,8 @@ struct TabStrip: View {
             if running { Circle().fill(.green).frame(width: 6, height: 6) }
             if isExternal(path) { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary) }
             Text(tabLabel(path)).font(.subheadline).lineLimit(1)
-            if active && model.wide, model.problems[min(pane, 1)].total > 0 {
-                // What the title's subtitle said (D61): the count opens the problems.
+            if active, model.problems[min(pane, 1)].total > 0 {
+                // The count opens the problems (D61, D62).
                 let counts = model.problems[min(pane, 1)]
                 Button {
                     model.focusedPane = pane
@@ -284,8 +284,8 @@ struct TabStrip: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(counts.total == 1 ? "1 problem" : "\(counts.total) problems")
             }
-            if active && (model.verticalBar || model.wide) {
-                // The title's place (D58, D61): the active tab opens "Go to".
+            if active {
+                // The title's place (D58, D61, D62): the active tab opens "Go to".
                 Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             }
             Button {
@@ -302,7 +302,7 @@ struct TabStrip: View {
         .background(active ? Color(.systemBackground) : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture {
-            // The active tab, tapped again: go to a symbol or line, like the title.
+            // The active tab, tapped again: go to a symbol or line.
             if active {
                 model.focusedPane = pane
                 model.goTo("")
@@ -324,9 +324,10 @@ struct TabStrip: View {
     }
 }
 
-/// The navigation bar where there is one (D61): on iPhone the file name
-/// (opens "Go to"), its status, the agent, ⋯ and Run; on an open iPhone Duo
-/// the system's vertical bar with the files toggle, Jump to Definition, Show
+/// The navigation bar where there is one (D61, D62): on iPhone (and a
+/// closed iPhone Duo's vertical bar) Go to, Find and Problems, the agent, ⋯
+/// and Run, with the active tab as the title; on an open iPhone Duo the
+/// system's vertical bar with the files toggle, Jump to Definition, Show
 /// Info, Settings, the debugger, ⋯ and Run
 /// (D58). The other wide layouts have none: the top row has it all.
 private struct EditorChrome: ViewModifier {
@@ -339,14 +340,23 @@ private struct EditorChrome: ViewModifier {
             .toolbar(model.wide && !model.verticalBar ? .hidden : .automatic, for: .navigationBar)
             .toolbar {
                 if !model.wide {
-                    // With a vertical bar (closed iPhone Duo) the active tab is the title (D58).
-                    if !model.verticalBar { ToolbarItem(placement: .principal) { title(file) } }
-                    // One item with the buttons close together: a group spaces
-                    // them wider than the title can afford on iPhone.
-                    TrailingButtons(vertical: model.verticalBar) {
-                        AgentButton()
-                        MoreMenu()
-                        RunButton()
+                    if model.verticalBar {
+                        // A closed iPhone Duo: all in the vertical bar (D58).
+                        TrailingButtons(vertical: true) {
+                            navigatorButtons(file)
+                            AgentButton()
+                            MoreMenu()
+                            RunButton()
+                        }
+                    } else {
+                        // One item per side with the buttons close together: a
+                        // group spaces them wider than an iPhone's bar can afford.
+                        ToolbarItem(placement: .topBarLeading) { TightButtons { navigatorButtons(file) } }
+                        TrailingButtons(vertical: false) {
+                            AgentButton()
+                            MoreMenu()
+                            RunButton()
+                        }
                     }
                 } else if model.verticalBar {
                     ToolbarItemGroup(placement: .topBarTrailing) {
@@ -396,92 +406,31 @@ private struct EditorChrome: ViewModifier {
             }
     }
 
-    /// Room for the title on iPhone: between the back button and the group of
-    /// buttons on the right (about 228 pt together).
-    private var titleWidth: CGFloat {
-        // With a vertical bar the buttons are on the side (D58).
-        model.wide ? min(420, model.windowWidth * 0.4) : max(90, model.windowWidth - (model.verticalBar ? 120 : 228))
-    }
-
-    /// The file name, cut in the middle when it doesn't fit. Toolbar buttons
-    /// keep their label's ideal size (it would run under the other buttons),
-    /// so the text gets an exact width: its own, or what is left.
-    /// The title leaves out ".py": nearly every file is one, and the room is short.
-    private func titleLabel(_ path: String) -> String {
-        let name = tabLabel(path)
-        return name.hasSuffix(".py") && name.count > 3 ? String(name.dropLast(3)) : name
-    }
-
-    private func fileName(_ name: String) -> some View {
-        CappedWidth(limit: titleWidth - 16) {
-            Text(name).font(.headline).lineLimit(1).truncationMode(.middle)
-        }
-    }
-
-    private func title(_ file: String?) -> some View {
-        VStack(spacing: 0) {
-            if let file {
-                Button { model.goTo("") } label: {
-                    HStack(spacing: 3) {
-                        fileName(titleLabel(file))
-                        Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
-                    }
-                }
-                .tint(.primary)
-                .accessibilityLabel("\(tabLabel(file)): go to a symbol or line")
-            } else {
-                Text("Terrarium").font(.headline)
-            }
-            subtitle(file).lineLimit(1)
-        }
-    }
-
+    /// The navigator's panes as buttons (D62): what the wide layouts' sidebar
+    /// has, as sheets. Find is the file's; a long press finds in the folder.
     @ViewBuilder
-    private func subtitle(_ file: String?) -> some View {
-        let s = model.session
+    private func navigatorButtons(_ file: String?) -> some View {
         let counts = model.problems[min(model.focused, 1)]
-        if let debug = s.debug, let frame = debug.frames.first {
-            Text(debug.postMortem ? "Error in \(frame.label)" : "Paused · line \(frame.line)")
-                .font(.caption).foregroundStyle(debug.postMortem ? .red : .green)
-        } else if let kernel = s.kernel, kernel.path == file, s.running {
-            // A notebook's cell (D44).
-            Text(kernel.cell.map { "Running cell [\($0)]…" } ?? "Starting Python…").font(.caption).foregroundStyle(.green)
-        } else if s.running && s.runningFile == file, let run = s.lastRun {
-            Text(run.summary(awaitingInput: s.awaitingInput)).font(.caption).foregroundStyle(.green)
-        } else if let file, isExternal(file) {
-            Text("Read only").font(.caption).foregroundStyle(.secondary)
-        } else if counts.total > 0 {
-            Button { model.showProblems() } label: {
-                Label(counts.total == 1 ? "1 problem" : "\(counts.total) problems", systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption)
+        Button { model.goTo("") } label: { Image(systemName: NavigatorPane.outline.symbol) }
+            .accessibilityLabel("Go to")
+            .disabled(file == nil)
+        Menu {
+            Button { model.findInFolder() } label: {
+                Label("Find in \(file.map { displayName(dirname($0)) } ?? "Files")…", systemImage: "doc.text.magnifyingglass")
             }
-            .tint(counts.errors > 0 ? .red : .orange)
-        } else if let kernel = s.kernel, kernel.path == file, !kernel.python.isEmpty {
-            Text("Python \(kernel.python) kernel").font(.caption).foregroundStyle(.secondary)
-        } else if model.wide, let file, !dirname(file).isEmpty {
-            Text(displayName(dirname(file))).font(.caption).foregroundStyle(.secondary)
+        } label: {
+            Image(systemName: NavigatorPane.find.symbol)
+        } primaryAction: {
+            model.find()
         }
-    }
-
-}
-
-/// Gives its one subview its ideal width, but no more than `limit`, whatever
-/// it is offered. Measures the text as it is drawn: in a navigation bar
-/// Dynamic Type is capped, so a `UIFont.preferredFont` estimate is too wide.
-private struct CappedWidth: Layout {
-    var limit: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        guard let view = subviews.first else { return .zero }
-        let ideal = view.sizeThatFits(.unspecified)
-        if ideal.width <= limit { return CGSize(width: ceil(ideal.width), height: ideal.height) }
-        // Cut text can be narrower than the room it was given.
-        let cut = view.sizeThatFits(ProposedViewSize(width: limit, height: nil))
-        return CGSize(width: min(ceil(cut.width), limit), height: cut.height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
+        .accessibilityLabel("Find")
+        .disabled(file == nil)
+        Button { model.showProblems() } label: {
+            Image(systemName: counts.total > 0 ? "exclamationmark.triangle.fill" : NavigatorPane.problems.symbol)
+        }
+        .tint(counts.errors > 0 ? .red : counts.total > 0 ? .orange : nil)
+        .accessibilityLabel(counts.total == 0 ? "No problems" : counts.total == 1 ? "1 problem" : "\(counts.total) problems")
+        .disabled(counts.total == 0)
     }
 }
 
