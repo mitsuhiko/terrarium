@@ -124,12 +124,12 @@ extension AppModel {
         sidebarSlidesOver && sidebarVisible && rect.minX < slideOverWidth
     }
 
-    /// Where the slid-over sidebar's dimming ends: at the other half when
-    /// that is beside the code and clear of the sidebar, else at the
-    /// window's edge.
-    var slideOverDimEnd: CGFloat {
+    /// Where the slid-over sidebar's dimming ends (global): at the other half
+    /// when that is beside the code and clear of the sidebar, else (nil) at
+    /// the window's edge.
+    var slideOverDimEnd: CGFloat? {
         if panelShown, panelSideBySide, let rect = panelSlot?.rect, rect.minX >= slideOverWidth { return rect.minX }
-        return windowWidth
+        return nil
     }
 
     /// The first pane on screen (its row starts with the files toggle).

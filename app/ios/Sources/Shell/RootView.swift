@@ -20,7 +20,12 @@ struct RootView: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
             Group {
-                if sizeClass == .regular {
+                // On model.wide, not the size class: setWide runs after the
+                // render that brings the new size class. A layout made in that
+                // render saw the other layout's `wide` (the wide one with the
+                // narrow navigation bar, its sidebar's onChange late) and
+                // sometimes kept it: SwiftUI lost the update that followed.
+                if model.wide {
                     WideLayout()
                 } else {
                     NarrowLayout()
@@ -158,7 +163,8 @@ private struct SlideOverSidebar: View {
             ZStack(alignment: .leading) {
                 // Over the code; the other half beside it stays live (an open Duo's other screen).
                 GeometryReader { geo in
-                    let end = model.slideOverDimEnd - geo.frame(in: .global).minX
+                    // To the window's edge: windowWidth leaves out the side insets, this doesn't.
+                    let end = model.slideOverDimEnd.map { $0 - geo.frame(in: .global).minX } ?? geo.size.width
                     Color.black.opacity(0.18)
                         .frame(width: max(0, end))
                         .contentShape(Rectangle())
