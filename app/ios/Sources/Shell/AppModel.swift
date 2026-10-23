@@ -887,6 +887,10 @@ final class AppModel {
         self.wide = wide
         if wide {
             route.removeAll { $0 == .editor }
+            // The half's agent and docs are back: their sheets go. Here, not
+            // only in RootView's onChange: folding and unfolding between two
+            // renders leaves agentInPanel as it was, and the sheet stayed.
+            panelRolesShown()
             return
         }
         guard wasWide, let shown else { return }

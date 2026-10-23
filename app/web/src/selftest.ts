@@ -17,7 +17,8 @@ async function until<T>(fn: () => T | undefined | null | false | Promise<T | und
   for (;;) {
     const v = await fn();
     if (v) return v;
-    if (performance.now() - t0 > timeout) throw new Error("timed out");
+    // Which wait it was: the condition's source, shortened.
+    if (performance.now() - t0 > timeout) throw new Error(`timed out: ${String(fn).replace(/\s+/g, " ").slice(0, 160)}`);
     await sleep(50);
   }
 }
@@ -1060,7 +1061,10 @@ export async function selftest() {
       });
     };
     await expectDocs("help(json.loads)", "library/json.html#json.loads");
-    if (!consoleText().includes("Opened the Python 3.14 documentation")) throw new Error(consoleText());
+    // The docs can open before the console has the line that says so.
+    await until(() => consoleText().includes("Opened the Python 3.14 documentation"), 5000).catch(() => {
+      throw new Error(`no "Opened" line: ${consoleText().slice(-300)}`);
+    });
     await expectDocs("help(pathlib.Path.glob)", "library/pathlib.html#pathlib.Path.glob");
     await expectDocs("help(str.split)", "builtins/stdtypes.html#str.split");
     await expectDocs("help('json')", "library/json.html#module-json");
