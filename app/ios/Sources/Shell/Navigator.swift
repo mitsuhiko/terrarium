@@ -8,21 +8,11 @@ struct NavigatorView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        @Bindable var model = model
         VStack(spacing: 0) {
             NavigatorPicker()
             switch model.navigator {
             case .files:
-                NavigationStack(path: $model.route) {
-                    FileBrowserView(dir: "")
-                        .navigationDestination(for: Route.self) { route in
-                            switch route {
-                            case .folder(let dir): FileBrowserView(dir: dir)
-                            case .trash: TrashView()
-                            case .editor: EmptyView()
-                            }
-                        }
-                }
+                SidebarFiles()
             case .outline:
                 OutlinePane()
             case .find:
@@ -32,6 +22,91 @@ struct NavigatorView: View {
             }
         }
         .background(Color(.systemGroupedBackground))
+    }
+}
+
+extension EnvironmentValues {
+    /// In the wide layout's sidebar: the files draw their own header (SidebarFiles).
+    @Entry var inSidebar = false
+}
+
+/// The sidebar's files: the top of `model.route`, with a header of its own,
+/// not in a NavigationStack. A navigation controller in the sidebar laid its
+/// content out for the window's vertical bar on an iPhone Duo (D58): it
+/// added the bar's inset (84 pt) at the sidebar's trailing edge, far from the
+/// bar, and put a pushed folder's back button there.
+private struct SidebarFiles: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let top = model.route.last { $0 != .editor }
+        ZStack {
+            Group {
+                switch top {
+                case .folder(let dir): FileBrowserView(dir: dir)
+                case .trash: TrashView()
+                default: FileBrowserView(dir: "")
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemGroupedBackground))
+            .id("\(model.route.count):\(top.map { String(describing: $0) } ?? "")")
+            .transition(.asymmetric(insertion: .move(edge: model.routeDeeper ? .trailing : .leading), removal: .opacity))
+        }
+        .clipped()
+        .animation(.smooth(duration: 0.25), value: model.route)
+        .environment(\.inSidebar, true)
+    }
+}
+
+/// The sidebar files' header: back (in a folder or the Trash), the title and
+/// the folder's buttons, in the place of a navigation bar.
+struct SidebarHeader<Buttons: View>: View {
+    let title: String
+    @ViewBuilder var buttons: Buttons
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if !model.route.isEmpty {
+                Button { model.route.removeLast() } label: {
+                    Image(systemName: "chevron.left").font(.body.weight(.semibold)).frame(width: 34, height: 34)
+                }
+                .accessibilityLabel("Back")
+            }
+            Text(title).font(.headline).lineLimit(1)
+                .padding(.leading, model.route.isEmpty ? 8 : 0)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 8)
+            buttons.frame(minWidth: 34, minHeight: 34)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 44)
+    }
+}
+
+/// A row that opens a folder or the Trash: a navigation link on iPhone, a
+/// push onto the sidebar's own stack when wide.
+struct RouteLink<Label: View>: View {
+    let route: Route
+    @ViewBuilder var label: Label
+    @Environment(AppModel.self) private var model
+    @Environment(\.inSidebar) private var inSidebar
+
+    var body: some View {
+        if inSidebar {
+            Button { model.route.append(route) } label: {
+                HStack(spacing: 8) {
+                    label
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.forward").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .tint(.primary)
+        } else {
+            NavigationLink(value: route) { label }
+        }
     }
 }
 

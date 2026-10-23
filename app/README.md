@@ -291,9 +291,10 @@ apps are native views (D30).
   gets the console back and the running program is marked crashed.
 - **Layouts**: on iPhone, Files → Code/Console; on iPad, a sidebar with the
   editor and console side by side (stacked in portrait). When the files, an
-  editor of about 60 columns and the other half don't fit side by side (a
-  Pro Max in landscape, an iPad mini, portrait), the sidebar slides over the
-  code instead of squeezing it (D61).
+  editor of about 60 columns and the other half don't fit side by side (an
+  iPad mini, portrait), and always on a phone (an open iPhone Duo, a Pro Max
+  in landscape), the sidebar slides over the code instead of squeezing it;
+  a half beside it stays live (D61).
 - **The other half** (D59, D61): where the console docks on iPad (and an
   open iPhone Duo) it shows the console, the agent, the running ui app or
   the docs. Its icons are in the top row: a tap shows the half on that, a

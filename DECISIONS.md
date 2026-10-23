@@ -2262,6 +2262,35 @@ landscape. Screenshots: Pro Max (both orientations), iPad mini, iPad Pro 11,
 the closed Duo. Open: the open Duo (its vertical bar with the new row) is
 not checked, folding can't be scripted.
 
+Note (2026-10-23): the open Duo's sidebar came up in several ways: as a
+column or sliding over, depending on the rotation, whether the other half
+was beside the code and the font size, and its files laid out for a
+vertical bar of their own. Now:
+- **On a phone the sidebar always slides over** (`sidebarSlidesOver`: the
+  open Duo, a Pro Max in landscape); iPads keep the rule above. It starts
+  closed, and asking for a half (its icons, the agent, the docs, Run)
+  closes it.
+- **A half past the sidebar stays** (`sidebarCovers`): on the open Duo the
+  other screen keeps its agent, docs or app, isn't dimmed and takes its
+  own taps; the dimming covers the code only. Halves under the sidebar are
+  hidden as before.
+- **The sidebar's files have no NavigationStack.** A navigation controller
+  in the sidebar added the window's vertical bar inset (84 pt) at the
+  sidebar's trailing edge, far from the bar: the list was narrower than
+  the sidebar, and a pushed folder's back button sat alone in that strip.
+  Neither `axisBehavior` nor ignoring the safe area helps, and
+  `preferredVerticalBarBehavior` is per window. The files are now a stack
+  of our own over `route` with a header like the other panes' (back, title,
+  ⋯, new file) and a search field; iPhone keeps its navigation stack.
+
+Evidence (the iPhone Duo simulator, open in DeviceHub, landscape): the
+sidebar's list fills it (cells 12..328 of 340 pt), folders and the Trash
+push and pop, the docs half stays beside it; the new header in the iPad
+Pro 11-inch simulator (iOS 27.0). The self-test (`--reset`) passes 87 of
+89 open, the same two (`help_opens_docs`, `halves`) failing before these
+changes; both pass alone. Not seen: the open Duo in portrait (XCUIDevice
+doesn't turn the inner screen).
+
 ## Proposed (not yet decided)
 
 (none)

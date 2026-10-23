@@ -60,10 +60,18 @@ extension AppModel {
 
     /// The other half on `role`, shown.
     func showHalf(_ role: PanelRole) {
+        uncoverHalves()
         withAnimation(.smooth(duration: 0.25)) {
             setPanelRole(role)
             consoleDocked = true
         }
+    }
+
+    /// A sidebar that slides over goes when the halves are asked for (the
+    /// agent, the docs, a half's icon): it covers them, and while it is up
+    /// their overlays are hidden (HalfOverlays).
+    func uncoverHalves() {
+        if sidebarSlidesOver && sidebarVisible { withAnimation { sidebarVisible = false } }
     }
 
     /// The half's icon: shows the half on it, or hides the half if it shows it already.
@@ -88,9 +96,13 @@ extension AppModel {
 
     /// The sidebar slides over the workspace instead of pushing it (D61):
     /// files, an editor of about 60 columns and the other half next to it
-    /// don't fit side by side. Never three columns squeezed.
+    /// don't fit side by side. Never three columns squeezed. On a phone (an
+    /// open iPhone Duo, a Pro Max in landscape) it always slides over: one
+    /// way, not one that changes with the rotation, the other half or the
+    /// font size.
     var sidebarSlidesOver: Bool {
         guard wide else { return false }
+        if UIDevice.current.userInterfaceIdiom == .phone { return true }
         let sidebar: CGFloat = 320
         let editor = CGFloat(settings.fontSize) * 0.6 * 60 + 48
         var half: CGFloat = 0
@@ -99,6 +111,24 @@ extension AppModel {
             half = panelRatio.map { rest * $0 } ?? max(320, rest * 0.38)
         }
         return sidebar + editor + half > windowWidth
+    }
+
+    /// The sidebar's width when it slides over.
+    var slideOverWidth: CGFloat { min(340, windowWidth * 0.8) }
+
+    /// The sidebar is sliding over and covers this part of the window
+    /// (global coordinates). A half past it (the open Duo's other screen)
+    /// stays as it is: shown, not dimmed, and its taps are its own.
+    func sidebarCovers(_ rect: CGRect) -> Bool {
+        sidebarSlidesOver && sidebarVisible && rect.minX < slideOverWidth
+    }
+
+    /// Where the slid-over sidebar's dimming ends: at the other half when
+    /// that is beside the code and clear of the sidebar, else at the
+    /// window's edge.
+    var slideOverDimEnd: CGFloat {
+        if panelShown, panelSideBySide, let rect = panelSlot?.rect, rect.minX >= slideOverWidth { return rect.minX }
+        return windowWidth
     }
 
     /// The first pane on screen (its row starts with the files toggle).

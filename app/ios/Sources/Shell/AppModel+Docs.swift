@@ -17,7 +17,7 @@ extension AppModel {
     func showDocs(_ target: DocsTarget) {
         // Wide, in the other half, shown on the docs (D61); a sheet on iPhone.
         if wide {
-            if !docsInPanel { showHalf(.docs) }
+            if docsInPanel { uncoverHalves() } else { showHalf(.docs) }
             panelDocs?.open(target)
             return
         }

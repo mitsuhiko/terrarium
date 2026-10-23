@@ -8,8 +8,35 @@ struct TrashView: View {
     @Environment(AppModel.self) private var model
     @State private var items: [Trash.Item]?
     @State private var emptying = false
+    @Environment(\.inSidebar) private var inSidebar
 
     var body: some View {
+        Group {
+            if inSidebar {
+                // The sidebar's own header (D61), not a navigation bar.
+                VStack(spacing: 0) {
+                    SidebarHeader(title: "Trash") { emptyButton.padding(.trailing, 6) }
+                    list.contentMargins(.top, 8, for: .scrollContent).contentMargins(.horizontal, 12, for: .scrollContent)
+                }
+            } else {
+                list
+                    .navigationTitle("Trash")
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { emptyButton } }
+            }
+        }
+        .confirmationDialog("Delete everything in the Trash?", isPresented: $emptying, titleVisibility: .visible) {
+            Button("Empty Trash", role: .destructive) { Task { await model.emptyTrash() } }
+        } message: {
+            Text("This cannot be undone.")
+        }
+        .task(id: model.fileListVersion) { items = await model.trashItems() }
+    }
+
+    private var emptyButton: some View {
+        Button("Empty", role: .destructive) { emptying = true }.disabled(items?.isEmpty ?? true)
+    }
+
+    private var list: some View {
         List {
             if let items {
                 if items.isEmpty {
@@ -24,18 +51,6 @@ struct TrashView: View {
                 }
             }
         }
-        .navigationTitle("Trash")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Empty", role: .destructive) { emptying = true }.disabled(items?.isEmpty ?? true)
-            }
-        }
-        .confirmationDialog("Delete everything in the Trash?", isPresented: $emptying, titleVisibility: .visible) {
-            Button("Empty Trash", role: .destructive) { Task { await model.emptyTrash() } }
-        } message: {
-            Text("This cannot be undone.")
-        }
-        .task(id: model.fileListVersion) { items = await model.trashItems() }
     }
 
     private func row(_ item: Trash.Item) -> some View {

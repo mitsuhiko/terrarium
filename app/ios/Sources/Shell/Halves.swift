@@ -59,6 +59,7 @@ extension AppModel {
     /// Puts the app next to the code: in the half that is set to show it, or
     /// if none is, in the other half (shown if it was hidden).
     func showAppInHalf() {
+        uncoverHalves()
         withAnimation(.smooth(duration: 0.3)) {
             if !halfShowsApp {
                 setPanelRole(.app)
@@ -283,15 +284,15 @@ struct HalfOverlays: View {
     var body: some View {
         GeometryReader { root in
             let origin = root.frame(in: .global).origin
-            // An iPad's sidebar in portrait slides over the workspace: it covers them too.
-            // So does the sidebar sliding over a short window (D61); their own
-            // hosting controllers would draw over it.
-            let shown = model.wide && !model.sidebarOverlaps && !(model.sidebarSlidesOver && model.sidebarVisible)
+            // The sidebar sliding over the workspace (D61) hides those it
+            // covers: their own hosting controllers would draw over it. Those
+            // past it stay (on an open Duo, the other screen).
+            let shown = model.wide && !model.sidebarOverlaps
             ZStack(alignment: .topLeading) {
-                if shown, model.mainRole == .app, let rect = model.mainSlot?.rect {
+                if shown, model.mainRole == .app, let rect = model.mainSlot?.rect, !model.sidebarCovers(rect) {
                     AppHalf().place(rect, origin)
                 }
-                if shown, model.panelShown, let rect = model.panelSlot?.rect {
+                if shown, model.panelShown, let rect = model.panelSlot?.rect, !model.sidebarCovers(rect) {
                     switch model.panelRole {
                     case .console:
                         EmptyView()

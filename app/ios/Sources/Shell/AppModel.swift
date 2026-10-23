@@ -159,7 +159,11 @@ final class AppModel {
     // workspace
     var panes: [Pane] = [Pane()]
     var focusedPane = 0
-    var route: [Route] = [] // iPhone: folders and the editor; iPad: folders in the sidebar
+    var route: [Route] = [] { // iPhone: folders and the editor; iPad: folders in the sidebar
+        didSet { routeDeeper = route.count >= oldValue.count }
+    }
+    /// The last change of `route` went deeper: the sidebar's files slide in from the trailing edge, else the leading one.
+    var routeDeeper = true
     var wide = false
     /// The window's width: the editor's title must fit between the bar's buttons.
     var windowWidth: CGFloat = 390
@@ -1046,7 +1050,7 @@ final class AppModel {
         var code = await editorCall(focused, "text") as? String
         if code == nil { code = try? await readText(file) }
         await editorCall(focused, "blur")
-        if wide { consoleDocked = true }
+        if wide { consoleDocked = true; uncoverHalves() }
         await command("runFile", ["path": file, "code": code ?? ""])
     }
 

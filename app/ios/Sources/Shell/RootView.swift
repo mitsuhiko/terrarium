@@ -143,7 +143,8 @@ private struct WideLayout: View {
         .animation(.smooth(duration: 0.25), value: column)
         // Into a short window (rotating, the other half beside the code): the
         // sidebar doesn't come up over the code by itself.
-        .onChange(of: model.sidebarSlidesOver) { _, over in if over { model.sidebarVisible = false } }
+        // It starts closed there too (an iPhone unfolded or rotated to the wide layout).
+        .onChange(of: model.sidebarSlidesOver, initial: true) { _, over in if over { model.sidebarVisible = false } }
     }
 }
 
@@ -155,13 +156,19 @@ private struct SlideOverSidebar: View {
     var body: some View {
         if model.wide && model.sidebarSlidesOver && model.sidebarVisible {
             ZStack(alignment: .leading) {
-                Color.black.opacity(0.18)
-                    .ignoresSafeArea()
-                    .onTapGesture { withAnimation { model.sidebarVisible = false } }
-                    .accessibilityLabel("Close the sidebar")
-                    .accessibilityAddTraits(.isButton)
+                // Over the code; the other half beside it stays live (an open Duo's other screen).
+                GeometryReader { geo in
+                    let end = model.slideOverDimEnd - geo.frame(in: .global).minX
+                    Color.black.opacity(0.18)
+                        .frame(width: max(0, end))
+                        .contentShape(Rectangle())
+                        .onTapGesture { withAnimation { model.sidebarVisible = false } }
+                        .accessibilityLabel("Close the sidebar")
+                        .accessibilityAddTraits(.isButton)
+                }
+                .ignoresSafeArea()
                 NavigatorView()
-                    .frame(width: min(340, model.windowWidth * 0.8))
+                    .frame(width: model.slideOverWidth)
                     .background(Color(.systemGroupedBackground).ignoresSafeArea())
                     .clipShape(.rect(bottomTrailingRadius: 16, topTrailingRadius: 16))
                     .shadow(color: .black.opacity(0.2), radius: 16)

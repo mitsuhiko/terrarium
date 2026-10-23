@@ -18,6 +18,7 @@ struct FileBrowserView: View {
     @AppStorage("sort") private var sort = "name"
     @State private var trashCount = 0
     @State private var favoriteEntries: [Entry] = []
+    @Environment(\.inSidebar) private var inSidebar
 
     struct Entry: Identifiable, Hashable {
         let name: String
@@ -47,6 +48,103 @@ struct FileBrowserView: View {
     }
 
     var body: some View {
+        chrome(list)
+            .task(id: "\(dir)#\(model.fileListVersion)") { await load() }
+            .refreshable { await load() }
+            .alert(title(naming), isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
+                TextField("Name", text: $name)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                Button("Cancel", role: .cancel) { naming = nil }
+                Button(naming.map { if case .rename = $0 { "Rename" } else { "Create" } } ?? "OK") { commitName() }
+            }
+            .confirmationDialog(deleting.map { "Delete “\($0.name)”\($0.dir ? " and everything in it" : "")?" } ?? "",
+                                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                                titleVisibility: .visible, presenting: deleting) { entry in
+                Button("Delete", role: .destructive) { Task { await model.delete(entry.path) } }
+            } message: { _ in
+                Text("It goes to the folder's trash if it has one (iCloud Drive's Recently Deleted), otherwise it is gone.")
+            }
+            .confirmationDialog(unlinking.map { "Remove “\($0.name)” from Locations?" } ?? "",
+                                isPresented: Binding(get: { unlinking != nil }, set: { if !$0 { unlinking = nil } }),
+                                titleVisibility: .visible, presenting: unlinking) { location in
+                Button("Remove", role: .destructive) { Task { await model.unlink(location.path) } }
+            } message: { _ in
+                Text("Its files stay where they are.")
+            }
+            .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
+                if case .success(let url) = result, let path = model.linkFolder(url) {
+                    model.route.append(.folder(path))
+                }
+            }
+    }
+
+    /// The title, search and buttons: a navigation bar on iPhone, the
+    /// sidebar's own header when wide (D61).
+    @ViewBuilder
+    private func chrome(_ list: some View) -> some View {
+        if inSidebar {
+            VStack(spacing: 0) {
+                SidebarHeader(title: displayName(dir)) {
+                    HStack(spacing: 0) {
+                        moreMenu.frame(width: 34, height: 34)
+                        newFileButton.frame(width: 34, height: 34)
+                    }
+                }
+                TextField("Search", text: $query)
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 4)
+                list.contentMargins(.top, 8, for: .scrollContent).contentMargins(.horizontal, 12, for: .scrollContent)
+            }
+        } else {
+            list
+                .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic))
+                .navigationTitle(displayName(dir))
+                .toolbar {
+                    // On an iPhone Duo's outer screen they go into the vertical bar (D58).
+                    TrailingButtons(vertical: model.verticalBar && !model.wide) {
+                        moreMenu
+                        // Wide, the editor's bar has the agent (one button, not two, D58).
+                        if !model.wide { AgentButton(project: projectRoot(dir)) }
+                        newFileButton
+                    }
+                }
+        }
+    }
+
+    private var moreMenu: some View {
+        Menu {
+            Section {
+                Button { ask(.newFile) } label: { Label("New File", systemImage: "doc.badge.plus") }
+                Button { ask(.newFolder) } label: { Label("New Folder", systemImage: "folder.badge.plus") }
+                Button { importing = true } label: { Label("Open Folder…", systemImage: "folder") }
+            }
+            Section {
+                Picker("Sort", selection: $sort) {
+                    Label("Name", systemImage: "textformat").tag("name")
+                    Label("Date", systemImage: "calendar").tag("date")
+                }
+            }
+            Section {
+                Button { model.findInFolder() } label: { Label("Find in \(displayName(dir))…", systemImage: "magnifyingglass") }
+                Button { model.showDocs() } label: { Label("Python Docs", systemImage: "book") }
+                Button { model.activeSheet = .settings } label: { Label("Settings…", systemImage: "gearshape") }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .accessibilityLabel("More")
+    }
+
+    private var newFileButton: some View {
+        Button { ask(.newFile) } label: { Image(systemName: "square.and.pencil") }
+            .accessibilityLabel("New file")
+    }
+
+    private var list: some View {
         List {
             if let error {
                 Text(error).foregroundStyle(.red).font(.footnote)
@@ -93,7 +191,7 @@ struct FileBrowserView: View {
             }
             if dir.isEmpty && query.isEmpty {
                 Section {
-                    NavigationLink(value: Route.trash) {
+                    RouteLink(route: .trash) {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Trash")
@@ -107,66 +205,6 @@ struct FileBrowserView: View {
             }
         }
         .listStyle(.insetGrouped)
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic))
-        .navigationTitle(displayName(dir))
-        .toolbar {
-            // On an iPhone Duo's outer screen they go into the vertical bar (D58).
-            TrailingButtons(vertical: model.verticalBar && !model.wide) {
-                    Menu {
-                        Section {
-                            Button { ask(.newFile) } label: { Label("New File", systemImage: "doc.badge.plus") }
-                            Button { ask(.newFolder) } label: { Label("New Folder", systemImage: "folder.badge.plus") }
-                            Button { importing = true } label: { Label("Open Folder…", systemImage: "folder") }
-                        }
-                        Section {
-                            Picker("Sort", selection: $sort) {
-                                Label("Name", systemImage: "textformat").tag("name")
-                                Label("Date", systemImage: "calendar").tag("date")
-                            }
-                        }
-                        Section {
-                            Button { model.findInFolder() } label: { Label("Find in \(displayName(dir))…", systemImage: "magnifyingglass") }
-                            Button { model.showDocs() } label: { Label("Python Docs", systemImage: "book") }
-                            Button { model.activeSheet = .settings } label: { Label("Settings…", systemImage: "gearshape") }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                    }
-                    .accessibilityLabel("More")
-                    // Wide, the editor's bar has the agent (one button, not two, D58).
-                    if !model.wide { AgentButton(project: projectRoot(dir)) }
-                    Button { ask(.newFile) } label: { Image(systemName: "square.and.pencil") }
-                        .accessibilityLabel("New file")
-            }
-        }
-        .task(id: "\(dir)#\(model.fileListVersion)") { await load() }
-        .refreshable { await load() }
-        .alert(title(naming), isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
-            TextField("Name", text: $name)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            Button("Cancel", role: .cancel) { naming = nil }
-            Button(naming.map { if case .rename = $0 { "Rename" } else { "Create" } } ?? "OK") { commitName() }
-        }
-        .confirmationDialog(deleting.map { "Delete “\($0.name)”\($0.dir ? " and everything in it" : "")?" } ?? "",
-                            isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-                            titleVisibility: .visible, presenting: deleting) { entry in
-            Button("Delete", role: .destructive) { Task { await model.delete(entry.path) } }
-        } message: { _ in
-            Text("It goes to the folder's trash if it has one (iCloud Drive's Recently Deleted), otherwise it is gone.")
-        }
-        .confirmationDialog(unlinking.map { "Remove “\($0.name)” from Locations?" } ?? "",
-                            isPresented: Binding(get: { unlinking != nil }, set: { if !$0 { unlinking = nil } }),
-                            titleVisibility: .visible, presenting: unlinking) { location in
-            Button("Remove", role: .destructive) { Task { await model.unlink(location.path) } }
-        } message: { _ in
-            Text("Its files stay where they are.")
-        }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result, let path = model.linkFolder(url) {
-                model.route.append(.folder(path))
-            }
-        }
     }
 
     // MARK: rows
@@ -175,7 +213,7 @@ struct FileBrowserView: View {
         let selected = entry.path == model.file
         return Group {
             if entry.dir {
-                NavigationLink(value: Route.folder(entry.path)) { EntryLabel(entry: entry, location: false, favorite: model.isFavorite(entry.path)) }
+                RouteLink(route: .folder(entry.path)) { EntryLabel(entry: entry, location: false, favorite: model.isFavorite(entry.path)) }
             } else {
                 Button {
                     // Images, PDFs, audio and documents open in Quick Look, text in the editor.
@@ -233,7 +271,7 @@ struct FileBrowserView: View {
         let path = entry.path, name = entry.name
         return Group {
             if entry.dir {
-                NavigationLink(value: Route.folder(path)) { FavoriteLabel(entry: entry) }
+                RouteLink(route: .folder(path)) { FavoriteLabel(entry: entry) }
             } else {
                 Button {
                     if AppModel.isPreviewable(name) { model.quickLook(path) } else { Task { await model.openFile(path) } }
@@ -253,7 +291,7 @@ struct FileBrowserView: View {
         let entry = Entry(name: location.name, path: location.path, dir: true, size: location.available ? 1 : 0, mtime: 0)
         return Group {
             if location.available {
-                NavigationLink(value: Route.folder(location.path)) { EntryLabel(entry: entry, location: true) }
+                RouteLink(route: .folder(location.path)) { EntryLabel(entry: entry, location: true) }
             } else {
                 EntryLabel(entry: entry, location: true).foregroundStyle(.secondary)
             }
