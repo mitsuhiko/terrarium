@@ -2086,6 +2086,15 @@ rotations), in a top row of its own next to ours in the vertical bar. Now it is 
 is always ours: in the vertical bar, or at the leading end of the editor's
 bar (iPad; checked in the iPad Pro 11-inch simulator, iOS 27.0).
 
+Note (2026-10-23): the open Duo's vertical bar has room to spare, so it
+also gets Jump to Definition, Show Info and Settings (still in ⋯ too).
+Only plain buttons, one item each, go into the vertical bar: the bordered
+Pause and the debugger's `HStack` stayed horizontal, and the system brought
+back a top bar for them alone (an empty strip above the tabs while a
+program ran). With a vertical bar they are now plain items, and while
+debugging the step buttons and Stop take the lookups' place (iPhone Duo
+simulator).
+
 ## D59: The wide workspace's other half shows what the user picks
 
 2026-10-22 - Accepted

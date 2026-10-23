@@ -312,7 +312,8 @@ struct TabStrip: View {
 
 /// The navigation bar where there is one (D61): on iPhone the file name
 /// (opens "Go to"), its status, the agent, ⋯ and Run; on an open iPhone Duo
-/// the system's vertical bar with the files toggle, the debugger, ⋯ and Run
+/// the system's vertical bar with the files toggle, Jump to Definition, Show
+/// Info, Settings, the debugger, ⋯ and Run
 /// (D58). The other wide layouts have none: the top row has it all.
 private struct EditorChrome: ViewModifier {
     @Environment(AppModel.self) private var model
@@ -336,8 +337,44 @@ private struct EditorChrome: ViewModifier {
                 } else if model.verticalBar {
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         SidebarToggle()
-                        if let debug = s.debug { DebugBar(debug: debug) }
-                        if s.status == "running", s.debug == nil { PauseButton() }
+                        // Only plain buttons, each its own item: a styled
+                        // button (PauseButton) or a stack of them (DebugBar)
+                        // can't go into the vertical bar, and the system
+                        // brings back a horizontal bar at the top for it.
+                        if let debug = s.debug {
+                            // The debugger's buttons take the lookups' place.
+                            if debug.postMortem {
+                                Button { model.resume("continue") } label: { Image(systemName: "checkmark") }
+                                    .accessibilityLabel("Done")
+                            } else {
+                                Button { model.resume("next") } label: { Image(systemName: "arrow.turn.down.right") }
+                                    .accessibilityLabel("Step Over")
+                                Button { model.resume("stepIn") } label: { Image(systemName: "arrow.down.to.line") }
+                                    .accessibilityLabel("Step Into")
+                                Button { model.resume("stepOut") } label: { Image(systemName: "arrow.up.to.line") }
+                                    .accessibilityLabel("Step Out")
+                                Button { model.stop() } label: { Image(systemName: "stop.fill") }
+                                    .tint(.red)
+                                    .accessibilityLabel("Stop")
+                            }
+                        } else {
+                            // The bar is tall: the code's lookups and Settings
+                            // get their own buttons (they stay in ⋯ too).
+                            let code = file.map { !isExternal($0) && !isMarkdown($0) } ?? false
+                            Button { Task { _ = await model.goToDefinition() } } label: { Image(systemName: "arrow.forward.to.line") }
+                                .accessibilityLabel("Jump to Definition")
+                                .disabled(!code)
+                            Button { Task { _ = await model.showInfo() } } label: { Image(systemName: "info.circle") }
+                                .accessibilityLabel("Show Info")
+                                .disabled(!code)
+                            Button { model.activeSheet = .settings } label: { Image(systemName: "gearshape") }
+                                .accessibilityLabel("Settings")
+                            if s.status == "running" {
+                                Button { model.pause() } label: { Image(systemName: "pause.fill") }
+                                    .disabled(s.awaitingInput || s.pausing)
+                                    .accessibilityLabel("Pause")
+                            }
+                        }
                         MoreMenu()
                         RunButton()
                     }

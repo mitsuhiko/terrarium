@@ -2,8 +2,9 @@ import SwiftUI
 
 // The wide layouts' top row (D61): no navigation bar, one row of about 40 pt
 // with the files toggle, the tabs, the split button, the other half's icons,
-// ⋯ and Run. On an open iPhone Duo the system's vertical bar keeps ⋯, Run
-// and the files toggle (D58); the row has the rest.
+// ⋯ and Run. On an open iPhone Duo the system's vertical bar keeps ⋯, Run,
+// the files toggle, Jump to Definition, Show Info and Settings (D58); the
+// row has the rest.
 
 /// What the sidebar shows (D61).
 enum NavigatorPane: String, CaseIterable, Identifiable {
