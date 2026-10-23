@@ -61,6 +61,10 @@ struct WorkspaceView: View {
             let panel = PanelHalf(sideBySide: landscape)
                 .frame(width: landscape ? size : nil, height: landscape ? nil : size)
             let gutter = HalfDivider(sideBySide: landscape, thickness: dragged == nil ? fold?.gap ?? 1 : 1, total: total, size: size)
+            // An open iPhone Duo: the top rows go up into the top inset (only
+            // the screen's corners are there, the bar buttons are in the
+            // vertical bar) and keep clear of the corners (clearOfTopCorners).
+            let lift = model.verticalBar ? topLift(inset: geo.safeAreaInsets.top) : 0
             layout {
                 if model.consoleDocked && first {
                     panel
@@ -72,6 +76,9 @@ struct WorkspaceView: View {
                     panel
                 }
             }
+            .padding(.top, lift > 0 ? geo.safeAreaInsets.top - lift : 0)
+            .ignoresSafeArea(.container, edges: lift > 0 ? .top : [])
+            .environment(\.topLift, lift)
             .onChange(of: landscape, initial: true) { _, side in model.panelSideBySide = side }
         }
         .modifier(EditorChrome())
@@ -244,6 +251,7 @@ struct TabStrip: View {
                 WorkspaceActions().padding(.horizontal, 8)
             }
         }
+        .clearOfTopCorners()
         .frame(height: row ? TopRowMetrics.height : 40)
         .background(Color(.secondarySystemBackground))
         .overlay(alignment: .bottom) { Divider() }

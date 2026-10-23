@@ -2095,6 +2095,17 @@ program ran). With a vertical bar they are now plain items, and while
 debugging the step buttons and Stop take the lookups' place (iPhone Duo
 simulator).
 
+Note (2026-10-23): with the bar buttons in the vertical bar, the top
+inset (24 pt) only holds the screen's rounded corners, so the workspace
+goes up into it and leaves 10 pt (`topLift`). A top row that touches the
+window's left or right edge moves its content in by 12 pt
+(`clearOfTopCorners`), measured against the simulator's framebuffer mask:
+14 pt below the top edge the corner takes 18 pt. A half at the top without
+a row (the console on the left) keeps its old top. Checked in the iPhone
+Duo simulator with the console on either side; the rotated layout (the
+vertical bar on the leading edge, the actions in the right-hand corner)
+is not checked: XCTest's rotation doesn't turn that simulator.
+
 ## D59: The wide workspace's other half shows what the user picks
 
 2026-10-22 - Accepted

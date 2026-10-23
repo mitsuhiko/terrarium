@@ -214,11 +214,14 @@ struct LayoutItems: View {
 /// debugger's, Pause, ⋯ and Run (with a vertical bar, ⋯ and Run are there).
 struct WorkspaceActions: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.topLift) private var lift
 
     var body: some View {
         let s = model.session
         HStack(spacing: 8) {
-            HalfPicker()
+            // Raised into the top inset (an open iPhone Duo): a bit higher
+            // still, next to the vertical bar's clock, clear of the corners.
+            HalfPicker().offset(y: lift > 0 ? -4 : 0)
             if !model.verticalBar {
                 if let debug = s.debug { DebugBar(debug: debug) }
                 if s.status == "running", s.debug == nil { PauseButton() }

@@ -156,6 +156,7 @@ extension AppModel {
 struct MainHalf<Editors: View>: View {
     @ViewBuilder var editors: Editors
     @Environment(AppModel.self) private var model
+    @Environment(\.topLift) private var lift
 
     var body: some View {
         if model.mainRole == .app {
@@ -167,12 +168,15 @@ struct MainHalf<Editors: View>: View {
                         Spacer(minLength: 0)
                         if !model.actionsAbovePanel { WorkspaceActions().padding(.horizontal, 8) }
                     }
+                    .clearOfTopCorners()
                     .frame(height: model.verticalBar ? 40 : TopRowMetrics.height)
                     .background(Color(.secondarySystemBackground))
                     .overlay(alignment: .bottom) { Divider() }
                 }
                 HalfSlot(slot: .main)
             }
+            // No row: the app keeps clear of the corners where it was.
+            .padding(.top, model.actionsAbovePanel && (model.panelSideBySide || !model.panelFirst) ? lift : 0)
         } else {
             editors
         }
@@ -219,6 +223,7 @@ struct PanelHalf: View {
     /// Next to the main half (else above or below it).
     let sideBySide: Bool
     @Environment(AppModel.self) private var model
+    @Environment(\.topLift) private var lift
 
     var body: some View {
         VStack(spacing: 0) {
@@ -230,6 +235,8 @@ struct PanelHalf: View {
                 HalfSlot(slot: .panel)
             }
         }
+        // At the top without a header: it keeps clear of the corners where it was.
+        .padding(.top, !model.actionsAbovePanel && (sideBySide || model.panelFirst) ? lift : 0)
         .background(Color(.secondarySystemBackground))
     }
 }
@@ -338,6 +345,7 @@ private struct PanelHeader: View {
             Spacer(minLength: 0)
             WorkspaceActions().padding(.horizontal, 8)
         }
+        .clearOfTopCorners()
         .frame(height: model.verticalBar ? 40 : TopRowMetrics.height)
         .overlay(alignment: .bottom) { Divider() }
     }

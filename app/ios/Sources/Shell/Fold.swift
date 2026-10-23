@@ -147,6 +147,41 @@ struct TrailingButtons<Content: View>: ToolbarContent {
     }
 }
 
+extension EnvironmentValues {
+    /// How far the workspace goes up into the top inset (an open iPhone Duo,
+    /// D58): with the bar buttons in the vertical bar, the inset is only the
+    /// screen's rounded corners.
+    @Entry var topLift: CGFloat = 0
+}
+
+/// The top inset's part the workspace takes with a vertical bar: all but 10 pt.
+func topLift(inset: CGFloat) -> CGFloat { max(0, inset - 10) }
+
+/// A top row raised into the inset keeps its ends clear of the screen's
+/// rounded corners: where it touches the window's left or right edge, its
+/// content moves in by 12 pt. (The iPhone Duo's inner screen, from the
+/// simulator's mask: 10 pt from the top edge the corner takes 24 pt, 14 pt
+/// down 18, 24 pt down 10; the rows put their content 8 pt in and 4 pt down.)
+private struct TopCornerClearance: ViewModifier {
+    @Environment(\.topLift) private var lift
+    @State private var frame = CGRect.zero
+
+    func body(content: Content) -> some View {
+        let pad: CGFloat = lift > 0 ? 12 : 0
+        // The window's edges, not the safe area's (that ends at the vertical bar).
+        let width = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first?.bounds.width ?? .infinity
+        content
+            .padding(.leading, frame.minX < 0.5 ? pad : 0)
+            .padding(.trailing, frame.maxX > width - 0.5 ? pad : 0)
+            .background { Color.clear.onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 } }
+    }
+}
+
+extension View {
+    /// For the workspace's top rows (TabStrip, PanelHeader, MainHalf's).
+    func clearOfTopCorners() -> some View { modifier(TopCornerClearance()) }
+}
+
 extension ToolbarContent {
     /// Keeps the items in their own bar at the top: a workspace half's agent,
     /// docs or ui app must not take the window's vertical bar from the
