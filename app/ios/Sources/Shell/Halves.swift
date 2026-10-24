@@ -230,7 +230,8 @@ struct PanelHalf: View {
             // Only where the workspace's corner is (D61): the other half on the right.
             if model.actionsAbovePanel { PanelHeader() }
             if model.panelRole == .console {
-                ConsoleView()
+                // Its frame too: the sliding sidebar dims up to it (slideOverDimEnd).
+                ConsoleView().background { HalfSlot(slot: .panel, fill: .clear) }
             } else {
                 HalfSlot(slot: .panel)
             }
@@ -246,28 +247,31 @@ enum HalfSlotID { case main, panel }
 /// Where a half's agent, docs or app goes; its frame is for HalfOverlays.
 private struct HalfSlot: View {
     let slot: HalfSlotID
+    var fill = Color(.systemBackground)
     @Environment(AppModel.self) private var model
     @State private var id = UUID()
     /// When it came: while two exist for a moment (the half moved), the newer one's frame counts.
     @State private var since = HalfFrame.next()
 
     var body: some View {
-        Color(.systemBackground)
+        fill
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { set($0) }
             .onDisappear { set(nil) }
     }
 
-    /// A slot that went away clears only its own frame, and an older slot's
-    /// late update doesn't take the place back from a newer one (else the
-    /// newer one's frame is lost when the older one goes).
+    /// The newest slot on screen has the place: an older slot's late update
+    /// doesn't take it back, and when the newest goes, the place goes back to
+    /// one still there. (Moving the half to the left at launch made a
+    /// short-lived newer slot on the right; when it went, the one that stayed
+    /// had no frame and the half's docs never showed.)
     private func set(_ frame: CGRect?) {
-        let current = slot == .main ? model.mainSlot : model.panelSlot
-        if frame == nil && current?.owner != id { return }
-        if frame != nil, let current, current.owner != id, current.since > since { return }
-        let value = frame.map { HalfFrame(owner: id, rect: $0, since: since) }
+        var live = model.liveHalfSlots[slot] ?? [:]
+        live[id] = frame.map { HalfFrame(owner: id, rect: $0, since: since) }
+        model.liveHalfSlots[slot] = live
+        let value = live.values.max { $0.since < $1.since }
         switch slot {
-        case .main: model.mainSlot = value
-        case .panel: model.panelSlot = value
+        case .main: if model.mainSlot != value { model.mainSlot = value }
+        case .panel: if model.panelSlot != value { model.panelSlot = value }
         }
     }
 }

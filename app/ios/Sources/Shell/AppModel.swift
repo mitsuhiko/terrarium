@@ -195,6 +195,8 @@ final class AppModel {
     /// Where the halves' agent, docs or app go, in the window (HalfOverlays).
     var mainSlot: HalfFrame?
     var panelSlot: HalfFrame?
+    /// Every slot on screen, by its owner: while a half moves there can be two.
+    @ObservationIgnored var liveHalfSlots: [HalfSlotID: [UUID: HalfFrame]] = [:]
     /// The workspace's left edge in the window: at 0 with the sidebar shown, the sidebar is over it.
     var workspaceMinX: CGFloat = 0
     var sidebarOverlaps: Bool { sidebarVisible && !sidebarSlidesOver && workspaceMinX < 1 }
