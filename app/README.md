@@ -305,7 +305,8 @@ apps are native views (D30).
   agent (⌘⇧A) and the docs open there, never as sheets. Touch and hold the
   icons (or ⋯ → Layout) to move the half before the main one or swap the
   app into the main half. The divider between the halves can be dragged
-  (remembered; double tap to reset).
+  (remembered; double tap to reset). Run shows the half on what the
+  program needs (D63): the app for a ui app, else the console.
 - **iPhone Duo** (D58): closed, the outer screen gets the iPhone layout;
   open, the inner one gets the iPad layout. Folding keeps the file on
   screen (also when rotating a Pro Max or resizing on iPad). On the inner

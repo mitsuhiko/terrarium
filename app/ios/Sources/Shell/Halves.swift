@@ -3,9 +3,10 @@ import SwiftUI
 // The wide workspace's two halves (D59): the main half shows the editor or
 // the running ui app, the other half (where the console docks: right in
 // landscape, below otherwise, past the fold on an open iPhone Duo, D58)
-// shows the console, the agent, the app or the docs. The user picks; nothing
-// switches by itself. Agent, docs and ui apps have navigation stacks of their
-// own, which can't be inside the workspace's: SwiftUI leaves out their bars
+// shows the console, the agent, the app or the docs. The user picks, and Run
+// picks what the program needs: the app or the console (D63). Agent, docs
+// and ui apps have navigation stacks of their own, which can't be inside
+// the workspace's: SwiftUI leaves out their bars
 // and moves their buttons into the workspace's, also from a hosting
 // controller of their own. So the halves only keep their place and report
 // its frame, and RootView draws them there, at the window's top level
@@ -68,6 +69,66 @@ extension AppModel {
             appSizeOverride = false
         }
     }
+
+    /// Run (D63): the other half comes up on what the program needs, the app
+    /// for a ui app (unless a half shows it already), else the console.
+    /// Which one it is is only sure once it runs: until then a guess from
+    /// its imports, put right by followRunInHalf and appAskedFullScreen.
+    func showHalfForRun(code: String) {
+        uncoverHalves()
+        let app = Self.looksLikeUIApp(code)
+        appRunGuess = nil
+        appHalfPicked = false
+        withAnimation(.smooth(duration: 0.25)) {
+            consoleDocked = true
+            if app {
+                if !halfShowsApp { setPanelRole(.app); appHalfPicked = true }
+            } else if panelRole != .console {
+                setPanelRole(.console)
+            }
+        }
+        if app && panelRole == .app { appRunGuess = session.runCounter }
+    }
+
+    /// After each session change: a ui app that came up goes into a half (a
+    /// guess that missed it: `ui` imported elsewhere); a run guessed to be
+    /// one that waits for input() or ends without a UI gets the console.
+    func followRunInHalf(uiShown: Bool) {
+        if uiShown, wide, !halfShowsApp {
+            withAnimation(.smooth(duration: 0.25)) {
+                setPanelRole(.app)
+                consoleDocked = true
+            }
+            appHalfPicked = true
+        }
+        guard let before = appRunGuess, session.runCounter != before else { return }
+        if session.uiOpen {
+            appRunGuess = nil
+        } else if session.awaitingInput || !session.running {
+            appRunGuess = nil
+            if wide, panelRole == .app {
+                withAnimation(.smooth(duration: 0.25)) { setPanelRole(.console) }
+            }
+        }
+    }
+
+    /// The app asks for the whole screen (`full_screen=True`, known once it
+    /// shows): if Run put the other half on the app, it goes back to the
+    /// console, which is what stays to see when the app closes.
+    func appAskedFullScreen() {
+        guard appHalfPicked, ui.store.fullScreen else { return }
+        appHalfPicked = false
+        if wide, panelRole == .app {
+            withAnimation(.smooth(duration: 0.25)) { setPanelRole(.console) }
+        }
+    }
+
+    /// The program imports the `ui` module at the top level of a line.
+    static func looksLikeUIApp(_ code: String) -> Bool {
+        uiImport.firstMatch(in: code, range: NSRange(code.startIndex..., in: code)) != nil
+    }
+    private static let uiImport = try! NSRegularExpression(
+        pattern: #"^[ \t]*(import[ \t]+ui\b|from[ \t]+ui[ \t]+import\b)"#, options: .anchorsMatchLines)
 
     /// For the close button's menu: the other way to show the app (wide only).
     var appSizeToggle: UISizeToggle? {

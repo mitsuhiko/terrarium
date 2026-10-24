@@ -1644,9 +1644,9 @@ def run(app: Callable[[], Child] | Child, *, title: str | None = None, theme: st
     out: the app ends itself with ``ui.close()``, and a two-finger swipe
     down still closes it. Running again replaces the previous app.
 
-    On an iPad or an open iPhone Duo the app runs next to the code when a
-    half of the workspace is set to show apps; ``full_screen=True`` asks for
-    the whole screen anyway (a game, say). Pages are always full screen.
+    On an iPad or an open iPhone Duo the app runs next to the code, in a
+    half of the workspace; ``full_screen=True`` asks for the whole screen
+    (a game, say). Pages are always full screen.
     """
     _app.start(app, {"title": title, "theme": theme, "tint": tint, "close_button": bool(close_button),
                      "full_screen": bool(full_screen)})

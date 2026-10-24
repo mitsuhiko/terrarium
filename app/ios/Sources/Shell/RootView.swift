@@ -86,6 +86,7 @@ struct RootView: View {
         // One agent and one docs viewer at a time: the half's when it shows them (D59).
         .onChange(of: model.agentInPanel) { _, shown in if shown { model.panelRolesShown() } }
         .onChange(of: model.docsInPanel) { _, shown in if shown { model.panelRolesShown() } }
+        .onChange(of: model.ui.store.fullScreen) { _, _ in model.appAskedFullScreen() }
         .onHinge { model.hinge = $0 }
         .onChange(of: model.panes) { _, _ in model.agentIDEChanged() }
         .onChange(of: model.file, initial: true) { _, _ in Task { await model.refreshFilePython() } }

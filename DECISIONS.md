@@ -2380,6 +2380,41 @@ runs (seeds 7 and 8, 150 steps): clean on the Pro Max; on the closed Duo
 "⋯ did not open its menu" now and then, as often without this change. Not seen: the long press, the narrowest
 iPhones, a notebook's running cell (it lost its line under the title).
 
+## D63: Run shows the other half on the app or the console
+
+2026-10-24 - Accepted
+
+D59 left the other half on whatever the user had picked: running
+`Adventure.py` with the half on the agent, the docs or the app meant a tap
+on the console before the game's `input()` could be answered. Now Run
+picks for the program (wide layouts only; on iPhone the console comes up
+as before):
+
+- A ui app gets the app in the other half, unless a half (the main one
+  too) shows it already. Anything else gets the console.
+- Which one a program is is only sure once it runs, so Run guesses from
+  its source (a line that starts with `import ui` or `from ui import`) and
+  switches right away, without the console flashing up first. The guess
+  is put right as the run goes: a UI that comes up (`ui` imported
+  elsewhere) moves the half to the app; a run guessed to be a ui app that
+  waits for `input()` or ends without a UI gets the console, as does an
+  app that asks for the whole screen (`full_screen=True`, known once it
+  shows), since the console is what's left to see when it closes.
+- The user's own picks while the program runs stay; nothing switches back
+  when it ends.
+
+This replaces D59's "nothing switches by itself".
+
+Evidence (simulator, iOS 27.0 iPad Pro 13-inch): the `halves` step runs a
+plain program with the half on the agent (console), Counter App with it on
+the docs (app), a program that imports `ui` through `importlib` with it on
+the console (app once the UI shows), one that imports `ui` without an app
+(console) and a full screen app (console). The self-test passes 89 of 90;
+`keybar_only_with_software_keyboard` fails without this change too. While
+writing the test: two runs started in quick succession (the second before
+the first's worker is up) can overlap in the session, and the first one's
+app shows up during the second; not new, not fixed here.
+
 ## Proposed (not yet decided)
 
 (none)

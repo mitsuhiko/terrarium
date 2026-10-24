@@ -1866,6 +1866,43 @@ export async function selftest() {
       await call("test.ui", { action: "close" });
       await until(() => !session.getSnapshot().uiOpen);
 
+      // Run picks the other half's role (D63): the console for a program that
+      // isn't a ui app, the app for one that is, also when it imports ui
+      // where the guess can't see it; a wrong guess gets the console. An app
+      // that asks for the whole screen gets it, the half the console.
+      const appUp = () => until(async () => session.getSnapshot().uiOpen && (await nativeTree()).visible);
+      const closeApp = async () => {
+        await call("test.ui", { action: "close" });
+        await until(() => !session.getSnapshot().uiOpen && session.getSnapshot().status === "idle");
+      };
+      const panelIs = (panel: string, inHalf = false) =>
+        until(async () => { const s = await halves(); return s.panel === panel && (!inHalf || s.appInHalf); })
+          .catch(async () => { throw new Error(`not on ${panel}: ${JSON.stringify(await halves())}`); });
+      await appCall("setHalves", "editor", "agent", true);
+      await fs.writeText("Tests/plain.py", 'print("plain")\n');
+      await (await runFile("Tests/plain.py")).done;
+      await panelIs("console");
+      await appCall("setHalves", "editor", "docs", true);
+      await runFile("Examples/Counter App.py");
+      await appUp();
+      await panelIs("app", true);
+      await closeApp();
+      await fs.writeText("Tests/indirect_ui.py", 'import importlib\nui = importlib.import_module("ui")\nui.run(lambda: ui.Screen("Hidden", ui.Text("x")))\n');
+      await appCall("setHalves", "editor", "console", true);
+      await runFile("Tests/indirect_ui.py");
+      await appUp();
+      await panelIs("app", true);
+      await closeApp();
+      await fs.writeText("Tests/not_ui.py", 'import ui\nprint("no app")\n');
+      await (await runFile("Tests/not_ui.py")).done;
+      await panelIs("console");
+      await appCall("setHalves", "editor", "agent", true);
+      await runFile("Tests/FullScreen.py");
+      await appUp();
+      await until(async () => { const s = await halves(); return s.overlay && s.fullScreen && s.panel === "console"; })
+        .catch(async () => { throw new Error(`full screen: ${JSON.stringify(await halves())}`); });
+      await closeApp();
+
       // The other half first: left of the main half (or above); the files make room.
       await appCall("setHalves", "app", "docs", true, true);
       await until(async () => {

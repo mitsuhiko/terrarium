@@ -160,10 +160,11 @@ ends the program, touch and hold offers Restart. `close_button=False`
 leaves it out, for an app that ends itself with `ui.close()`; a two-finger
 swipe down still closes it.
 
-On an iPad or an open iPhone Duo, the app runs next to your code when a
-half of the workspace is set to show the app. `full_screen=True` asks for
-the whole screen anyway, for a game, say. Touch and hold the close button
-to switch between the two.
+On an iPad or an open iPhone Duo, the app runs next to your code: Run
+shows it in the other half of the workspace (programs that aren't ui apps
+get the console there). `full_screen=True` asks for the whole screen
+instead, for a game, say. Touch and hold the close button to switch
+between the two.
 
 ### ui.close()
 

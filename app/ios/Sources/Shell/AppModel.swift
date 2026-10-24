@@ -186,6 +186,11 @@ final class AppModel {
     var mainRole: MainRole = .editor
     var panelRole: PanelRole = .console
     @ObservationIgnored var lastPanelRole: PanelRole = .console
+    /// Run put the other half on the app on a guess (D63): the run counter
+    /// before it, until the run shows its UI, waits for input() or ends.
+    @ObservationIgnored var appRunGuess: Int?
+    /// Run (or the app coming up) put the other half on the app (D63).
+    @ObservationIgnored var appHalfPicked = false
     /// The other half goes before the main one (left, or above).
     var panelFirst = false
     /// The user switched this run's ui app to full screen (true) or into its half (false).
@@ -569,10 +574,12 @@ final class AppModel {
         }
         // UI apps are on screen while they run (or restart), except while the debugger is paused.
         let showUI = (session.uiOpen || restartingRun != nil) && debug == nil
+        let uiShown = showUI && !ui.visible
         if showUI != ui.visible {
             if showUI { ui.show() } else { ui.hide() }
             appSizeOverride = nil // each app starts as it asks (D59)
         }
+        followRunInHalf(uiShown: uiShown)
         // A new run or a pending input() brings the console up.
         if session.runCounter != lastRunCounter {
             lastRunCounter = session.runCounter
@@ -1061,7 +1068,7 @@ final class AppModel {
         var code = await editorCall(focused, "text") as? String
         if code == nil { code = try? await readText(file) }
         await editorCall(focused, "blur")
-        if wide { consoleDocked = true; uncoverHalves() }
+        if wide { showHalfForRun(code: code ?? "") }
         await command("runFile", ["path": file, "code": code ?? ""])
     }
 
