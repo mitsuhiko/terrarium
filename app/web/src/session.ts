@@ -132,6 +132,10 @@ export class Session {
   private debugResult: ((message: any) => void) | null = null;
   private debugQueue: Promise<unknown> = Promise.resolve();
   private stopCounter = 0;
+  /** Bumped when a run replaces what ran or was starting (Run, a notebook's
+   * new kernel, Stop while a run starts): the older run's code notices after
+   * its awaits and leaves the session to the new one. */
+  private generation = 0;
   // Notebook kernels (D44): the worker belongs to one notebook while `kernel` is set.
   private kernel: { path: string; python: string; count: number } | null = null;
   private cell: { path: string; id: string; count: number; failed: boolean; tail: string; run: number | null } | null = null;
@@ -287,21 +291,26 @@ export class Session {
 
   /** Run a saved file: its folder is the program's cwd, used in place (D35). */
   async runFile(path: string, code: string) {
-    this.closeWorker();
+    const gen = this.replaceRun();
+    const replaced = () => gen !== this.generation;
     const dir = dirname(path);
     this.startRun(path);
     this.set({ status: "starting", runningFile: path });
     try {
       const choice = await chooseFor(dir, code);
+      if (replaced()) return;
       if (!choice.ok) throw new Error(`Python version: ${choice.error}`);
       this.setRunPython(choice.python);
-      const worker = await this.takeWorker(dir, choice.python);
+      const worker = await this.takeWorker(dir, choice.python, gen);
       // What the last program started on the device (sensors, sounds) stops (D40).
       await call("device.reset").catch(() => {});
+      if (replaced()) return;
       this.set({ status: "running" });
       const result = await worker.run(code, { filename: basename(path), cwd: PROJECT_ROOT, breakpoints: breakpoints.forRun(dir) });
+      if (replaced()) return;
       await this.finishRun(result);
     } catch (e) {
+      if (replaced()) return;
       this.append("stderr", `${(e as Error).message ?? e}\n`);
       this.endRun("error");
       this.set({ status: "idle" });
@@ -311,6 +320,7 @@ export class Session {
   /** Run console input in the current session (a fresh one if there is none). */
   async runConsole(source: string) {
     if (!source.trim() || this.state.status !== "idle") return;
+    const gen = this.generation;
     this.flushOutput();
     // Console input continues the previous run's block when that program is still loaded.
     const reuse = this.worker && !this.worker.dead;
@@ -322,22 +332,33 @@ export class Session {
     } else {
       const choice = await chooseFor(this.workerDir);
       const python = choice.ok ? choice.python : undefined;
-      worker = await this.takeWorker(this.workerDir, python);
+      try {
+        worker = await this.takeWorker(this.workerDir, python, gen);
+      } catch (e) {
+        if (gen !== this.generation) return;
+        throw e;
+      }
       this.setRunPython(worker.python);
     }
     this.setScenesActive(true);
     this.set({ status: "running" });
     const result = await worker.run(source, { repl: true, cwd: PROJECT_ROOT });
+    if (gen !== this.generation) return;
     await this.finishRun(result, true);
   }
 
-  private async takeWorker(dir: string, python?: string) {
+  /** A worker for a run of generation `gen`; replaced meanwhile, it ends and this throws. */
+  private async takeWorker(dir: string, python: string | undefined, gen: number) {
     const worker = await this.pool.take(python);
     try {
       await worker.attach(dir);
     } catch (e) {
       worker.terminate("closed");
       throw new Error(`Could not open the folder: ${(e as Error).message ?? e}`);
+    }
+    if (gen !== this.generation) {
+      worker.terminate("closed");
+      throw new Error("replaced by a newer run");
     }
     this.worker = worker;
     this.workerDir = dir;
@@ -625,7 +646,11 @@ export class Session {
     if (debug?.postMortem) return this.resume("continue"); // just ends the inspection
     this.stopRequested = true;
     this.cancelCells();
-    if (this.worker?.running) {
+    if (this.state.status === "starting") {
+      // Its interpreter isn't up yet: the run ends here, it never starts.
+      this.replaceRun();
+      this.set({ status: "idle", pausing: false });
+    } else if (this.worker?.running) {
       this.worker.stop(); // also interrupts a paused debugger (its call is pending)
       this.endDebug();
     } else if (debug) {
@@ -633,6 +658,23 @@ export class Session {
       this.endDebug();
       this.closeUI();
     }
+  }
+
+  /**
+   * What ran or was starting ends, for a new run (or Stop while one starts):
+   * its worker goes, its run is marked stopped, and its code, still in an
+   * await, leaves the session alone from now on (`generation`). Returns the
+   * new run's generation.
+   */
+  private replaceRun() {
+    this.generation++;
+    this.cell = null; // its cell says it was stopped itself (runCell)
+    this.inputResolver = null;
+    this.setScenesActive(false);
+    if (this.state.runs[this.currentRun]?.status === "running") this.endRun("stopped");
+    this.closeWorker();
+    if (this.state.kernel) this.set({ kernel: null }); // a kernel that was starting
+    return this.generation;
   }
 
   private closeWorker(keepAlive = false) {
@@ -812,18 +854,30 @@ export class Session {
     this.flushOutput();
     this.stopRequested = false;
     let fresh = false;
+    let gen = this.generation;
+    // Run or Stop replaced this cell's run: the notebook hears it, the session is theirs.
+    const replaced = () => {
+      if (gen === this.generation) return false;
+      this.emit(path, { type: "output", cell: id, output: errorOutput("KernelRestarted", "The kernel was stopped.", ["The kernel was stopped."]) });
+      this.emit(path, { type: "done", cell: id, status: "stopped" });
+      if (this.state.kernel?.path !== path) this.emit(path, { type: "kernel", state: "dead" });
+      return true;
+    };
     if (!this.worker || this.worker.dead || this.kernel?.path !== path || this.state.uiOpen) {
-      this.closeWorker(); // what ran before ends, like with Run
+      gen = this.replaceRun(); // what ran before ends, like with Run
       this.set({ status: "starting", runningFile: path, kernel: { path, python: "", count: 0, cell: null } });
       this.emit(path, { type: "kernel", state: "starting" });
       try {
         const choice = await chooseFor(dirname(path), source);
+        if (replaced()) return "stopped";
         if (!choice.ok) throw new Error(`Python version: ${choice.error}`);
-        await this.takeWorker(dirname(path), choice.python);
+        await this.takeWorker(dirname(path), choice.python, gen);
         await call("device.reset").catch(() => {});
+        if (replaced()) return "stopped";
         this.kernel = { path, python: runtimeFor(choice.python).version, count: 0 };
         fresh = true;
       } catch (e) {
+        if (replaced()) return "stopped";
         this.emit(path, { type: "output", cell: id, output: errorOutput("Error", String((e as Error).message ?? e)) });
         this.emit(path, { type: "done", cell: id, status: "error" });
         this.emit(path, { type: "kernel", state: "dead" });
@@ -840,6 +894,7 @@ export class Session {
     this.emit(path, { type: "kernel", state: "busy", python: kernel.python });
     this.emit(path, { type: "start", cell: id, count: cell.count });
     const result = await worker.run(code, { filename: basename(path), cwd: PROJECT_ROOT, cell: { count: cell.count, prepare: fresh ? source : null } });
+    if (replaced()) return "stopped";
     this.flushOutput();
     this.cell = null;
     this.setScenesActive(false);

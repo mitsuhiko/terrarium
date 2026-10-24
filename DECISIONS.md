@@ -2415,6 +2415,18 @@ writing the test: two runs started in quick succession (the second before
 the first's worker is up) can overlap in the session, and the first one's
 app shows up during the second; not new, not fixed here.
 
+Note (2026-10-24): fixed. A run that replaced one still starting or running
+went on after its awaits against the new run's state: a starting one took
+a worker and ran anyway (its app showed up during the new run), and a
+killed one's end marked the new run ended (an error, idle) or, for a cell,
+made its run the current one again. The session now has a generation that
+a new run (Run, a notebook's new kernel) bumps; the older run's code checks
+it after each await and leaves the session alone, and the new run marks it
+stopped and ends its worker. Stop while a run starts ends it too (before,
+it did nothing and the program started anyway). The self-test's
+`run_replaces_run` step covers all three; without the fix it fails on the
+first.
+
 ## Proposed (not yet decided)
 
 (none)

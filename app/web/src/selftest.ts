@@ -387,6 +387,44 @@ export async function selftest() {
     if (run?.status !== "stopped" || consoleText().includes("crashed")) throw new Error(`${run?.status}: ${consoleText()}`);
   });
 
+  // A run that replaces one still starting (Run twice in a row) or still
+  // running: the older one never shows up later (its app, its output) and
+  // doesn't end the newer one. Stop while a run starts ends it.
+  await step("run_replaces_run", async () => {
+    await fs.mkdir("Tests").catch(() => {});
+    const app = 'import ui\nui.run(lambda: ui.Screen("Stray", ui.Text("x")))\n';
+    const runs = () => Object.values(session.getSnapshot().runs);
+    session.clear();
+    void session.runFile("Tests/first.py", app); // still starting when the next comes
+    void session.runFile("Tests/second.py", 'print("second")\n');
+    await until(() => idle() && consoleText().includes("second"));
+    await new Promise((r) => setTimeout(r, 1500)); // time for a stray first run to show up
+    let s = session.getSnapshot();
+    const [first, second] = runs().slice(-2);
+    if (s.uiOpen || first?.status !== "stopped" || second?.status !== "ok" || !idle()) {
+      throw new Error(`starting: ui=${s.uiOpen} ${first?.status} ${second?.status} ${s.status}: ${consoleText()}`);
+    }
+
+    session.clear();
+    void session.runFile("Tests/first.py", "import time\nprint('looping')\nwhile True: time.sleep(0.05)\n");
+    await until(() => consoleText().includes("looping"));
+    const second2 = session.runFile("Tests/second.py", "import time\ntime.sleep(0.5)\nprint('second')\n");
+    await until(() => session.getSnapshot().status === "running");
+    // The first one's end doesn't end the second.
+    if (runs().at(-1)?.status !== "running") throw new Error(`running: ${JSON.stringify(runs().map((r) => r.status))}`);
+    await second2;
+    const statuses = runs().slice(-2).map((r) => r.status);
+    if (statuses.join() !== "stopped,ok" || /closed|Error/.test(consoleText())) throw new Error(`running: ${statuses}: ${consoleText()}`);
+
+    session.clear();
+    void session.runFile("Tests/first.py", app);
+    session.stop();
+    await until(idle);
+    await new Promise((r) => setTimeout(r, 1500));
+    s = session.getSnapshot();
+    if (s.uiOpen || runs().at(-1)?.status !== "stopped") throw new Error(`stop: ui=${s.uiOpen} ${runs().at(-1)?.status}`);
+  });
+
   // -- processes (D47) ------------------------------------------------------------------
 
   const processCounts = () => (session as any).worker?.procs?.counts as { started: number; alive: number } | undefined;
