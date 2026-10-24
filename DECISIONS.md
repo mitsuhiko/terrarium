@@ -2314,6 +2314,36 @@ Pro 11-inch simulator (iOS 27.0). The self-test (`--reset`) passes 87 of
 changes; both pass alone. Not seen: the open Duo in portrait (XCUIDevice
 doesn't turn the inner screen).
 
+Note (2026-10-24), two regressions found retaking the store screenshots:
+- **The editor scrolls past its end again.** The CSS rule that kept the
+  text's end above the home indicator replaced the theme's 40vh bottom
+  padding, so a short file hardly scrolled and a paused line in its lower
+  part stayed under the console (bisected to this decision's commit). The
+  padding is `40vh` plus the inset now, in the theme. Self-test:
+  `debugger_reveals_paused_line`.
+- **An iPad's sidebar starts open where it fits.** Its first decision
+  (`sidebarSlidesOver`, before the workspace's layout) assumed the other
+  half beside the code, so a portrait iPad started with the sidebar
+  closed. Until the layout says, the window's shape decides
+  (`panelSideBySide`).
+- **The other half keeps its frame when it moves at launch.** Moving the
+  docs half to the left in the first render made two slots at once, the
+  short-lived one newer; when it went it cleared the frame, and the half
+  stayed blank (the open Duo, no saved halves). All slots on screen are
+  kept now (`liveHalfSlots`): the newest has the place, and when it goes
+  the place goes back to one still there.
+- **The console half isn't dimmed by the sliding sidebar.** Only the
+  agent, docs and app reported their half's frame, so with the console the
+  dimming went to the window's edge and took the console's taps. The
+  console reports it too.
+
+Evidence: the iPhone Duo simulator (iOS 27.1, open in DeviceHub,
+landscape), the iPhone 18 Pro Max and iPad Pro 13-inch (M5) simulators
+(iOS 27.0). The self-test (`--reset`) passes on the iPhone, with the
+known flaky steps (`help_opens_docs`, `editor_keyboard_from_native`)
+failing now and then; on the iPad `keybar_only_with_software_keyboard`
+fails, as it does without these changes.
+
 ## D62: Narrow layouts show Go to, Find and Problems instead of a title
 
 2026-10-23 - Accepted

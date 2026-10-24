@@ -2,12 +2,14 @@
 
 **Terrarium – Python IDE with a coding agent.**
 
-A Pythonista-style Python IDE for iPhone and iPad: a native SwiftUI app that
-runs Python on the device ([Pyodide](https://pyodide.org/), CPython 3.14 in
-WebAssembly) and has a coding agent built in.
+A Pythonista-style Python IDE for iPhone, iPad and the foldable iPhone Duo:
+a native SwiftUI app that runs Python on the device
+([Pyodide](https://pyodide.org/), CPython 3.14 in WebAssembly) and has a
+coding agent built in.
 
 > A demo and research project, written largely with coding agents. It is
-> not on the App Store yet and not affiliated with Pythonista.
+> in TestFlight, not on the App Store yet, and not affiliated with
+> Pythonista.
 
 <p>
   <a href="app/appstore/screenshots/iphone/1-plot.png"><img src="app/appstore/screenshots/iphone/1-plot.png" width="24%" alt="Editor and console with an inline matplotlib plot"></a>
@@ -30,21 +32,32 @@ WebAssembly) and has a coding agent built in.
   <a href="app/appstore/screenshots/ipad/4-editor.png"><img src="app/appstore/screenshots/ipad/4-editor.png" width="49%" alt="iPad: completions from ty"></a>
 </p>
 
+<p>
+  <a href="app/appstore/screenshots/duo/2-agent.png"><img src="app/appstore/screenshots/duo/2-agent.png" width="49%" alt="iPhone Duo, open: the code and the agent on either side of the fold"></a>
+  <a href="app/appstore/screenshots/duo/1-app.png"><img src="app/appstore/screenshots/duo/1-app.png" width="49%" alt="iPhone Duo, open: the todo app next to its code"></a>
+</p>
+
 <sub>The App Store screenshots (all of them: <a href="app/appstore/screenshots">app/appstore/screenshots</a>),
-from <code>app/scripts/store-screenshots.sh</code> in the iPhone 18 Pro Max and
-iPad Pro 13-inch (M5) simulators, iOS 27. The agent's replies there are
-scripted; its tools really ran.</sub>
+from <code>app/scripts/store-screenshots.sh</code> in the iPhone 18 Pro Max,
+iPad Pro 13-inch (M5) and iPhone Duo simulators, iOS 27. The agent's replies
+there are scripted; its tools really ran.</sub>
 
 ## Features
 
-- **Python on the device**: CPython 3.14 through Pyodide. A streaming console
-  with `input()` and a `>>>` prompt, inline matplotlib plots, tracebacks that
-  link to the line, and a Stop that always works.
+- **Python on the device**: CPython 3.14 through Pyodide, and a 3.15
+  preview. A streaming console with `input()` and a `>>>` prompt, inline
+  matplotlib plots, tracebacks drawn as frames that link to the line, and a
+  Stop that always works. `multiprocessing` and `subprocess` run each
+  process in a worker of its own.
 - **Packages**: numpy, pandas, matplotlib and the rest of Pyodide's packages,
   plus pure-Python packages from PyPI. They are declared with PEP 723
   (`# /// script`, as with `uv run`) and cached for offline use.
-- **Editor**: CodeMirror with a key bar for touch typing, tabs, split view on
-  iPad, outline, go to line, find in folder, and hardware keyboard shortcuts.
+- **Editor**: CodeMirror with a key bar for touch typing, tabs, split view,
+  outline, go to line, find in folder, themes, and hardware keyboard
+  shortcuts.
+- **Notebooks and Markdown**: Jupyter notebooks and `# %%` cells run in a
+  kernel with rich output (plots, pandas tables, HTML). Markdown files show
+  as a preview, with links between files.
 - **Code intelligence**: [ruff](https://github.com/astral-sh/ruff) (lint and
   format) and [ty](https://github.com/astral-sh/ty) (type checking,
   completions, go to definition) run locally as WebAssembly.
@@ -52,7 +65,16 @@ scripted; its tools really ran.</sub>
   frame, and inspecting the frames after an error.
 - **Native apps from Python**: the `ui` module builds SwiftUI screens, lists,
   sheets, inputs and canvases with Solid-style signals. Turtle graphics draw
-  right in the console.
+  right in the console. Home Screen shortcuts run a program.
+- **The device from Python**: Pythonista's `clipboard`, `dialogs`,
+  `photos`, `location`, `motion`, `sound`, `speech`, `reminders` and
+  more.
+- **Documentation**: the Python docs of both versions and the app's own
+  modules, offline, with search; `help()` opens them.
+- **Layouts**: on iPad and the open iPhone Duo, one top row, a sidebar
+  with files, outline, find and problems, and the other half next to the
+  code: console, agent, the running app or the docs. On the Duo the fold
+  divides them.
 - **Files**: the app's Documents folder (also in the Files app) and linked
   folders from iCloud Drive or other apps. Programs read and write them, with
   `sqlite3` and all.

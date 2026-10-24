@@ -219,9 +219,9 @@ apps are native views (D30).
   - Long-press a line number to set a breakpoint. Long-press it again to
     disable or remove it.
   - Run as usual: the program stops there and the editor turns read-only
-    with the line highlighted.
-  - Step over, in or out from the console header (iPhone) or the nav bar
-    (iPad), and Continue from the Run button.
+    with the line highlighted and scrolled into view.
+  - Step over, in or out from the console header (iPhone) or the top row
+    (iPad, D61), and Continue from the Run button.
   - The console shows the stack and the variables. Tap a name in the editor
     for its value, and `>>>` runs in the paused function.
   - Pause (in the console header) stops a running program, e.g. an endless

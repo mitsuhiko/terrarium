@@ -1360,7 +1360,7 @@ final class AppModel {
         toggleBreakpoint(c.path, line: c.line, text: c.text)
     }
 
-    // MARK: launch hooks for screenshots: open=<path>[&bp=<lines>][&split=<path>][&run][&cells][&top=<text>][&folder=<dir>][&pane=files|editor|console][&cursor=<line>:<col>][&focus[=console]][&type=<text, @@ for the cursor>][&agent[=accounts|conversations|demo]][&ask=<prompt>][&docs=<version>/<ref, # as %23>][&settings][&newfile=<dir>][&move=<path>][&trash]
+    // MARK: launch hooks for screenshots: open=<path>[&bp=<lines>][&split=<path>][&run][&cells][&top=<text>][&folder=<dir>][&sidebar=0|1][&pane=files|editor|console][&cursor=<line>:<col>][&focus[=console]][&type=<text, @@ for the cursor>][&agent[=accounts|conversations|demo]][&ask=<prompt>][&docs=<version>/<ref, # as %23>][&settings][&newfile=<dir>][&move=<path>][&trash]
 
     private func launchHooks(_ fragment: String) async {
         guard !fragment.hasPrefix("#selftest") else { return }
@@ -1404,7 +1404,7 @@ final class AppModel {
             _ = await editorCall(focused, "scrollToText", [text])
         }
         if let dir = hook["folder"] { route = [.folder(dir)] }
-        if hook["sidebar"] == "0" { sidebarVisible = false }
+        if let sidebar = hook["sidebar"] { sidebarVisible = sidebar != "0" } // a phone's starts closed (D61)
         switch hook["pane"] {
         case "console": if wide { consoleDocked = true } else { consoleDetent = .half }
         case "files": if !wide { route = [] }

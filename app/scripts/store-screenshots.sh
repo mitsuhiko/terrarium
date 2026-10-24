@@ -64,7 +64,7 @@ IPAD_SCENES=(
   "4-editor|open=Examples/Todo App.py&folder=Examples&pane=editor&$COMPLETION|16"
   "5-debugger|open=Examples/Cells.py&folder=Examples&bp=16&run|16"
   "6-todo|open=Examples/Todo App.py&panel=app&sidebar=0&run|14"
-  "7-docs|docs=3.14/library/json.html|8"
+  "7-docs|open=Examples/Adventure/world.py&folder=Examples/Adventure&docs=3.14/library/json.html|10"
 )
 # The open iPhone Duo: the halves on either side of the fold (D59).
 DUO_SCENES=(
@@ -73,7 +73,7 @@ DUO_SCENES=(
   "3-plot|open=Examples/Plot.py&panel=console&sidebar=0&run|25"
   "4-docs|open=Examples/Hello.py&panel=docs&side=first&sidebar=0&docs=3.14/library/json.html|10"
   "5-split|open=Examples/Turtle.py&split=Examples/Plot.py&sidebar=0&pane=editor|12"
-  "6-files|open=Examples/Todo App.py&folder=Examples&panel=console|10"
+  "6-files|open=Examples/Todo App.py&folder=Examples&sidebar=1&panel=console|10"
 )
 
 running() { xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -q "UIKitApplication:$BUNDLE_ID\["; }

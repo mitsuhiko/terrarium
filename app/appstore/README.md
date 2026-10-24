@@ -43,10 +43,12 @@ to do by hand in App Store Connect, and the open risks for review.
   - iPhone (9): plot, agent, editor with a ty diagnostic, notebook, ui app,
     debugger, turtle, docs, files.
   - iPad (7): split view, agent, notebook, completions, debugger, the
-    todo app next to its code (D59), docs.
+    todo app next to its code (D59), docs next to a file that uses
+    `json`. The files sidebar is open in all but the todo app.
   - iPhone Duo, inner screen (6, 2853x2007, `store-screenshots.sh duo`):
     the todo app, the agent, a plot, the docs (left) each beside the code
-    across the fold, split view at the fold, files with editor and console.
+    across the fold, split view at the fold, the files sidebar slid over the
+    code next to the console.
     Open the Duo in DeviceHub first: nothing headless opens it, and the
     script leaves its locale alone (a reboot closes it), so the clock may be
     24-hour. Not checked: whether App Store Connect has a slot for the
