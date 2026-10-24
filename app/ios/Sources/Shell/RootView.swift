@@ -78,7 +78,7 @@ struct RootView: View {
                 Button("Remove All \(menu.count) in File", role: .destructive) { model.clearBreakpoints(menu.path) }
             }
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { model.windowWidth = $0 }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { model.windowWidth = $0.width; model.windowHeight = $0.height }
         .onOpenURL { url in
             if let action = LaunchAction(url: url) { LaunchRouter.send(action) }
         }

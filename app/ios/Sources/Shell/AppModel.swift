@@ -167,6 +167,7 @@ final class AppModel {
     var wide = false
     /// The window's width: the editor's title must fit between the bar's buttons.
     var windowWidth: CGFloat = 390
+    var windowHeight: CGFloat = 844
     var problems = [ProblemCounts(), ProblemCounts()]
     var editorFocused = false
     var fileListVersion = 0
@@ -208,7 +209,11 @@ final class AppModel {
     /// Bumped when the focused editor's text changed (the outline follows).
     var editRevision = 0
     /// The other half is next to the main one (else above or below it), as laid out.
-    var panelSideBySide = true
+    var panelLaidOutSideBySide: Bool?
+    /// Before the workspace's first layout, a guess from the window's shape: the
+    /// sidebar decides at launch whether it starts closed (sidebarSlidesOver),
+    /// and a fixed guess closed it on a portrait iPad where it fits.
+    var panelSideBySide: Bool { panelLaidOutSideBySide ?? (windowWidth > windowHeight * 1.2) }
     /// The other half's share of the workspace, once the user dragged the divider (D61).
     var panelRatio: CGFloat?
     var activeSheet: ActiveSheet?

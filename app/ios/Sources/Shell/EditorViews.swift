@@ -85,7 +85,7 @@ struct WorkspaceView: View {
             .padding(.top, lift > 0 ? geo.safeAreaInsets.top - lift : 0)
             .ignoresSafeArea(.container, edges: lift > 0 ? .top : [])
             .environment(\.topLift, lift)
-            .onChange(of: landscape, initial: true) { _, side in model.panelSideBySide = side }
+            .onChange(of: landscape, initial: true) { _, side in model.panelLaidOutSideBySide = side }
         }
         .modifier(EditorChrome())
         .navigationBarTitleDisplayMode(.inline)
