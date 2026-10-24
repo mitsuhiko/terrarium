@@ -250,6 +250,3 @@ details[open] > .tb-row::before { transform: rotate(45deg); top: 11px; }
 .md-body kbd { font: 0.85em var(--mono); padding: 0.1em 0.4em; border: 1px solid var(--tertiary); border-radius: 4px; }
 .md-body .md-empty { color: var(--secondary); }
 .md-body .md-flash { animation: flash-line 1.4s ease-out; border-radius: 6px; }
-
-/* Under the home indicator (D61): the text scrolls there, and its end stays above it. */
-.cm-scroller .cm-content { padding-bottom: calc(4px + var(--bottom-inset)); }

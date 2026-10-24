@@ -96,7 +96,9 @@ const theme = EditorView.theme({
   "&": { height: "100%", fontSize: "var(--editor-font-size)", background: "var(--editor-bg)", color: "var(--editor-fg)" },
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": { fontFamily: "var(--mono)", lineHeight: "1.5", overscrollBehavior: "contain" },
-  ".cm-content": { caretColor: "var(--caret)", paddingBottom: "40vh" },
+  // The last lines scroll up to the middle (a paused line is brought there),
+  // and wide the end stays above the home indicator too (D61).
+  ".cm-content": { caretColor: "var(--caret)", paddingBottom: "calc(40vh + var(--bottom-inset))" },
   ".cm-gutters": { background: "var(--editor-bg)", color: "var(--gutter)", border: "none" },
   ".cm-activeLine": { background: "var(--active-line)" },
   ".cm-activeLineGutter": { background: "transparent", color: "var(--gutter-active)" },
@@ -996,6 +998,13 @@ export class PaneEditor {
   backspace() {
     deleteCharBackward(this.view);
     return fileText(this.view.state);
+  }
+
+  /** Where a line is in the editor's scroller (self-test): its top from the visible top, and the visible height. */
+  lineOnScreen(line: number) {
+    const view = this.view;
+    const block = view.lineBlockAt(view.state.doc.line(line).from);
+    return { top: Math.round(block.top + view.documentPadding.top - view.scrollDOM.scrollTop), height: view.scrollDOM.clientHeight };
   }
 
   info() {

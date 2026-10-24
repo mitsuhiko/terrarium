@@ -88,6 +88,7 @@ const api: Api = {
   applyFixNamed: (name: string) => editor.applyFixNamed(name),
   setCursor: (line: number, column: number) => editor.setCursor(line, column),
   info: () => editor.info(),
+  lineOnScreen: (line: number) => editor.lineOnScreen(line),
   themeState: () => {
     const style = getComputedStyle(document.documentElement);
     return { theme: document.documentElement.dataset.theme, bg: style.getPropertyValue("--editor-bg").trim(), dark: matchMedia("(prefers-color-scheme: dark)").matches };

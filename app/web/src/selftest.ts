@@ -1646,6 +1646,34 @@ export async function selftest() {
     return { line: d.frames[0].line, i: d.scopes[0].variables.find((v) => v.name === "i")?.value };
   });
 
+  // The paused line comes up into the part of the editor the console leaves
+  // (half of it on iPhone), also near the end of a short file: the text
+  // scrolls past its end (40vh; a CSS rule once took that away).
+  await step("debugger_reveals_paused_line", async () => {
+    const code = Array.from({ length: 40 }, (_, i) => `x${i + 1} = ${i + 1}`).join("\n") + "\n";
+    await fs.writeText("Tests/reveal.py", code);
+    breakpoints.set("Tests/reveal.py", [{ line: 30, enabled: true }]);
+    await appCall("showPane", "console");
+    await runFile("Tests/reveal.py");
+    await until(stopped());
+    // Wide, the console is in the other half (visibleFraction 0.9).
+    const visible = (await app.wide()) ? 0.85 : 0.4;
+    let at = { top: 0, height: 0 };
+    try {
+      await until(async () => {
+        at = await editorCall<{ top: number; height: number }>("lineOnScreen", 30);
+        return at.top >= 0 && at.top < at.height * visible;
+      }, 3000).catch(() => {
+        throw new Error(`line 30 at ${at.top} of ${at.height}`);
+      });
+    } finally {
+      breakpoints.clear("Tests/reveal.py");
+      session.stop();
+      await until(idle);
+    }
+    return at;
+  });
+
   await step("debugger_inspect_error", async () => {
     await fs.writeText("Tests/avg.py", "def average(xs):\n    total = sum(xs)\n    return total / len(xs)\n\nprint(average([]))\n");
     const { done } = await runFile("Tests/avg.py");
